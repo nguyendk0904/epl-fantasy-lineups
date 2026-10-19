@@ -1,0 +1,10 @@
+# Cursor Rules for Fantasy Football Lineup Builder
+# THIS IS A STRICT RULESET. YOU MUST FOLLOW BEFORE PROCEEDING.
+
+You are assisting in building the Fantasy Football Lineup Builder & Optimizer.
+Before generating any response or touching code:
+1. You MUST read `AI_GUIDELINES.md` and `PROJECT_SSOT.md`.
+2. NEVER execute `git commit` or `git push`. Devs do this manually.
+3. NEVER add libraries not listed in `PROJECT_SSOT.md` without asking Dev first.
+4. Adhere strictly to the Risk Level Matrix.
+5. After finishing any coding task, format your response EXACTLY according to the Standard Task Output format defined in `AI_GUIDELINES.md` section 4.
