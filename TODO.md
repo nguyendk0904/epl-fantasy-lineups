@@ -13,10 +13,10 @@
 
 | Giai đoạn (Phase) | Hoàn thành | Tỷ lệ | Trạng thái |
 | :--- | :---: | :---: | :---: |
-| **Phase 1: Local Full-Stack Product** | **0 / 17** | `0%` | 🟡 Đang thực hiện |
+| **Phase 1: Local Full-Stack Product** | **1 / 17** | `6%` | 🟡 Đang thực hiện |
 | **Phase 2: AWS Services Integration** | **0 / 14** | `0%` | ⚪ Chờ Phase 1 |
 | **Phase 3: Production Deploy & E2E Test** | **0 / 14** | `0%` | ⚪ Chờ Phase 2 |
-| **TỔNG CỘNG TOÀN DỰ ÁN** | **0 / 45** | **0%** | 🟡 Khởi động |
+| **TỔNG CỘNG TOÀN DỰ ÁN** | **1 / 45** | **2%** | 🟡 Đang thực hiện |
 
 ---
 
@@ -73,9 +73,9 @@
 
 ---
 
-### ⚙️ Nhất (Backend Core & FPL Sync Lead) - [0/4]
+### ⚙️ Nhất (Backend Core & FPL Sync Lead) - [1/4]
 
-- [ ] **`P1-NH01`** *(Level 2)*: Khởi tạo base FastAPI, CORS, SQLAlchemy Async
+- [x] **`P1-NH01`** *(Level 2)*: Khởi tạo base FastAPI, CORS, SQLAlchemy Async
   - *Mô tả:* Dựng khung ứng dụng FastAPI, cấu hình CORS cho frontend, thiết lập file config biến môi trường Pydantic và session async kết nối PostgreSQL.
   - *Phụ thuộc:* Không (Bắt đầu ngay).
   - *Thư mục:* `backend/`
