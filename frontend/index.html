@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="https://fantasy.premierleague.com/favicon.ico" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>FPL Lineup Builder & Optimizer | EPL Fantasy</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              fpl: {
+                purple: '#37003c',
+                green: '#00ff87',
+                cyan: '#02efff',
+                magenta: '#e90052',
+              },
+              pitch: {
+                dark: '#14381e',
+                light: '#1b4d29',
+                line: 'rgba(255, 255, 255, 0.35)',
+              },
+            },
+          },
+        },
+      }
+    </script>
+  </head>
+  <body class="bg-[#1a001f] text-slate-100 min-h-screen antialiased">
+    <div id="root"></div>
+    <script type="module" src="/src/App.tsx"></script>
+  </body>
+</html>
+

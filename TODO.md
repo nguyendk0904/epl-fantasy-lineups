@@ -13,10 +13,10 @@
 
 | Giai đoạn (Phase) | Hoàn thành | Tỷ lệ | Trạng thái |
 | :--- | :---: | :---: | :---: |
-| **Phase 1: Local Full-Stack Product** | **0 / 17** | `0%` | 🟡 Đang thực hiện |
+| **Phase 1: Local Full-Stack Product** | **1 / 17** | `6%` | 🟡 Đang thực hiện |
 | **Phase 2: AWS Services Integration** | **0 / 14** | `0%` | ⚪ Chờ Phase 1 |
 | **Phase 3: Production Deploy & E2E Test** | **0 / 14** | `0%` | ⚪ Chờ Phase 2 |
-| **TỔNG CỘNG TOÀN DỰ ÁN** | **0 / 45** | **0%** | 🟡 Khởi động |
+| **TỔNG CỘNG TOÀN DỰ ÁN** | **1 / 45** | **2%** | 🟡 Đang thực hiện |
 
 ---
 
@@ -31,12 +31,12 @@
 
 ---
 
-## 🚀 PHASE 1: TẠO SẢN PHẨM HOÀN CHỈNH & TEST TRÊN LOCAL (0/17)
+## 🚀 PHASE 1: TẠO SẢN PHẨM HOÀN CHỈNH & TEST TRÊN LOCAL (1/17)
 *Mục tiêu: Chạy toàn bộ hệ thống trên localhost qua Docker Compose, dữ liệu FPL thật, test unit pass 100%.*
 
-### 🎨 Nguyên (Frontend & UI Lead) - [0/5]
+### 🎨 Nguyên (Frontend & UI Lead) - [1/5]
 
-- [ ] **`P1-NG01`** *(Level 1)*: Khởi tạo base React + Vite + TailwindCSS + Shadcn/ui
+- [X] **`P1-NG01`** *(Level 1)*: Khởi tạo base React + Vite + TailwindCSS + Shadcn/ui
   - *Mô tả:* Setup khung dự án Frontend với Vite, TypeScript, cấu hình Tailwind, font chữ, layout Navbar và Tab điều hướng chính.
   - *Phụ thuộc:* Không (Bắt đầu ngay).
   - *Thư mục:* `frontend/`
