@@ -13,10 +13,10 @@
 
 | Giai đoạn (Phase) | Hoàn thành | Tỷ lệ | Trạng thái |
 | :--- | :---: | :---: | :---: |
-| **Phase 1: Local Full-Stack Product** | **1 / 17** | `6%` | 🟡 Đang thực hiện |
+| **Phase 1: Local Full-Stack Product** | **4 / 17** | `23.5%` | 🟡 Đang thực hiện |
 | **Phase 2: AWS Services Integration** | **0 / 14** | `0%` | ⚪ Chờ Phase 1 |
 | **Phase 3: Production Deploy & E2E Test** | **0 / 14** | `0%` | ⚪ Chờ Phase 2 |
-| **TỔNG CỘNG TOÀN DỰ ÁN** | **1 / 45** | **2%** | 🟡 Đang thực hiện |
+| **TỔNG CỘNG TOÀN DỰ ÁN** | **4 / 45** | **8.8%** | 🟡 Đang thực hiện |
 
 ---
 
@@ -31,7 +31,7 @@
 
 ---
 
-## 🚀 PHASE 1: TẠO SẢN PHẨM HOÀN CHỈNH & TEST TRÊN LOCAL (1/17)
+## 🚀 PHASE 1: TẠO SẢN PHẨM HOÀN CHỈNH & TEST TRÊN LOCAL (4/17)
 *Mục tiêu: Chạy toàn bộ hệ thống trên localhost qua Docker Compose, dữ liệu FPL thật, test unit pass 100%.*
 
 ### 🎨 Nguyên (Frontend & UI Lead) - [1/5]
@@ -137,16 +137,16 @@
 
 ---
 
-### 🐳 Quang (DevOps & AWS Lead) - [0/4]
+### 🐳 Quang (DevOps & AWS Lead) - [2/4]
 
-- [ ] **`P1-Q01`** *(Level 2)*: Viết `backend/Dockerfile` và `frontend/Dockerfile`
+- [x] **`P1-Q01`** *(Level 2)*: Viết `backend/Dockerfile` và `frontend/Dockerfile`
   - *Mô tả:* Đóng gói Docker đa tầng (multi-stage build) cho Backend (Python 3.11-slim kèm coinor-cbc solver) và Frontend (Vite build sang Nginx alpine phục vụ static file).
   - *Phụ thuộc:* `P1-NG01`, `P1-NH01` (Cần package.json và requirements.txt).
   - *Thư mục:* `backend/`, `frontend/`, root
   - *File tạo mới (3 files):* `backend/Dockerfile`, `frontend/Dockerfile`, `.dockerignore`.
   - *Branch:* `feature/P1-Q01-dockerfile`
 
-- [ ] **`P1-Q02`** *(Level 2)*: Xây dựng `infra/docker-compose.yml` chạy Local Full-Stack
+- [x] **`P1-Q02`** *(Level 2)*: Xây dựng `infra/docker-compose.yml` chạy Local Full-Stack
   - *Mô tả:* File compose kết nối 3 container: PostgreSQL 15, FastAPI (port 8000), Vite React (port 5173); cấu hình volume lưu data DB và healthcheck đảm bảo thứ tự khởi động.
   - *Phụ thuộc:* `P1-Q01`
   - *Thư mục:* `infra/`
