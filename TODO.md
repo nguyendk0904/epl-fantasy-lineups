@@ -34,7 +34,7 @@
 ## 🚀 PHASE 1: TẠO SẢN PHẨM HOÀN CHỈNH & TEST TRÊN LOCAL (4/17)
 *Mục tiêu: Chạy toàn bộ hệ thống trên localhost qua Docker Compose, dữ liệu FPL thật, test unit pass 100%.*
 
-### 🎨 Nguyên (Frontend & UI Lead) - [1/5]
+### 🎨 Nguyên (Frontend & UI Lead) - [2/5]
 
 - [X] **`P1-NG01`** *(Level 1)*: Khởi tạo base React + Vite + TailwindCSS + Shadcn/ui
   - *Mô tả:* Setup khung dự án Frontend với Vite, TypeScript, cấu hình Tailwind, font chữ, layout Navbar và Tab điều hướng chính.
@@ -43,7 +43,7 @@
   - *File tạo mới (4 files):* `frontend/package.json`, `frontend/vite.config.ts`, `frontend/tailwind.config.js`, `frontend/src/App.tsx`.
   - *Branch:* `feature/P1-NG01-init-react`
 
-- [ ] **`P1-NG02`** *(Level 2)*: Xây dựng Sân bóng ảo (`VirtualPitch`) 11 chính + 4 bench
+- [x] **`P1-NG02`** *(Level 2)*: Xây dựng Sân bóng ảo (`VirtualPitch`) 11 chính + 4 bench
   - *Mô tả:* Component hiển thị sân cỏ trực quan với 11 vị trí thi đấu chính thức (sơ đồ 4-3-3 mặc định) và 4 vị trí bench bên dưới; hỗ trợ gắn badge Captain 'C' và Vice-Captain 'V'.
   - *Phụ thuộc:* `P1-NG01`
   - *Thư mục:* `frontend/src/components/pitch/`
