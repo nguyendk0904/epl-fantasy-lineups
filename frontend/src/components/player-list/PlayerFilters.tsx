@@ -1,6 +1,6 @@
 import React from 'react';
 import { Search, Filter, X } from 'lucide-react';
-import { PositionType } from '@/types';
+import { PositionType } from '../../types';
 
 export interface FilterState {
   search: string;

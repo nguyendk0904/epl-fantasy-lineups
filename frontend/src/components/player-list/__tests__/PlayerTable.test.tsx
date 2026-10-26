@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { Player } from '@/types';
+import { Player } from '../../../types';
 import { FilterState } from '../PlayerFilters';
 
 const MOCK_PLAYERS: Player[] = [
