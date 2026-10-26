@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { PlayerPitchSlot } from './PlayerPitchSlot';
 import { PositionType, FormationType, LineupPlayer } from '../../types';
 import { Armchair, ChevronDown, Sparkles } from 'lucide-react';
@@ -11,7 +11,7 @@ interface VirtualPitchProps {
   onSelectCaptain?: (id: number) => void;
   onSelectViceCaptain?: (id: number) => void;
   onRemovePlayer?: (id: number) => void;
-  onAddPlayerClick?: (position: PositionType) => void;
+  onAddPlayerClick?: (position: PositionType, slotIndex?: number, isBench?: boolean) => void;
 }
 
 const FORMATIONS: FormationType[] = [
@@ -28,32 +28,52 @@ const FORMATIONS: FormationType[] = [
 export function VirtualPitch({
   startingXI = [],
   bench = [],
-  formation: initialFormation = '4-3-3',
+  formation = '4-3-3',
   onFormationChange,
   onSelectCaptain,
   onSelectViceCaptain,
   onRemovePlayer,
   onAddPlayerClick,
 }: VirtualPitchProps) {
-  const [formation, setFormation] = useState<FormationType>(initialFormation);
-
   // Parse formation string into number of [DEF, MID, FWD]
   const [defCount, midCount, fwdCount] = formation.split('-').map(Number);
 
   const handleFormationSelect = (newForm: FormationType) => {
-    setFormation(newForm);
     if (onFormationChange) onFormationChange(newForm);
   };
 
-  // Group starting players into rows
-  const gkpPlayer = startingXI[0] || null;
-  const defPlayers = startingXI.slice(1, 1 + defCount);
-  const midPlayers = startingXI.slice(1 + defCount, 1 + defCount + midCount);
-  const fwdPlayers = startingXI.slice(1 + defCount + midCount, 11);
+  // Helper lấy cầu thủ đúng slotIndex cho từng vị trí
+  const getPitchPlayer = (pos: PositionType, index: number): LineupPlayer | null => {
+    // 1. Ưu tiên tìm cầu thủ có cùng element_type và slotIndex = index
+    const exact = startingXI.find(p => p && p.element_type === pos && p.slotIndex === index);
+    if (exact) return exact;
 
-  // Bench slots (Index 0: GKP, Index 1-3: Outfielders)
-  const benchGKP = bench[0] || null;
-  const benchOutfield = [bench[1] || null, bench[2] || null, bench[3] || null];
+    // 2. Nếu có cầu thủ khác cùng vị trí đã được gán slotIndex rõ ràng thì ô này là RỖNG (null)
+    const posPlayers = startingXI.filter((p): p is LineupPlayer => p !== null && p.element_type === pos);
+    const hasExplicitSlots = posPlayers.some(p => p.slotIndex !== undefined && p.slotIndex >= 0 && p.slotIndex <= 5);
+    if (hasExplicitSlots) {
+      return null;
+    }
+
+    // 3. Fallback cho dữ liệu mộc chưa đánh slotIndex
+    return posPlayers[index] || null;
+  };
+
+  const getBenchPlayer = (index: number): LineupPlayer | null => {
+    if (index === 0) {
+      return bench.find(p => p && p.element_type === 'GKP') || null;
+    }
+    const exact = bench.find(p => p && p.slotIndex === index);
+    if (exact) return exact;
+
+    const outfield = bench.filter((p): p is LineupPlayer => p !== null && p.element_type !== 'GKP');
+    const hasExplicitSlots = outfield.some(p => p.slotIndex !== undefined && p.slotIndex >= 1 && p.slotIndex <= 3);
+    if (hasExplicitSlots) {
+      return null;
+    }
+
+    return outfield[index - 1] || null;
+  };
 
   return (
     <div className="w-full flex flex-col items-center">
@@ -146,8 +166,10 @@ export function VirtualPitch({
           {/* Hàng 1: Thủ Môn (GKP) */}
           <div className="flex justify-center items-center">
             <PlayerPitchSlot
-              player={gkpPlayer}
+              player={getPitchPlayer('GKP', 0)}
               expectedPosition="GKP"
+              slotIndex={0}
+              isBench={false}
               onSelectCaptain={onSelectCaptain}
               onSelectViceCaptain={onSelectViceCaptain}
               onRemovePlayer={onRemovePlayer}
@@ -160,8 +182,10 @@ export function VirtualPitch({
             {Array.from({ length: defCount }).map((_, i) => (
               <PlayerPitchSlot
                 key={`def-${i}`}
-                player={defPlayers[i] || null}
+                player={getPitchPlayer('DEF', i)}
                 expectedPosition="DEF"
+                slotIndex={i}
+                isBench={false}
                 onSelectCaptain={onSelectCaptain}
                 onSelectViceCaptain={onSelectViceCaptain}
                 onRemovePlayer={onRemovePlayer}
@@ -175,8 +199,10 @@ export function VirtualPitch({
             {Array.from({ length: midCount }).map((_, i) => (
               <PlayerPitchSlot
                 key={`mid-${i}`}
-                player={midPlayers[i] || null}
+                player={getPitchPlayer('MID', i)}
                 expectedPosition="MID"
+                slotIndex={i}
+                isBench={false}
                 onSelectCaptain={onSelectCaptain}
                 onSelectViceCaptain={onSelectViceCaptain}
                 onRemovePlayer={onRemovePlayer}
@@ -190,8 +216,10 @@ export function VirtualPitch({
             {Array.from({ length: fwdCount }).map((_, i) => (
               <PlayerPitchSlot
                 key={`fwd-${i}`}
-                player={fwdPlayers[i] || null}
+                player={getPitchPlayer('FWD', i)}
                 expectedPosition="FWD"
+                slotIndex={i}
+                isBench={false}
                 onSelectCaptain={onSelectCaptain}
                 onSelectViceCaptain={onSelectViceCaptain}
                 onRemovePlayer={onRemovePlayer}
@@ -225,8 +253,9 @@ export function VirtualPitch({
           <div className="flex flex-col items-center">
             <span className="text-[10px] font-bold text-amber-400/90 mb-1.5 uppercase tracking-wider">GK Sub</span>
             <PlayerPitchSlot
-              player={benchGKP}
+              player={getBenchPlayer(0)}
               expectedPosition="GKP"
+              slotIndex={0}
               isBench={true}
               onRemovePlayer={onRemovePlayer}
               onAddPlayerClick={onAddPlayerClick}
@@ -237,8 +266,9 @@ export function VirtualPitch({
           <div className="flex flex-col items-center">
             <span className="text-[10px] font-bold text-slate-400 mb-1.5 uppercase tracking-wider">Sub 1</span>
             <PlayerPitchSlot
-              player={benchOutfield[0]}
+              player={getBenchPlayer(1)}
               expectedPosition="DEF"
+              slotIndex={1}
               isBench={true}
               onRemovePlayer={onRemovePlayer}
               onAddPlayerClick={onAddPlayerClick}
@@ -249,8 +279,9 @@ export function VirtualPitch({
           <div className="flex flex-col items-center">
             <span className="text-[10px] font-bold text-slate-400 mb-1.5 uppercase tracking-wider">Sub 2</span>
             <PlayerPitchSlot
-              player={benchOutfield[1]}
+              player={getBenchPlayer(2)}
               expectedPosition="MID"
+              slotIndex={2}
               isBench={true}
               onRemovePlayer={onRemovePlayer}
               onAddPlayerClick={onAddPlayerClick}
@@ -261,8 +292,9 @@ export function VirtualPitch({
           <div className="flex flex-col items-center">
             <span className="text-[10px] font-bold text-slate-400 mb-1.5 uppercase tracking-wider">Sub 3</span>
             <PlayerPitchSlot
-              player={benchOutfield[2]}
+              player={getBenchPlayer(3)}
               expectedPosition="FWD"
+              slotIndex={3}
               isBench={true}
               onRemovePlayer={onRemovePlayer}
               onAddPlayerClick={onAddPlayerClick}

@@ -34,7 +34,7 @@
 ## 🚀 PHASE 1: TẠO SẢN PHẨM HOÀN CHỈNH & TEST TRÊN LOCAL (4/17)
 *Mục tiêu: Chạy toàn bộ hệ thống trên localhost qua Docker Compose, dữ liệu FPL thật, test unit pass 100%.*
 
-### 🎨 Nguyên (Frontend & UI Lead) - [2/5]
+### 🎨 Nguyên (Frontend & UI Lead) - [3/5]
 
 - [X] **`P1-NG01`** *(Level 1)*: Khởi tạo base React + Vite + TailwindCSS + Shadcn/ui
   - *Mô tả:* Setup khung dự án Frontend với Vite, TypeScript, cấu hình Tailwind, font chữ, layout Navbar và Tab điều hướng chính.
@@ -50,7 +50,7 @@
   - *File tạo mới (3 files):* `frontend/src/components/pitch/VirtualPitch.tsx`, `frontend/src/components/pitch/PlayerPitchSlot.tsx`, `frontend/src/components/pitch/__tests__/VirtualPitch.test.tsx`.
   - *Branch:* `feature/P1-NG02-virtual-pitch`
 
-- [ ] **`P1-NG03`** *(Level 2)*: Bảng danh sách & Bộ lọc cầu thủ (`PlayerTable`)
+- [x] **`P1-NG03`** *(Level 2)*: Bảng danh sách & Bộ lọc cầu thủ (`PlayerTable`)
   - *Mô tả:* Bảng dữ liệu cầu thủ sử dụng TanStack Table; hỗ trợ tìm kiếm tên tức thì, lọc theo vị trí (GKP/DEF/MID/FWD), lọc theo CLB và sắp xếp theo giá / điểm số.
   - *Phụ thuộc:* `P1-NG01`
   - *Thư mục:* `frontend/src/components/player-list/`
