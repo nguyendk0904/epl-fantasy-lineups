@@ -20,7 +20,7 @@ import {
   Target,
   X,
 } from 'lucide-react';
-import { Player, PositionType } from '@/types';
+import { Player, PositionType } from '../../types';
 import { PlayerFilters, FilterState } from './PlayerFilters';
 
 export interface PlayerTableProps {
