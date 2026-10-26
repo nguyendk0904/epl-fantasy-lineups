@@ -13,10 +13,10 @@
 
 | Giai đoạn (Phase) | Hoàn thành | Tỷ lệ | Trạng thái |
 | :--- | :---: | :---: | :---: |
-| **Phase 1: Local Full-Stack Product** | **2 / 17** | `12%` | 🟡 Đang thực hiện |
+| **Phase 1: Local Full-Stack Product** | **3 / 17** | `18%` | 🟡 Đang thực hiện |
 | **Phase 2: AWS Services Integration** | **0 / 14** | `0%` | ⚪ Chờ Phase 1 |
 | **Phase 3: Production Deploy & E2E Test** | **0 / 14** | `0%` | ⚪ Chờ Phase 2 |
-| **TỔNG CỘNG TOÀN DỰ ÁN** | **2 / 45** | **4%** | 🟡 Đang thực hiện |
+| **TỔNG CỘNG TOÀN DỰ ÁN** | **3 / 45** | **7%** | 🟡 Đang thực hiện |
 
 ---
 
@@ -31,10 +31,10 @@
 
 ---
 
-## 🚀 PHASE 1: TẠO SẢN PHẨM HOÀN CHỈNH & TEST TRÊN LOCAL (2/17)
+## 🚀 PHASE 1: TẠO SẢN PHẨM HOÀN CHỈNH & TEST TRÊN LOCAL (3/17)
 *Mục tiêu: Chạy toàn bộ hệ thống trên localhost qua Docker Compose, dữ liệu FPL thật, test unit pass 100%.*
 
-### 🎨 Nguyên (Frontend & UI Lead) - [2/5]
+### 🎨 Nguyên (Frontend & UI Lead) - [3/5]
 
 - [X] **`P1-NG01`** *(Level 1)*: Khởi tạo base React + Vite + TailwindCSS + Shadcn/ui
   - *Mô tả:* Setup khung dự án Frontend với Vite, TypeScript, cấu hình Tailwind, font chữ, layout Navbar và Tab điều hướng chính.
@@ -50,7 +50,7 @@
   - *File tạo mới (3 files):* `frontend/src/components/pitch/VirtualPitch.tsx`, `frontend/src/components/pitch/PlayerPitchSlot.tsx`, `frontend/src/components/pitch/__tests__/VirtualPitch.test.tsx`.
   - *Branch:* `feature/P1-NG02-virtual-pitch`
 
-- [ ] **`P1-NG03`** *(Level 2)*: Bảng danh sách & Bộ lọc cầu thủ (`PlayerTable`)
+- [x] **`P1-NG03`** *(Level 2)*: Bảng danh sách & Bộ lọc cầu thủ (`PlayerTable`)
   - *Mô tả:* Bảng dữ liệu cầu thủ sử dụng TanStack Table; hỗ trợ tìm kiếm tên tức thì, lọc theo vị trí (GKP/DEF/MID/FWD), lọc theo CLB và sắp xếp theo giá / điểm số.
   - *Phụ thuộc:* `P1-NG01`
   - *Thư mục:* `frontend/src/components/player-list/`

@@ -34,16 +34,18 @@ export function getPlayerKitUrl(teamId: number, position: PositionType, teamCode
 interface PlayerPitchSlotProps {
   player: LineupPlayer | null;
   expectedPosition: PositionType;
+  slotIndex?: number;
   isBench?: boolean;
   onSelectCaptain?: (id: number) => void;
   onSelectViceCaptain?: (id: number) => void;
   onRemovePlayer?: (id: number) => void;
-  onAddPlayerClick?: (position: PositionType) => void;
+  onAddPlayerClick?: (position: PositionType, slotIndex?: number, isBench?: boolean) => void;
 }
 
 export function PlayerPitchSlot({
   player,
   expectedPosition,
+  slotIndex = 0,
   isBench = false,
   onSelectCaptain,
   onSelectViceCaptain,
@@ -56,7 +58,7 @@ export function PlayerPitchSlot({
   if (!player) {
     return (
       <div 
-        onClick={() => onAddPlayerClick && onAddPlayerClick(expectedPosition)}
+        onClick={() => onAddPlayerClick && onAddPlayerClick(expectedPosition, slotIndex, isBench)}
         className={`flex flex-col items-center justify-center p-2 rounded-2xl transition-all cursor-pointer group select-none
           backdrop-blur-md border border-dashed hover:scale-105 duration-200
           ${isBench 
