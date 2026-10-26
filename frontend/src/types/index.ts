@@ -8,6 +8,7 @@ export interface Player {
   second_name?: string;
   web_name: string;
   team_id: number;
+  team_code?: number;
   team_short_name?: string;
   element_type: PositionType;
   now_cost: number;
