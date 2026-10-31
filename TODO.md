@@ -16,7 +16,8 @@
 | **Phase 1: Local Full-Stack Product** | **9 / 17** | `53%` | 🟡 Đang thực hiện |
 | **Phase 2: AWS Services Integration** | **0 / 14** | `0%` | ⚪ Chờ Phase 1 |
 | **Phase 3: Production Deploy & E2E Test** | **0 / 14** | `0%` | ⚪ Chờ Phase 2 |
-| **TỔNG CỘNG TOÀN DỰ ÁN** | **9 / 45** | **20%** | 🟡 Đang thực hiện |
+| **Phase 4: Live Gamification & League Operations** | **0 / 14** | `0%` | ⚪ Chờ Phase 3 |
+| **TỔNG CỘNG TOÀN DỰ ÁN** | **9 / 59** | **15%** | 🟡 Đang thực hiện |
 
 ---
 
@@ -170,7 +171,7 @@
 ---
 
 ## ☁️ PHASE 2: TÍCH HỢP SỬ DỤNG CÁC DỊCH VỤ CỦA AWS (0/14)
-*Mục tiêu: Đưa CSDL lên Amazon RDS, lưu trữ static web trên S3, kích hoạt AWS Budgets Alert ($1.00) bảo vệ tài khoản của Quang.*
+*Mục tiêu: Đưa CSDL lên Amazon RDS, lưu trữ static web trên S3, kích hoạt AWS Budgets Alert ($\rightarrow$1.00) bảo vệ tài khoản của Quang.*
 
 ### 🎨 Nguyên (Frontend) - [0/3]
 - [ ] **`P2-NG01`** *(Level 2)*: Tích hợp tính năng tạo Share Link đội hình qua Cloud API. *(Branch: `feature/P2-NG01-share-lineup`, Thư mục: `frontend/src/components/`, Files: `ShareModal.tsx`, `useShareLineup.ts`)*
@@ -190,7 +191,7 @@
 ### 🐳 Quang (DevOps & AWS) - [0/4]
 - [ ] **`P2-Q01`** *(Level 4)*: Khởi tạo instance Amazon RDS PostgreSQL (`db.t4g.micro`, Single-AZ, 20GB gp3) trên tài khoản AWS của Quang. *(Branch: `feature/P2-Q01-aws-rds-init`, Thư mục: `infra/aws/`, Files: `rds_setup.md`)*
 - [ ] **`P2-Q02`** *(Level 4)*: Cấu hình Security Group an toàn: Chỉ mở port 5432 cho IP nhóm dev hoặc Backend. *(Branch: `feature/P2-Q02-rds-security-group`, Thư mục: `infra/aws/`, Files: `security_groups.md`)*
-- [ ] **`P2-Q03`** *(Level 4)*: **BẮT BUỘC:** Kích hoạt AWS Budgets Alert mức $1.00 gửi email cảnh báo tự động về hòm thư của nhóm. *(Branch: `feature/P2-Q03-aws-budget-guard`, Thư mục: `infra/aws/`, Files: `budget_alert_setup.md`)*
+- [ ] **`P2-Q03`** *(Level 4)*: **BẮT BUỘC:** Kích hoạt AWS Budgets Alert mức $\rightarrow$1.00 gửi email cảnh báo tự động về hòm thư của nhóm. *(Branch: `feature/P2-Q03-aws-budget-guard`, Thư mục: `infra/aws/`, Files: `budget_alert_setup.md`)*
 - [ ] **`P2-Q04`** *(Level 3)*: Khởi tạo AWS S3 Bucket cấu hình static hosting và chính sách truy cập an toàn. *(Branch: `feature/P2-Q04-s3-bucket-setup`, Thư mục: `infra/aws/`, Files: `s3_policy.json`)*
 
 ---
@@ -217,4 +218,34 @@
 - [ ] **`P3-Q01`** *(Level 4)*: Triển khai Frontend lên AWS S3 + CloudFront (kèm chứng chỉ SSL HTTPS, CDN toàn cầu). *(Branch: `feature/P3-Q01-s3-cloudfront-deploy`)*
 - [ ] **`P3-Q02`** *(Level 4)*: Đóng gói và triển khai Backend FastAPI lên AWS App Runner (hoặc EC2 t4g.small). *(Branch: `feature/P3-Q02-backend-aws-deploy`)*
 - [ ] **`P3-Q03`** *(Level 4)*: Xây dựng pipeline GitHub Actions CI/CD: Push vào nhánh `main` tự động test và deploy lên AWS. *(Branch: `feature/P3-Q03-github-actions-cicd`)*
-- [ ] **`P3-Q04`** *(Level 1)*: Kiểm tra hóa đơn AWS Billing, đối soát chi phí $0.00 và viết tài liệu kiến trúc Cloud nộp đồ án. *(Branch: `feature/P3-Q04-cloud-architecture-doc`)*
+- [ ] **`P3-Q04`** *(Level 1)*: Kiểm tra hóa đơn AWS Billing, đối soát chi phí $\rightarrow$0.00 và viết tài liệu kiến trúc Cloud nộp đồ án. *(Branch: `feature/P3-Q04-cloud-architecture-doc`)*
+
+---
+
+## 🏆 PHASE 4: VẬN HÀNH MÙA GIẢI & GAMIFICATION (0/14)
+*Mục tiêu: Vận hành trực tiếp với FPL thật: Lịch thi đấu 38 vòng, chấm điểm live, quản lý chấn thương, BXH và luật chuyển nhượng 3 người/tuần.*
+
+### 🎨 Nguyên (Frontend & UI Lead) - [0/4]
+- [ ] **`P4-NG01`** *(Level 2)*: Màn hình Lịch thi đấu các tuần & Độ khó trận đấu (`FixturesView`): 38 vòng đấu, tỉ số thực tế, badge FDR 1-5. *(Branch: `feature/P4-NG01-fixtures-ui`, Thư mục: `frontend/src/components/fixtures/`, Files: `FixturesView.tsx`, `FixtureCard.tsx`, `FixturesView.test.tsx`)*
+- [ ] **`P4-NG02`** *(Level 2)*: Huy hiệu Trạng thái Chấn thương & Treo giò (`PlayerStatusBadge`): Cờ đỏ 🚑 (Nghỉ/0%), cờ vàng ⚠️ (Nghi ngờ), cờ đỏ 🟥 (Treo giò). *(Branch: `feature/P4-NG02-player-status-badge`, Thư mục: `frontend/src/components/common/`, Files: `PlayerStatusBadge.tsx`, `PlayerStatusBadge.test.tsx`)*
+- [ ] **`P4-NG03`** *(Level 2)*: Bảng xếp hạng Người chơi (`LeaderboardView`) & Sân bóng vinh danh Đội hình tiêu biểu tuần (`DreamTeamModal`). *(Branch: `feature/P4-NG03-leaderboard-ui`, Thư mục: `frontend/src/components/leaderboard/`, Files: `LeaderboardView.tsx`, `DreamTeamModal.tsx`, `LeaderboardView.test.tsx`)*
+- [ ] **`P4-NG04`** *(Level 2)*: Giao diện Luật Chuyển nhượng tuần: Bộ đếm đổi người `(Còn lại: X / 3)`, đồng hồ đếm ngược Deadline, modal chốt đội hình tuần. *(Branch: `feature/P4-NG04-transfer-rules-ui`, Thư mục: `frontend/src/components/transfers/`, Files: `TransferControl.tsx`, `TransferSummaryModal.tsx`, `TransferControl.test.tsx`)*
+
+### ⚙️ Nhất (Backend Core & Live Data Lead) - [0/4]
+- [ ] **`P4-NH01`** *(Level 3)*: Worker `live_sync.py`: Tự động cào Lịch thi đấu 38 vòng (`/api/fixtures/`) & Trạng thái y tế (`/api/bootstrap-static/`) lưu PostgreSQL. *(Branch: `feature/P4-NH01-sync-fixtures-injuries`, Thư mục: `backend/app/services/`, Files: `fixture_sync.py`, `test_fixture_sync.py`)*
+- [ ] **`P4-NH02`** *(Level 3)*: Worker `gameweek_sync.py`: Cào Điểm trực tiếp sau trận (`/api/event/{gw}/live/`) và Đội hình tiêu biểu (`/api/dream-team/{gw}/`) lưu DB. *(Branch: `feature/P4-NH02-live-match-sync`, Thư mục: `backend/app/services/`, Files: `live_match_sync.py`, `test_live_match_sync.py`)*
+- [ ] **`P4-NH03`** *(Level 2)*: REST API `GET /api/v1/fixtures` & `GET /api/v1/dream-team/{gw}`: Cung cấp lịch thi đấu và 11 cầu thủ xuất sắc nhất vòng. *(Branch: `feature/P4-NH03-fixtures-api`, Thư mục: `backend/app/api/v1/endpoints/`, Files: `fixture.py`, `fixtures.py`, `test_fixtures_api.py`)*
+- [ ] **`P4-NH04`** *(Level 3)*: REST API `GET /api/v1/leaderboard` & `POST /api/v1/transfers/confirm`: Trả về BXH và thực thi validation chặn chuyển nhượng > 3 cầu thủ. *(Branch: `feature/P4-NH04-leaderboard-transfers-api`, Thư mục: `backend/app/api/v1/endpoints/`, Files: `gameweek.py`, `gameweeks.py`, `test_gameweeks_api.py`)*
+
+### 🧠 Vũ (Data & Algorithm Engineer) - [0/3]
+- [ ] **`P4-V01`** *(Level 3)*: Thiết kế Schema Migration Alembic cho các bảng: `fixtures`, `player_gameweek_stats`, `user_gameweek_lineups`, `dream_teams`. *(Branch: `feature/P4-V01-gameweek-schema`, Thư mục: `backend/app/models/`, `backend/alembic/`, Files: `fixture.py`, `gameweek.py`, `003_live_gameweek_schema.py`, `test_gameweek_models.py`)*
+- [ ] **`P4-V02`** *(Level 3)*: Game Engine tính điểm tự động (`scoring_engine.py`): Điểm Captain x2, cơ chế Auto-sub thay thế cầu thủ không thi đấu từ hàng ghế dự bị. *(Branch: `feature/P4-V02-scoring-engine`, Thư mục: `backend/app/services/`, Files: `scoring_engine.py`, `test_scoring_engine.py`)*
+- [ ] **`P4-V03`** *(Level 3)*: Nâng cấp PuLP Optimizer: Tự động loại bỏ cầu thủ chấn thương/treo giò và xây dựng Transfer Optimizer gợi ý 3 lượt thay tốt nhất. *(Branch: `feature/P4-V03-transfer-optimizer`, Thư mục: `backend/app/services/`, Files: `transfer_optimizer.py`, `test_transfer_optimizer.py`)*
+
+### 🐳 Quang (DevOps & Cloud Automation Lead) - [0/3]
+- [ ] **`P4-Q01`** *(Level 3)*: Thiết lập AWS EventBridge Scheduler định kỳ tự động chạy Live Sync lịch thi đấu và điểm số sau trận. *(Branch: `feature/P4-Q01-eventbridge-scheduler`, Thư mục: `infra/aws/`, Files: `eventbridge_schedules.tf`, `README_SCHEDULER.md`)*
+- [ ] **`P4-Q02`** *(Level 3)*: Tích hợp Redis Caching cho Bảng xếp hạng và Lịch thi đấu chịu tải cao khi kết thúc trận đấu. *(Branch: `feature/P4-Q02-redis-caching`, Thư mục: `backend/app/core/`, Files: `redis_cache.py`, `test_redis_cache.py`)*
+- [ ] **`P4-Q03`** *(Level 2)*: Kịch bản Kiểm thử Vòng đời Tuần thi đấu (Gameweek Lifecycle Test): Đổi 3 người $\rightarrow$
+ightarrow$\rightarrow$ Khóa deadline $\rightarrow$
+ightarrow$\rightarrow$ Tính điểm $\rightarrow$
+ightarrow$\rightarrow$ Cập nhật BXH. *(Branch: `feature/P4-Q03-gameweek-integration-test`, Thư mục: `scripts/`, Files: `test_gameweek_lifecycle.py`, `seed_mock_fixtures.py`)*
