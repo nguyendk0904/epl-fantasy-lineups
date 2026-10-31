@@ -6,23 +6,22 @@
 
 ## 📖 BỘ TÀI LIỆU CHUẨN HÓA CHO DỰ ÁN & AI (BẮT BUỘC ĐỌC)
 
-Dự án này áp dụng phương pháp **Vibe Coding có kỷ luật (Disciplined Vibe Coding)**. Trước khi code hoặc giao việc cho AI, tất cả thành viên và AI Assistant bắt buộc phải tham chiếu:
+Dự án này áp dụng phương pháp **Vibe Coding có kỷ luật (Disciplined Vibe Coding)**. Toàn bộ tài liệu chuẩn hóa của dự án được lưu trữ tập trung tại thư mục [`docs/`](docs/README.md). Trước khi code hoặc giao việc cho AI, tất cả thành viên và AI Assistant bắt buộc phải tham chiếu:
 
-1. **[TODO.md](file:///d:/5th%20semester/cloud_compting/fantasy_lineup/TODO.md)**:
-   - **Bảng theo dõi tiến độ & Đặc tả chi tiết 45 task:** Tích hợp đầy đủ mô tả ngắn, quan hệ phụ thuộc (dependencies), thư mục được phép làm việc và tên chính xác từng file tạo mới ($\le$ 5 file/task).
-2. **[AI_DEVELOPMENT_GUIDE.md](file:///d:/5th%20semester/cloud_compting/fantasy_lineup/AI_DEVELOPMENT_GUIDE.md)**:
+1. **[`docs/TODO.md`](docs/TODO.md)**:
+   - **Bảng theo dõi tiến độ & Đặc tả chi tiết 59 task (Phase 1 - Phase 4):** Tích hợp đầy đủ mô tả ngắn, quan hệ phụ thuộc (dependencies), thư mục được phép làm việc, tên chính xác từng file tạo mới ($\le$ 5 file/task), tiêu chí nghiệm thu (Acceptance Criteria) và cách kiểm chứng (Verification).
+2. **[`docs/AI_DEVELOPMENT_GUIDE.md`](docs/AI_DEVELOPMENT_GUIDE.md)**:
    - **Cẩm nang thực chiến dành cho thành viên:** Hướng dẫn 6 bước làm việc với AI theo Giao thức Bắt tay 2 lượt (2-Way Handshake), kỹ thuật Prompting, cách thẩm định output, xử lý lỗi và kịch bản riêng cho từng bạn.
-3. **[PROJECT_ROADMAP.md](file:///d:/5th%20semester/cloud_compting/fantasy_lineup/PROJECT_ROADMAP.md)**:
-   - Kế hoạch 3 giai đoạn: Phase 1 (Local Product), Phase 2 (AWS Integration), Phase 3 (Deploy & E2E Test).
-   - Phân chia nhiệm vụ chi tiết và tiêu chí nghiệm thu (DoD) của 4 thành viên cho từng phase.
-4. **[AI_GUIDELINES.md](file:///d:/5th%20semester/cloud_compting/fantasy_lineup/AI_GUIDELINES.md)**: 
-   - 8 Quy tắc vàng bất biến cho AI (**Cấm tự động commit**, mỗi lần 1 task trên branch riêng, tối đa 5 file mới, bắt buộc viết & chạy unit test báo cáo pass count).
+3. **[`docs/PROJECT_ROADMAP.md`](docs/PROJECT_ROADMAP.md)**:
+   - **Lộ trình 4 giai đoạn:** Phase 1 (Local Full-Stack), Phase 2 (AWS Services Integration), Phase 3 (Production Deploy & CI/CD), Phase 4 (Live Season & Gamification).
+   - Phân chia nhiệm vụ chi tiết, luồng dữ liệu kiến trúc (Mermaid flow) và tiêu chí nghiệm thu (DoD) của 4 thành viên.
+4. **[`docs/AI_GUIDELINES.md`](docs/AI_GUIDELINES.md)**: 
+   - **5 Quy tắc vàng bất biến cho AI:** Đọc tài liệu trước, kiểm tra dependency, không lấn sân vai trò khác, **cấm tự động commit/push**, bắt buộc xuất Handoff đúng chuẩn 4 phần.
    - Ma trận phân loại rủi ro (Risk Level 1 đến 4).
-   - Format báo cáo kết quả bắt buộc sau mỗi task.
-5. **[PROJECT_SSOT.md](file:///d:/5th%20semester/cloud_compting/fantasy_lineup/PROJECT_SSOT.md)**: 
-   - Nguồn sự thật duy nhất (Single Source of Truth) về Tech Stack, Luật FPL, Database Schema và REST API Contract.
-6. **[DEV_PROMPT_TEMPLATES.md](file:///d:/5th%20semester/cloud_compting/fantasy_lineup/DEV_PROMPT_TEMPLATES.md)**: 
-   - Bộ prompt mẫu chuẩn hóa cho từng bạn trong nhóm để giao việc cho AI.
+5. **[`docs/PROJECT_SSOT.md`](docs/PROJECT_SSOT.md)**: 
+   - Nguồn sự thật duy nhất (Single Source of Truth) về Tech Stack, Luật FPL, Database Schema PostgreSQL và REST API Contract.
+6. **[`docs/DEV_PROMPT_TEMPLATES.md`](docs/DEV_PROMPT_TEMPLATES.md)**: 
+   - Bộ prompt mẫu chuẩn hóa cho từng bạn trong nhóm (Nguyên, Nhất, Vũ, Quang) để giao việc cho AI.
 
 ---
 

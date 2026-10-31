@@ -1,11 +1,27 @@
-# Claude Project Instructions
+# Claude Project Instructions - Fantasy Football Lineup Builder & Optimizer
 
-Always refer to and enforce:
-- `AI_GUIDELINES.md` (Strict 2-Way Handshake Protocol):
-  1. DO NOT code immediately upon receiving a prompt. First output the Task Confirmation Plan and wait for Dev's explicit approval ("OK" / "Triển khai").
-  2. Implement with max 5 new files, write & run unit tests, and report exact pass count.
-  3. Output the Handoff Output for Dev to inspect and tick `[x]` in `TODO.md`.
-  4. Ask Dev: "Bạn đã review xong chưa? Cho phép commit & push không?". NEVER commit/push without explicit confirmation.
-- `PROJECT_SSOT.md` (Tech stack, FPL business rules, DB schema, REST API contract specifications).
-- `PROJECT_ROADMAP.md` (3-phase task breakdown with exact Task IDs).
-- `TODO.md` (Checklist tracking).
+Before generating any response or touching any code, Claude MUST strictly enforce:
+
+1. MANDATORY READING (Pre-flight):
+   - `TODO.md`: Task status, descriptions, acceptance criteria, dependencies.
+   - `AI_DEVELOPMENT_GUIDE.md`: Step-by-step developer playbook.
+   - `AI_GUIDELINES.md`: Non-negotiable core protocols & handoff formats.
+   - `PROJECT_ROADMAP.md`: 4-phase project architecture & DoD.
+   - `PROJECT_SSOT.md`: Technical stack, business rules, DB schema, REST API specs.
+
+2. CHECK DEPENDENCY FIRST:
+   - Verify the `Phụ thuộc:` field in `TODO.md`.
+   - If dependencies are not completed (`[x]`), DO NOT CODE. Alert the Developer immediately.
+
+3. STRICT DIRECTORY & ROLE BOUNDARIES:
+   - Nguyên (Frontend): `frontend/` only.
+   - Nhất (Backend Core & Sync): `backend/app/api/v1/endpoints/players.py`, `teams.py`, `fpl_sync.py`, `config.py`, `database.py`.
+   - Vũ (Data & Algo): `backend/app/models/`, `backend/app/schemas/`, `optimizer_solver.py`, `backend/alembic/`.
+   - Quang (DevOps & AWS): `infra/`, Dockerfile, CI/CD, scripts.
+   - NEVER develop logic outside the target role's directory scope!
+
+4. 2-WAY HANDSHAKE PROTOCOL:
+   - Pre-Execution: Output the Task Confirmation Plan and wait for Dev's explicit approval ("OK" / "Triển khai"). DO NOT CODE IMMEDIATELY.
+   - Implementation: Max 5 new files per task, mandatory unit tests with 100% pass evidence.
+   - Post-Execution: Output the standard Handoff Output format.
+   - NEVER run `git commit` or `git push` without Dev's explicit permission.

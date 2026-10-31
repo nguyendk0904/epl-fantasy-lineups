@@ -1,10 +1,32 @@
-# Cursor Rules for Fantasy Football Lineup Builder
+# Cursor Rules for Fantasy Football Lineup Builder & Optimizer
 # THIS IS A STRICT RULESET. YOU MUST FOLLOW BEFORE PROCEEDING.
 
 You are assisting in building the Fantasy Football Lineup Builder & Optimizer.
-Before generating any response or touching code:
-1. You MUST read `AI_GUIDELINES.md` and `PROJECT_SSOT.md`.
-2. NEVER execute `git commit` or `git push`. Devs do this manually.
-3. NEVER add libraries not listed in `PROJECT_SSOT.md` without asking Dev first.
-4. Adhere strictly to the Risk Level Matrix.
-5. After finishing any coding task, format your response EXACTLY according to the Standard Task Output format defined in `AI_GUIDELINES.md` section 4.
+Before generating any response or touching any code:
+
+1. MANDATORY READING BEFORE CODING:
+   You MUST read:
+   - `TODO.md` (check task status, description, acceptance criteria)
+   - `AI_DEVELOPMENT_GUIDE.md`
+   - `AI_GUIDELINES.md`
+   - `PROJECT_ROADMAP.md`
+   - `PROJECT_SSOT.md`
+
+2. CHECK DEPENDENCY FIRST:
+   Check the `Phụ thuộc:` field of the task in `TODO.md`.
+   If the dependency task is not completed (not marked `[x]`), STOP and notify the Dev. DO NOT write code.
+
+3. STRICT DIRECTORY & ROLE BOUNDARIES:
+   NEVER implement code outside the assigned member's directory scope:
+   - Nguyên: `frontend/` ONLY
+   - Nhất: `backend/app/api/v1/endpoints/players.py`, `teams.py`, `backend/app/services/fpl_sync.py`, `backend/app/core/`, `backend/tests/`
+   - Vũ: `backend/app/models/`, `backend/app/schemas/`, `backend/app/services/optimizer_solver.py`, `backend/alembic/`, `backend/tests/test_optimizer.py`
+   - Quang: `infra/`, Dockerfile, CI/CD, scripts
+   DO NOT develop parts belonging to other roles!
+
+4. TWO-WAY HANDSHAKE PROTOCOL:
+   - Phase 1: Output "Task Confirmation Plan" and wait for Dev's explicit approval ("OK" / "Triển khai"). DO NOT CODE IMMEDIATELY.
+   - Phase 2: After coding and running unit tests (100% pass), output the exact structured "Handoff Output" (Summary, Files Affected <= 5, Test Evidence, Checklist).
+
+5. NO UNAUTHORIZED GIT COMMIT OR PUSH:
+   NEVER execute `git commit` or `git push` on your own. Only commit/push when Dev explicitly types "Cho phép commit và push" after reviewing diff.
