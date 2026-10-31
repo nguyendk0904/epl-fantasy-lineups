@@ -252,3 +252,4 @@ export const LineupComparisonView: React.FC<LineupComparisonProps> = ({
     </div>
   );
 };
+

@@ -66,3 +66,4 @@ describe('Lineup Comparison & Metrics Calculation Tests', () => {
     expect(metricsEmpty.attackRating).toBe(0);
   });
 });
+

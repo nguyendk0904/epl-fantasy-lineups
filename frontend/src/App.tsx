@@ -135,47 +135,215 @@ export function App() {
     }
   };
 
-  // Mock Optimizer Solver: Tìm kiếm đội hình tối ưu điểm xP
+  // Thuật toán duyệt tối ưu có ràng buộc (Constrained Knapsack Optimizer)
   const handleRunOptimizer = async (config: OptimizerConfig): Promise<OptimizerResult | null> => {
     setIsOptimizing(true);
-    await new Promise(resolve => setTimeout(resolve, 800)); // Giả lập độ trễ tính toán
+    await new Promise((resolve) => setTimeout(resolve, 600)); // Giả lập độ trễ tính toán
 
     const selectedForm: FormationType = config.targetFormation === 'auto' ? '3-4-3' : config.targetFormation;
     const [defCount, midCount, fwdCount] = selectedForm.split('-').map(Number);
 
-    // Lọc bỏ cầu thủ bị exclude
-    const candidates = SAMPLE_MARKET_PLAYERS.filter(p => !config.excludedPlayerIds.includes(p.id));
+    // 1. Lọc danh sách ứng viên (bỏ excluded)
+    const pool = SAMPLE_MARKET_PLAYERS.filter((p) => !config.excludedPlayerIds.includes(p.id));
+    const locked = pool.filter((p) => config.lockedPlayerIds.includes(p.id));
+    const lockedCost = locked.reduce((s, p) => s + p.now_cost, 0);
 
-    // Phân loại vị trí
-    const gkps = candidates.filter(p => p.element_type === 'GKP').sort((a, b) => b.total_points - a.total_points);
-    const defs = candidates.filter(p => p.element_type === 'DEF').sort((a, b) => b.total_points - a.total_points);
-    const mids = candidates.filter(p => p.element_type === 'MID').sort((a, b) => b.total_points - a.total_points);
-    const fwds = candidates.filter(p => p.element_type === 'FWD').sort((a, b) => b.total_points - a.total_points);
+    if (lockedCost > config.budget) {
+      setIsOptimizing(false);
+      showToast('Không khả thi: Cầu thủ đã khóa vượt quá ngân sách đã chọn!');
+      return null;
+    }
+
+    const lockedClubs: Record<number, number> = {};
+    for (const p of locked) {
+      lockedClubs[p.team_id] = (lockedClubs[p.team_id] || 0) + 1;
+      if (lockedClubs[p.team_id] > 3) {
+        setIsOptimizing(false);
+        showToast('Không khả thi: Các cầu thủ đã khóa có hơn 3 người cùng thuộc 1 CLB!');
+        return null;
+      }
+    }
+
+    const lockedByPos = {
+      GKP: locked.filter((p) => p.element_type === 'GKP'),
+      DEF: locked.filter((p) => p.element_type === 'DEF'),
+      MID: locked.filter((p) => p.element_type === 'MID'),
+      FWD: locked.filter((p) => p.element_type === 'FWD'),
+    };
+
+    if (
+      lockedByPos.GKP.length > 2 ||
+      lockedByPos.DEF.length > 5 ||
+      lockedByPos.MID.length > 5 ||
+      lockedByPos.FWD.length > 3
+    ) {
+      setIsOptimizing(false);
+      showToast('Không khả thi: Số cầu thủ khóa vượt quá hạn mức vị trí (2 GKP, 5 DEF, 5 MID, 3 FWD)!');
+      return null;
+    }
+
+    const remCandidates = pool.filter((p) => !config.lockedPlayerIds.includes(p.id));
+    const remByPos = {
+      GKP: remCandidates.filter((p) => p.element_type === 'GKP'),
+      DEF: remCandidates.filter((p) => p.element_type === 'DEF'),
+      MID: remCandidates.filter((p) => p.element_type === 'MID'),
+      FWD: remCandidates.filter((p) => p.element_type === 'FWD'),
+    };
+
+    const getCombinations = <T,>(arr: T[], k: number): T[][] => {
+      if (k === 0) return [[]];
+      if (arr.length < k) return [];
+      const head = arr[0];
+      const tail = arr.slice(1);
+      return [
+        ...getCombinations(tail, k - 1).map((c) => [head, ...c]),
+        ...getCombinations(tail, k),
+      ];
+    };
+
+    const gkpCombs = getCombinations(remByPos.GKP, 2 - lockedByPos.GKP.length).map((c) => ({
+      players: [...lockedByPos.GKP, ...c],
+      cost: [...lockedByPos.GKP, ...c].reduce((s, p) => s + p.now_cost, 0),
+      xp: [...lockedByPos.GKP, ...c].reduce((s, p) => s + (p.expected_points_next ?? 4), 0),
+      clubs: [...lockedByPos.GKP, ...c].map((p) => p.team_id),
+    }));
+
+    const defCombs = getCombinations(remByPos.DEF, 5 - lockedByPos.DEF.length).map((c) => ({
+      players: [...lockedByPos.DEF, ...c],
+      cost: [...lockedByPos.DEF, ...c].reduce((s, p) => s + p.now_cost, 0),
+      xp: [...lockedByPos.DEF, ...c].reduce((s, p) => s + (p.expected_points_next ?? 4), 0),
+      clubs: [...lockedByPos.DEF, ...c].map((p) => p.team_id),
+    }));
+
+    const midCombs = getCombinations(remByPos.MID, 5 - lockedByPos.MID.length).map((c) => ({
+      players: [...lockedByPos.MID, ...c],
+      cost: [...lockedByPos.MID, ...c].reduce((s, p) => s + p.now_cost, 0),
+      xp: [...lockedByPos.MID, ...c].reduce((s, p) => s + (p.expected_points_next ?? 4), 0),
+      clubs: [...lockedByPos.MID, ...c].map((p) => p.team_id),
+    }));
+
+    const fwdCombs = getCombinations(remByPos.FWD, 3 - lockedByPos.FWD.length).map((c) => ({
+      players: [...lockedByPos.FWD, ...c],
+      cost: [...lockedByPos.FWD, ...c].reduce((s, p) => s + p.now_cost, 0),
+      xp: [...lockedByPos.FWD, ...c].reduce((s, p) => s + (p.expected_points_next ?? 4), 0),
+      clubs: [...lockedByPos.FWD, ...c].map((p) => p.team_id),
+    }));
+
+    let bestSquad: { players: Player[]; cost: number; xp: number } | null = null;
+    let maxXP = -1;
+
+    for (const g of gkpCombs) {
+      for (const d of defCombs) {
+        if (g.cost + d.cost > config.budget - 30) continue;
+        for (const f of fwdCombs) {
+          if (g.cost + d.cost + f.cost > config.budget - 20) continue;
+          for (const m of midCombs) {
+            const totalCost = g.cost + d.cost + f.cost + m.cost;
+            if (totalCost > config.budget + 1e-5) continue;
+
+            // Kiểm tra tối đa 3 cầu thủ mỗi CLB
+            const clubMap: Record<number, number> = {};
+            let validClub = true;
+            for (const cid of [...g.clubs, ...d.clubs, ...f.clubs, ...m.clubs]) {
+              clubMap[cid] = (clubMap[cid] || 0) + 1;
+              if (clubMap[cid] > 3) {
+                validClub = false;
+                break;
+              }
+            }
+            if (!validClub) continue;
+
+            const totalXP = g.xp + d.xp + f.xp + m.xp;
+            if (totalXP > maxXP) {
+              maxXP = totalXP;
+              bestSquad = {
+                players: [...g.players, ...d.players, ...m.players, ...f.players],
+                cost: Math.round(totalCost * 10) / 10,
+                xp: Math.round(totalXP * 10) / 10,
+              };
+            }
+          }
+        }
+      }
+    }
+
+    if (!bestSquad) {
+      setIsOptimizing(false);
+      showToast('Không tìm thấy đội hình thỏa mãn ngân sách này. Vui lòng tăng ngân sách hoặc bỏ bớt cầu thủ khóa!');
+      return null;
+    }
+
+    // Phân bổ 15 cầu thủ thành Starting XI và Bench theo sơ đồ
+    const gkps = bestSquad.players
+      .filter((p) => p.element_type === 'GKP')
+      .sort((a, b) => (b.expected_points_next ?? 0) - (a.expected_points_next ?? 0));
+    const defs = bestSquad.players
+      .filter((p) => p.element_type === 'DEF')
+      .sort((a, b) => (b.expected_points_next ?? 0) - (a.expected_points_next ?? 0));
+    const mids = bestSquad.players
+      .filter((p) => p.element_type === 'MID')
+      .sort((a, b) => (b.expected_points_next ?? 0) - (a.expected_points_next ?? 0));
+    const fwds = bestSquad.players
+      .filter((p) => p.element_type === 'FWD')
+      .sort((a, b) => (b.expected_points_next ?? 0) - (a.expected_points_next ?? 0));
+
+    const startingDefs = defs.slice(0, defCount);
+    const benchDefs = defs.slice(defCount);
+
+    const startingMids = mids.slice(0, midCount);
+    const benchMids = mids.slice(midCount);
+
+    const startingFwds = fwds.slice(0, fwdCount);
+    const benchFwds = fwds.slice(fwdCount);
 
     const startingXIResult: LineupPlayer[] = [
       { ...gkps[0], isStarting: true, isCaptain: false, isViceCaptain: false, slotIndex: 0 },
-      ...defs.slice(0, defCount).map((p, idx) => ({ ...p, isStarting: true, isCaptain: false, isViceCaptain: false, slotIndex: idx })),
-      ...mids.slice(0, midCount).map((p, idx) => ({ ...p, isStarting: true, isCaptain: false, isViceCaptain: false, slotIndex: idx })),
-      ...fwds.slice(0, fwdCount).map((p, idx) => ({ ...p, isStarting: true, isCaptain: false, isViceCaptain: false, slotIndex: idx })),
+      ...startingDefs.map((p, idx) => ({
+        ...p,
+        isStarting: true,
+        isCaptain: false,
+        isViceCaptain: false,
+        slotIndex: idx,
+      })),
+      ...startingMids.map((p, idx) => ({
+        ...p,
+        isStarting: true,
+        isCaptain: false,
+        isViceCaptain: false,
+        slotIndex: idx,
+      })),
+      ...startingFwds.map((p, idx) => ({
+        ...p,
+        isStarting: true,
+        isCaptain: false,
+        isViceCaptain: false,
+        slotIndex: idx,
+      })),
     ];
 
+    const benchSubs = [...benchDefs, ...benchMids, ...benchFwds];
     const benchResult: LineupPlayer[] = [
       { ...gkps[1], isStarting: false, isCaptain: false, isViceCaptain: false, slotIndex: 0 },
-      ...defs.slice(defCount, defCount + 1).map(p => ({ ...p, isStarting: false, isCaptain: false, isViceCaptain: false, slotIndex: 1 })),
-      ...mids.slice(midCount, midCount + 1).map(p => ({ ...p, isStarting: false, isCaptain: false, isViceCaptain: false, slotIndex: 2 })),
-      ...fwds.slice(fwdCount, fwdCount + 1).map(p => ({ ...p, isStarting: false, isCaptain: false, isViceCaptain: false, slotIndex: 3 })),
+      ...benchSubs.slice(0, 3).map((p, idx) => ({
+        ...p,
+        isStarting: false,
+        isCaptain: false,
+        isViceCaptain: false,
+        slotIndex: idx + 1,
+      })),
     ];
 
-    const captainId = fwds[0]?.id || mids[0]?.id;
-    const viceCaptainId = mids[0]?.id || fwds[0]?.id;
-
-    const totalCostResult = [...startingXIResult, ...benchResult].reduce((sum, p) => sum + p.now_cost, 0);
-    const totalXpResult = [...startingXIResult, ...benchResult].reduce((sum, p) => sum + (p.expected_points_next ?? 4), 0);
+    // Chọn Captain (xP cao nhất Starting XI) và Vice-Captain (xP cao nhì)
+    const sortedStarters = [...startingXIResult].sort(
+      (a, b) => (b.expected_points_next ?? 0) - (a.expected_points_next ?? 0)
+    );
+    const captainId = sortedStarters[0]?.id;
+    const viceCaptainId = sortedStarters[1]?.id;
 
     const result: OptimizerResult = {
       status: 'optimal',
-      total_cost: Math.round(totalCostResult * 10) / 10,
-      total_expected_points: Math.round(totalXpResult * 10) / 10,
+      total_cost: bestSquad.cost,
+      total_expected_points: bestSquad.xp,
       starting_xi: startingXIResult,
       bench: benchResult,
       captain_id: captainId,
@@ -185,13 +353,18 @@ export function App() {
 
     setOptimizedResult(result);
     setIsOptimizing(false);
-    showToast(`Thuật toán đã tìm thấy đội hình tối ưu đạt ${result.total_expected_points} xP!`);
+    showToast('Đã tìm thấy đội hình tối ưu hoàn hảo trong ngân sách!');
     setActiveTab('compare');
     return result;
   };
 
   const handleApplyOptimizedLineup = () => {
     if (!optimizedResult) return;
+
+    if (optimizedResult.total_cost > 100.0) {
+      showToast('Không thể áp dụng: Đội hình tối ưu vượt quá ngân sách £100.0m cho phép!');
+      return;
+    }
 
     loadSampleLineup(optimizedResult.starting_xi, optimizedResult.bench);
     setFormation(optimizedResult.formation);
@@ -200,7 +373,6 @@ export function App() {
     showToast('Đã áp dụng đội hình tối ưu của AI vào Sân bóng thành công!');
     setActiveTab('pitch');
   };
-
   const currentFullSquad = [...startingXI, ...bench];
   const optimizedFullSquad = optimizedResult ? [...optimizedResult.starting_xi, ...optimizedResult.bench] : [];
 
