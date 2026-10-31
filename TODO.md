@@ -13,11 +13,11 @@
 
 | Giai đoạn (Phase) | Hoàn thành | Tỷ lệ | Trạng thái |
 | :--- | :---: | :---: | :---: |
-| **Phase 1: Local Full-Stack Product** | **9 / 17** | `53%` | 🟡 Đang thực hiện |
+| **Phase 1: Local Full-Stack Product** | **10 / 17** | `59%` | 🟡 Đang thực hiện |
 | **Phase 2: AWS Services Integration** | **0 / 14** | `0%` | ⚪ Chờ Phase 1 |
 | **Phase 3: Production Deploy & E2E Test** | **0 / 14** | `0%` | ⚪ Chờ Phase 2 |
 | **Phase 4: Live Gamification & League Operations** | **0 / 14** | `0%` | ⚪ Chờ Phase 3 |
-| **TỔNG CỘNG TOÀN DỰ ÁN** | **9 / 59** | **15%** | 🟡 Đang thực hiện |
+| **TỔNG CỘNG TOÀN DỰ ÁN** | **10 / 59** | **17%** | 🟡 Đang thực hiện |
 
 ---
 
@@ -74,7 +74,7 @@
 
 ---
 
-### ⚙️ Nhất (Backend Core & FPL Sync Lead) - [1/4]
+### ⚙️ Nhất (Backend Core & FPL Sync Lead) - [2/4]
 
 - [x] **`P1-NH01`** *(Level 2)*: Khởi tạo base FastAPI, CORS, SQLAlchemy Async
   - *Mô tả:* Dựng khung ứng dụng FastAPI, cấu hình CORS cho frontend, thiết lập file config biến môi trường Pydantic và session async kết nối PostgreSQL.
@@ -83,7 +83,7 @@
   - *File tạo mới (4 files):* `backend/requirements.txt`, `backend/app/main.py`, `backend/app/core/config.py`, `backend/app/core/database.py`.
   - *Branch:* `feature/P1-NH01-init-fastapi`
 
-- [ ] **`P1-NH02`** *(Level 3)*: Viết service `fpl_sync.py` kéo & Upsert dữ liệu FPL
+- [x] **`P1-NH02`** *(Level 3)*: Viết service `fpl_sync.py` kéo & Upsert dữ liệu FPL
   - *Mô tả:* Worker kéo JSON từ FPL API (`bootstrap-static`), chuẩn hóa giá chia 10 (£15.2m), map vị trí chữ (GKP/DEF/MID/FWD) và upsert dữ liệu 20 CLB, ~650 cầu thủ vào PostgreSQL.
   - *Phụ thuộc:* `P1-NH01`, `P1-V01` (Cần models DB của Vũ).
   - *Thư mục:* `backend/app/services/`
