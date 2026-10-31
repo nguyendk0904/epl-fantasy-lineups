@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { createRoot } from 'react-dom/client';
 import { 
   Trophy, 
@@ -8,11 +8,14 @@ import {
   Wallet, 
   ShieldCheck, 
   Layers,
-  ArrowRight
+  ArrowRight,
+  RotateCcw,
+  AlertTriangle
 } from 'lucide-react';
 import { VirtualPitch } from './components/pitch/VirtualPitch';
 import { PlayerTable } from './components/player-list/PlayerTable';
-import { LineupPlayer, PositionType, FormationType, Player } from './types';
+import { PositionType, Player, LineupPlayer } from './types';
+import { useLineupStore, TOTAL_BUDGET } from './stores/lineupStore';
 
 export type TabType = 'pitch' | 'players' | 'optimizer' | 'compare';
 
@@ -67,125 +70,52 @@ export const SAMPLE_MARKET_PLAYERS: Player[] = [
 
 export function App() {
   const [activeTab, setActiveTab] = useState<TabType>('pitch');
-  const [startingXI, setStartingXI] = useState<LineupPlayer[]>(INITIAL_STARTING_XI);
-  const [bench, setBench] = useState<LineupPlayer[]>(INITIAL_BENCH);
-  const [formation, setFormation] = useState<FormationType>('4-3-3');
-  const [notification, setNotification] = useState<string | null>(null);
-  const [targetSlot, setTargetSlot] = useState<{
-    position: PositionType;
-    slotIndex?: number;
-    isBench?: boolean;
-  } | null>(null);
 
-  // Parse current formation counts
-  const [defMax, midMax, fwdMax] = formation.split('-').map(Number);
+  // Zustand Store Hooks
+  const {
+    startingXI,
+    bench,
+    formation,
+    targetSlot,
+    notification,
+    setFormation,
+    setCaptain,
+    setViceCaptain,
+    setTargetSlot,
+    removePlayer,
+    addPlayerToLineup,
+    loadSampleLineup,
+    resetLineup,
+    clearToast,
+    getTotalCost,
+    getRemainingBudget,
+    getTotalPlayers,
+    getSelectedPlayerIds,
+    validateLineup,
+  } = useLineupStore();
 
-  // Calculate live squad stats
-  const totalCost = [...startingXI, ...bench].reduce((sum, p) => sum + p.now_cost, 0);
-  const totalBudget = 100.0;
-  const remainingBudget = totalBudget - totalCost;
-  const totalPlayers = startingXI.length + bench.length;
-  const selectedPlayerIds = [...startingXI, ...bench].map(p => p.id);
-
-  const showToast = (msg: string) => {
-    setNotification(msg);
-    setTimeout(() => setNotification(null), 3000);
-  };
-
-  const handleSelectCaptain = (id: number) => {
-    setStartingXI(prev => prev.map(p => ({
-      ...p,
-      isCaptain: p.id === id,
-      isViceCaptain: p.id === id ? false : p.isViceCaptain,
-    })));
-  };
-
-  const handleSelectViceCaptain = (id: number) => {
-    setStartingXI(prev => prev.map(p => ({
-      ...p,
-      isViceCaptain: p.id === id,
-      isCaptain: p.id === id ? false : p.isCaptain,
-    })));
-  };
-
-  const handleFormationChange = (newForm: FormationType) => {
-    setFormation(newForm);
-    const [newDefCount, newMidCount, newFwdCount] = newForm.split('-').map(Number);
-
-    // GKP: 1 chính (slot 0), 1 phụ (slot 0)
-    const gkp = startingXI.find(p => p.element_type === 'GKP') || null;
-    const benchGkp = bench.find(p => p.element_type === 'GKP') || null;
-
-    // Gom toàn bộ DEF, MID, FWD hiện có trong cả startingXI và bench
-    const allDefs = [
-      ...startingXI.filter(p => p.element_type === 'DEF'),
-      ...bench.filter(p => p.element_type === 'DEF'),
-    ];
-    const allMids = [
-      ...startingXI.filter(p => p.element_type === 'MID'),
-      ...bench.filter(p => p.element_type === 'MID'),
-    ];
-    const allFwds = [
-      ...startingXI.filter(p => p.element_type === 'FWD'),
-      ...bench.filter(p => p.element_type === 'FWD'),
-    ];
-
-    // 1. Phân bổ Hậu vệ (DEF)
-    const newStartingDefs = allDefs.slice(0, newDefCount).map((p, idx) => ({
-      ...p,
-      isStarting: true,
-      slotIndex: idx,
-    }));
-    const excessDefs = allDefs.slice(newDefCount);
-
-    // 2. Phân bổ Tiền vệ (MID)
-    const newStartingMids = allMids.slice(0, newMidCount).map((p, idx) => ({
-      ...p,
-      isStarting: true,
-      slotIndex: idx,
-    }));
-    const excessMids = allMids.slice(newMidCount);
-
-    // 3. Phân bổ Tiền đạo (FWD)
-    const newStartingFwds = allFwds.slice(0, newFwdCount).map((p, idx) => ({
-      ...p,
-      isStarting: true,
-      slotIndex: idx,
-    }));
-    const excessFwds = allFwds.slice(newFwdCount);
-
-    // Ghép lại Starting XI (đá chính)
-    const newStartingXI: LineupPlayer[] = [
-      ...(gkp ? [{ ...gkp, isStarting: true, slotIndex: 0 }] : []),
-      ...newStartingDefs,
-      ...newStartingMids,
-      ...newStartingFwds,
-    ];
-
-    // Ghép lại Bench (dự bị) - tối đa 3 cầu thủ outfield, slotIndex từ 1..3
-    const excessOutfield = [...excessDefs, ...excessMids, ...excessFwds];
-    const newBench: LineupPlayer[] = [
-      ...(benchGkp ? [{ ...benchGkp, isStarting: false, slotIndex: 0 }] : []),
-      ...excessOutfield.slice(0, 3).map((p, idx) => ({
-        ...p,
-        isStarting: false,
-        slotIndex: idx + 1,
-      })),
-    ];
-
-    setStartingXI(newStartingXI);
-    setBench(newBench);
-    showToast(`Đã chuyển sang sơ đồ ${newForm}!`);
-  };
-
-  const handleRemovePlayer = (id: number) => {
-    const removed = [...startingXI, ...bench].find(p => p.id === id);
-    setStartingXI(prev => prev.filter(p => p.id !== id));
-    setBench(prev => prev.filter(p => p.id !== id));
-    if (removed) {
-      showToast(`Đã bỏ ${removed.web_name} khỏi đội hình`);
+  // Khởi tạo sample lineup lần đầu nếu store rỗng
+  useEffect(() => {
+    if (startingXI.length === 0 && bench.length === 0) {
+      loadSampleLineup(INITIAL_STARTING_XI, INITIAL_BENCH);
     }
-  };
+  }, []);
+
+  // Tự tắt Toast sau 3 giây
+  useEffect(() => {
+    if (notification) {
+      const timer = setTimeout(() => {
+        clearToast();
+      }, 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [notification, clearToast]);
+
+  const totalCost = getTotalCost();
+  const remainingBudget = getRemainingBudget();
+  const totalPlayers = getTotalPlayers();
+  const selectedPlayerIds = getSelectedPlayerIds();
+  const validation = validateLineup();
 
   const handleAddPlayerClick = (position: PositionType, slotIndex?: number, isBench?: boolean) => {
     setTargetSlot({ position, slotIndex, isBench: !!isBench });
@@ -193,131 +123,10 @@ export function App() {
   };
 
   const handleSelectPlayerFromMarket = (player: Player) => {
-    // 1. Kiểm tra cầu thủ đã có trong đội hình chưa
-    if (selectedPlayerIds.includes(player.id)) {
-      showToast(`${player.web_name} đã có trong đội hình!`);
-      return;
-    }
-
-    // 2. Kiểm tra xem ô targetSlot này đã có cầu thủ nào chiếm chưa
-    const isTargeting = !!targetSlot;
-    const isReplacing = isTargeting && (
-      !targetSlot.isBench
-        ? startingXI.some(p => p.element_type === targetSlot.position && p.slotIndex === targetSlot.slotIndex)
-        : bench.some(p => p.slotIndex === targetSlot.slotIndex)
-    );
-
-    // Nếu không phải đang thay thế 1 cầu thủ có sẵn, và tổng số cầu thủ đã đạt tối đa 15
-    if (!isReplacing && totalPlayers >= 15) {
-      showToast(`Đội hình đã đủ tối đa 15 cầu thủ! Vui lòng xóa bớt trước khi thêm.`);
-      return;
-    }
-
-    // 3. Kiểm tra ngân sách
-    if (remainingBudget < player.now_cost) {
-      showToast(`Không đủ ngân sách! Cần £${player.now_cost.toFixed(1)}m, còn lại £${remainingBudget.toFixed(1)}m.`);
-      return;
-    }
-
-    // 4. Kiểm tra giới hạn 3 cầu thủ / CLB
-    const clubCount = [...startingXI, ...bench].filter(p => p.team_id === player.team_id).length;
-    if (clubCount >= 3) {
-      showToast(`Đã đạt tối đa 3 cầu thủ từ CLB này!`);
-      return;
-    }
-
-    const slotIdx = targetSlot ? (targetSlot.slotIndex ?? 0) : 0;
-    const newLineupPlayer: LineupPlayer = {
-      ...player,
-      isStarting: targetSlot ? !targetSlot.isBench : true,
-      isCaptain: false,
-      isViceCaptain: false,
-      slotIndex: slotIdx,
-    };
-
-    // TRƯỜNG HỢP A: Người dùng bấm chọn trực tiếp vào một ô vị trí cụ thể trên sân hoặc bench
-    if (targetSlot) {
-      if (player.element_type !== targetSlot.position) {
-        showToast(`Cầu thủ này là ${player.element_type}, không thể xếp vào vị trí ${targetSlot.position}!`);
-        return;
-      }
-
-      if (!targetSlot.isBench) {
-        // Đặt chính xác vào ô slotIndex của hàng vị trí này
-        const updatedStarting = startingXI.filter(
-          p => !(p.element_type === targetSlot.position && p.slotIndex === slotIdx)
-        );
-        setStartingXI([...updatedStarting, newLineupPlayer]);
-      } else {
-        // Ghế dự bị: đặt chính xác vào ô slotIndex trên bench
-        const updatedBench = bench.filter(p => p.slotIndex !== slotIdx);
-        setBench([...updatedBench, newLineupPlayer]);
-      }
-
-      setTargetSlot(null);
-      setActiveTab('pitch'); // Tự động quay lại xem sân bóng
-      showToast(`Đã xếp ${player.web_name} vào đúng vị trí ${targetSlot.position} ô số ${slotIdx + 1} ${targetSlot.isBench ? 'dự bị' : 'đá chính'}!`);
-      return;
-    }
-
-    // TRƯỜNG HỢP B: Người dùng chọn tự do từ bảng cầu thủ mà chưa bấm slot trên sân
-    if (player.element_type === 'GKP') {
-      const hasStartingGkp = startingXI.some(p => p.element_type === 'GKP');
-      if (!hasStartingGkp) {
-        setStartingXI(prev => [...prev.filter(p => p.element_type !== 'GKP'), { ...newLineupPlayer, slotIndex: 0, isStarting: true }]);
-        setActiveTab('pitch');
-        showToast(`Đã thêm thủ môn ${player.web_name} vào đội hình chính!`);
-      } else {
-        const hasBenchGkp = bench.some(p => p.element_type === 'GKP');
-        if (!hasBenchGkp) {
-          setBench(prev => [...prev.filter(p => p.element_type !== 'GKP'), { ...newLineupPlayer, slotIndex: 0, isStarting: false }]);
-          setActiveTab('pitch');
-          showToast(`Đã thêm thủ môn dự bị ${player.web_name}!`);
-        } else {
-          showToast(`Đội hình đã có đủ 2 Thủ môn (1 chính, 1 dự bị)!`);
-        }
-      }
-      return;
-    }
-
-    // Tìm slotIndex còn trống đầu tiên cho DEF, MID hoặc FWD
-    const posMax = player.element_type === 'DEF' ? defMax : player.element_type === 'MID' ? midMax : fwdMax;
-    const occupiedStartingSlots = new Set(
-      startingXI.filter(p => p.element_type === player.element_type).map(p => p.slotIndex)
-    );
-    let freeStartingSlot = -1;
-    for (let i = 0; i < posMax; i++) {
-      if (!occupiedStartingSlots.has(i)) {
-        freeStartingSlot = i;
-        break;
-      }
-    }
-
-    if (freeStartingSlot !== -1) {
-      setStartingXI(prev => [...prev, { ...newLineupPlayer, slotIndex: freeStartingSlot, isStarting: true }]);
+    const success = addPlayerToLineup(player);
+    if (success) {
       setActiveTab('pitch');
-      showToast(`Đã thêm ${player.web_name} vào vị trí ${player.element_type} ô ${freeStartingSlot + 1} chính thức!`);
-      return;
     }
-
-    // Nếu hàng chính thức đã đủ, tìm slot trống trên ghế dự bị (slot 1..3)
-    const occupiedBenchSlots = new Set(bench.map(p => p.slotIndex));
-    let freeBenchSlot = -1;
-    for (let s = 1; s <= 3; s++) {
-      if (!occupiedBenchSlots.has(s)) {
-        freeBenchSlot = s;
-        break;
-      }
-    }
-
-    if (freeBenchSlot !== -1) {
-      setBench(prev => [...prev, { ...newLineupPlayer, slotIndex: freeBenchSlot, isStarting: false }]);
-      setActiveTab('pitch');
-      showToast(`Hàng ${player.element_type} chính đã đủ. Đã xếp ${player.web_name} vào ghế dự bị Sub ${freeBenchSlot}!`);
-      return;
-    }
-
-    showToast(`Hàng ${player.element_type} và ghế dự bị đã đủ chỗ!`);
   };
 
   return (
@@ -353,7 +162,7 @@ export function App() {
                 £{remainingBudget.toFixed(1)}m
               </span>
               <span className="text-slate-600">/</span>
-              <span className="text-slate-400">£{totalBudget.toFixed(1)}m</span>
+              <span className="text-slate-400">£{TOTAL_BUDGET.toFixed(1)}m</span>
             </div>
 
             <div className="flex items-center gap-2 bg-slate-900/80 border border-slate-800 px-3 py-1.5 rounded-lg shadow-inner">
@@ -363,6 +172,15 @@ export function App() {
                 {totalPlayers}/15
               </span>
             </div>
+
+            {/* Reset button */}
+            <button
+              onClick={() => resetLineup()}
+              className="p-1.5 rounded-lg bg-slate-900/80 hover:bg-rose-950/50 border border-slate-800 hover:border-rose-500/50 text-slate-400 hover:text-rose-400 transition-colors"
+              title="Đặt lại đội hình"
+            >
+              <RotateCcw className="w-4 h-4" />
+            </button>
           </div>
         </div>
 
@@ -420,6 +238,21 @@ export function App() {
 
       {/* Main Content Area */}
       <main className="flex-1 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 w-full">
+        {/* Warning Banner if Lineup has validation errors */}
+        {!validation.isValid && totalPlayers > 0 && (
+          <div className="mb-4 bg-amber-500/10 border border-amber-500/30 rounded-xl p-3 text-xs sm:text-sm text-amber-300 flex items-start gap-2.5 shadow-lg">
+            <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5 text-amber-400" />
+            <div>
+              <p className="font-bold">Đội hình chưa hoàn tất yêu cầu của FPL:</p>
+              <ul className="list-disc list-inside mt-1 space-y-0.5 text-slate-300">
+                {validation.errors.map((err, i) => (
+                  <li key={i}>{err}</li>
+                ))}
+              </ul>
+            </div>
+          </div>
+        )}
+
         {activeTab === 'pitch' && (
           <section className="space-y-4">
             <div className="bg-gradient-to-r from-purple-950/60 to-slate-900/60 border border-purple-800/30 rounded-2xl p-4 sm:p-6 backdrop-blur shadow-xl">
@@ -430,16 +263,24 @@ export function App() {
                     Đội hình thi đấu chính thức (Gameweek)
                   </h2>
                   <p className="text-slate-400 text-sm mt-1">
-                    Chọn đủ 15 cầu thủ (11 đá chính, 4 dự bị) trong ngân sách £100.0m và tối đa 3 người/CLB.
+                    Chọn đủ 15 cầu thủ (11 đá chính, 4 dự bị) trong ngân sách £100.0m và tối đa 3 người/CLB. Tự động lưu LocalStorage.
                   </p>
                 </div>
-                <button
-                  onClick={() => setActiveTab('players')}
-                  className="px-4 py-2 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-400 text-slate-950 font-bold text-sm flex items-center gap-2 shadow-lg shadow-emerald-500/20 hover:brightness-110 transition-all"
-                >
-                  <span>Chợ cầu thủ</span>
-                  <ArrowRight className="w-4 h-4" />
-                </button>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => loadSampleLineup(INITIAL_STARTING_XI, INITIAL_BENCH)}
+                    className="px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold border border-slate-700 transition-colors"
+                  >
+                    Tải mẫu FPL
+                  </button>
+                  <button
+                    onClick={() => setActiveTab('players')}
+                    className="px-4 py-2 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-400 text-slate-950 font-bold text-sm flex items-center gap-2 shadow-lg shadow-emerald-500/20 hover:brightness-110 transition-all"
+                  >
+                    <span>Chợ cầu thủ</span>
+                    <ArrowRight className="w-4 h-4" />
+                  </button>
+                </div>
               </div>
 
               {/* Integrated VirtualPitch Component */}
@@ -447,10 +288,10 @@ export function App() {
                 startingXI={startingXI}
                 bench={bench}
                 formation={formation}
-                onFormationChange={handleFormationChange}
-                onSelectCaptain={handleSelectCaptain}
-                onSelectViceCaptain={handleSelectViceCaptain}
-                onRemovePlayer={handleRemovePlayer}
+                onFormationChange={setFormation}
+                onSelectCaptain={setCaptain}
+                onSelectViceCaptain={setViceCaptain}
+                onRemovePlayer={removePlayer}
                 onAddPlayerClick={handleAddPlayerClick}
               />
             </div>

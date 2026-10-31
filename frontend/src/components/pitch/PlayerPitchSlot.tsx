@@ -78,7 +78,7 @@ export function PlayerPitchSlot({
   const kitUrl = getPlayerKitUrl(player.team_id, player.element_type, player.team_code);
 
   return (
-    <div className="relative group flex flex-col items-center w-20 sm:w-24 select-none">
+    <div className="relative group flex flex-col items-center w-20 sm:w-24 select-none pb-7">
       {/* Nút Xóa (X) Glassmorphism */}
       {onRemovePlayer && (
         <button
@@ -150,15 +150,15 @@ export function PlayerPitchSlot({
         </div>
       </div>
 
-      {/* Menu thao tác nhanh chọn C / V khi di chuột */}
+      {/* Menu thao tác nhanh chọn C / V khi di chuột - Vùng hover liền mạch & hiển thị mượt mà */}
       {!isBench && (
-        <div className="absolute -bottom-7 left-1/2 -translate-x-1/2 hidden group-hover:flex items-center gap-1 bg-slate-900/90 backdrop-blur-md border border-white/20 p-0.5 rounded-lg shadow-2xl z-40">
+        <div className="absolute bottom-0 left-1/2 -translate-x-1/2 opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto transition-all duration-200 flex items-center gap-1.5 bg-slate-900/95 backdrop-blur-md border border-emerald-500/40 px-2 py-1 rounded-xl shadow-[0_10px_25px_rgba(0,0,0,0.8)] z-40">
           <button
             onClick={() => onSelectCaptain && onSelectCaptain(player.id)}
-            className={`px-1.5 py-0.5 rounded text-[10px] font-black transition-colors ${
+            className={`px-2 py-0.5 rounded-md text-[11px] font-black transition-all ${
               player.isCaptain 
-                ? 'bg-amber-400 text-slate-950' 
-                : 'text-slate-300 hover:bg-slate-800 hover:text-amber-400'
+                ? 'bg-amber-400 text-slate-950 ring-2 ring-amber-300/50 shadow-sm' 
+                : 'bg-slate-800 text-slate-300 hover:bg-amber-400 hover:text-slate-950'
             }`}
             title="Chọn làm Captain (x2 điểm)"
           >
@@ -166,10 +166,10 @@ export function PlayerPitchSlot({
           </button>
           <button
             onClick={() => onSelectViceCaptain && onSelectViceCaptain(player.id)}
-            className={`px-1.5 py-0.5 rounded text-[10px] font-black transition-colors ${
+            className={`px-2 py-0.5 rounded-md text-[11px] font-black transition-all ${
               player.isViceCaptain 
-                ? 'bg-sky-400 text-slate-950' 
-                : 'text-slate-300 hover:bg-slate-800 hover:text-sky-400'
+                ? 'bg-sky-400 text-slate-950 ring-2 ring-sky-300/50 shadow-sm' 
+                : 'bg-slate-800 text-slate-300 hover:bg-sky-400 hover:text-slate-950'
             }`}
             title="Chọn làm Vice-Captain"
           >
