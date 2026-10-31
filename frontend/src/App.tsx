@@ -10,34 +10,37 @@ import {
   Layers,
   ArrowRight,
   RotateCcw,
-  AlertTriangle
+  AlertTriangle,
+  Zap
 } from 'lucide-react';
 import { VirtualPitch } from './components/pitch/VirtualPitch';
 import { PlayerTable } from './components/player-list/PlayerTable';
-import { PositionType, Player, LineupPlayer } from './types';
+import { OptimizerControl, OptimizerConfig, OptimizerResult } from './components/optimizer/OptimizerControl';
+import { LineupComparisonView } from './components/comparison/LineupComparisonView';
+import { PositionType, Player, LineupPlayer, FormationType } from './types';
 import { useLineupStore, TOTAL_BUDGET } from './stores/lineupStore';
 
 export type TabType = 'pitch' | 'players' | 'optimizer' | 'compare';
 
 const INITIAL_STARTING_XI: LineupPlayer[] = [
-  { id: 1, web_name: 'Flekken', team_id: 3, element_type: 'GKP', now_cost: 4.5, total_points: 88, isStarting: true, isCaptain: false, isViceCaptain: false, slotIndex: 0 },
-  { id: 2, web_name: 'Saliba', team_id: 1, element_type: 'DEF', now_cost: 6.0, total_points: 85, isStarting: true, isCaptain: false, isViceCaptain: false, slotIndex: 0 },
-  { id: 3, web_name: 'Gabriel', team_id: 1, element_type: 'DEF', now_cost: 6.0, total_points: 82, isStarting: true, isCaptain: false, isViceCaptain: false, slotIndex: 1 },
-  { id: 4, web_name: 'Konsa', team_id: 2, element_type: 'DEF', now_cost: 4.5, total_points: 55, isStarting: true, isCaptain: false, isViceCaptain: false, slotIndex: 2 },
-  { id: 5, web_name: 'Robinson', team_id: 9, element_type: 'DEF', now_cost: 4.5, total_points: 60, isStarting: true, isCaptain: false, isViceCaptain: false, slotIndex: 3 },
-  { id: 6, web_name: 'Saka', team_id: 1, element_type: 'MID', now_cost: 10.0, total_points: 120, isStarting: true, isCaptain: false, isViceCaptain: true, slotIndex: 0 },
-  { id: 7, web_name: 'Palmer', team_id: 5, element_type: 'MID', now_cost: 10.5, total_points: 135, isStarting: true, isCaptain: false, isViceCaptain: false, slotIndex: 1 },
-  { id: 8, web_name: 'Rogers', team_id: 2, element_type: 'MID', now_cost: 5.0, total_points: 70, isStarting: true, isCaptain: false, isViceCaptain: false, slotIndex: 2 },
-  { id: 9, web_name: 'Haaland', team_id: 10, element_type: 'FWD', now_cost: 15.0, total_points: 160, isStarting: true, isCaptain: true, isViceCaptain: false, slotIndex: 0 },
-  { id: 10, web_name: 'Wood', team_id: 13, element_type: 'FWD', now_cost: 6.0, total_points: 95, isStarting: true, isCaptain: false, isViceCaptain: false, slotIndex: 1 },
-  { id: 11, web_name: 'Delap', team_id: 10, element_type: 'FWD', now_cost: 5.5, total_points: 80, isStarting: true, isCaptain: false, isViceCaptain: false, slotIndex: 2 },
+  { id: 1, web_name: 'Flekken', team_id: 3, element_type: 'GKP', now_cost: 4.5, total_points: 88, expected_points_next: 3.5, isStarting: true, isCaptain: false, isViceCaptain: false, slotIndex: 0 },
+  { id: 2, web_name: 'Saliba', team_id: 1, element_type: 'DEF', now_cost: 6.0, total_points: 85, expected_points_next: 4.5, isStarting: true, isCaptain: false, isViceCaptain: false, slotIndex: 0 },
+  { id: 3, web_name: 'Gabriel', team_id: 1, element_type: 'DEF', now_cost: 6.0, total_points: 82, expected_points_next: 4.2, isStarting: true, isCaptain: false, isViceCaptain: false, slotIndex: 1 },
+  { id: 4, web_name: 'Konsa', team_id: 2, element_type: 'DEF', now_cost: 4.5, total_points: 55, expected_points_next: 3.0, isStarting: true, isCaptain: false, isViceCaptain: false, slotIndex: 2 },
+  { id: 5, web_name: 'Robinson', team_id: 9, element_type: 'DEF', now_cost: 4.5, total_points: 60, expected_points_next: 3.2, isStarting: true, isCaptain: false, isViceCaptain: false, slotIndex: 3 },
+  { id: 6, web_name: 'Saka', team_id: 1, element_type: 'MID', now_cost: 10.0, total_points: 120, expected_points_next: 6.5, isStarting: true, isCaptain: false, isViceCaptain: true, slotIndex: 0 },
+  { id: 7, web_name: 'Palmer', team_id: 5, element_type: 'MID', now_cost: 10.5, total_points: 135, expected_points_next: 7.2, isStarting: true, isCaptain: false, isViceCaptain: false, slotIndex: 1 },
+  { id: 8, web_name: 'Rogers', team_id: 2, element_type: 'MID', now_cost: 5.0, total_points: 70, expected_points_next: 4.5, isStarting: true, isCaptain: false, isViceCaptain: false, slotIndex: 2 },
+  { id: 9, web_name: 'Haaland', team_id: 10, element_type: 'FWD', now_cost: 15.0, total_points: 160, expected_points_next: 8.8, isStarting: true, isCaptain: true, isViceCaptain: false, slotIndex: 0 },
+  { id: 10, web_name: 'Wood', team_id: 13, element_type: 'FWD', now_cost: 6.0, total_points: 95, expected_points_next: 5.5, isStarting: true, isCaptain: false, isViceCaptain: false, slotIndex: 1 },
+  { id: 11, web_name: 'Delap', team_id: 10, element_type: 'FWD', now_cost: 5.5, total_points: 80, expected_points_next: 4.0, isStarting: true, isCaptain: false, isViceCaptain: false, slotIndex: 2 },
 ];
 
 const INITIAL_BENCH: LineupPlayer[] = [
-  { id: 12, web_name: 'Turner', team_id: 13, element_type: 'GKP', now_cost: 4.0, total_points: 20, isStarting: false, isCaptain: false, isViceCaptain: false, slotIndex: 0 },
-  { id: 13, web_name: 'Dunk', team_id: 4, element_type: 'DEF', now_cost: 4.5, total_points: 50, isStarting: false, isCaptain: false, isViceCaptain: false, slotIndex: 1 },
-  { id: 14, web_name: 'Smith Rowe', team_id: 9, element_type: 'MID', now_cost: 5.5, total_points: 65, isStarting: false, isCaptain: false, isViceCaptain: false, slotIndex: 2 },
-  { id: 15, web_name: 'Semenyo', team_id: 3, element_type: 'MID', now_cost: 5.5, total_points: 75, isStarting: false, isCaptain: false, isViceCaptain: false, slotIndex: 3 },
+  { id: 12, web_name: 'Turner', team_id: 13, element_type: 'GKP', now_cost: 4.0, total_points: 20, expected_points_next: 1.0, isStarting: false, isCaptain: false, isViceCaptain: false, slotIndex: 0 },
+  { id: 13, web_name: 'Dunk', team_id: 4, element_type: 'DEF', now_cost: 4.5, total_points: 50, expected_points_next: 2.8, isStarting: false, isCaptain: false, isViceCaptain: false, slotIndex: 1 },
+  { id: 14, web_name: 'Smith Rowe', team_id: 9, element_type: 'MID', now_cost: 5.5, total_points: 65, expected_points_next: 3.8, isStarting: false, isCaptain: false, isViceCaptain: false, slotIndex: 2 },
+  { id: 15, web_name: 'Semenyo', team_id: 3, element_type: 'MID', now_cost: 5.5, total_points: 75, expected_points_next: 4.5, isStarting: false, isCaptain: false, isViceCaptain: false, slotIndex: 3 },
 ];
 
 export const SAMPLE_MARKET_PLAYERS: Player[] = [
@@ -70,6 +73,8 @@ export const SAMPLE_MARKET_PLAYERS: Player[] = [
 
 export function App() {
   const [activeTab, setActiveTab] = useState<TabType>('pitch');
+  const [isOptimizing, setIsOptimizing] = useState<boolean>(false);
+  const [optimizedResult, setOptimizedResult] = useState<OptimizerResult | null>(null);
 
   // Zustand Store Hooks
   const {
@@ -86,6 +91,7 @@ export function App() {
     addPlayerToLineup,
     loadSampleLineup,
     resetLineup,
+    showToast,
     clearToast,
     getTotalCost,
     getRemainingBudget,
@@ -128,6 +134,247 @@ export function App() {
       setActiveTab('pitch');
     }
   };
+
+  // Thuật toán duyệt tối ưu có ràng buộc (Constrained Knapsack Optimizer)
+  const handleRunOptimizer = async (config: OptimizerConfig): Promise<OptimizerResult | null> => {
+    setIsOptimizing(true);
+    await new Promise((resolve) => setTimeout(resolve, 600)); // Giả lập độ trễ tính toán
+
+    const selectedForm: FormationType = config.targetFormation === 'auto' ? '3-4-3' : config.targetFormation;
+    const [defCount, midCount, fwdCount] = selectedForm.split('-').map(Number);
+
+    // 1. Lọc danh sách ứng viên (bỏ excluded)
+    const pool = SAMPLE_MARKET_PLAYERS.filter((p) => !config.excludedPlayerIds.includes(p.id));
+    const locked = pool.filter((p) => config.lockedPlayerIds.includes(p.id));
+    const lockedCost = locked.reduce((s, p) => s + p.now_cost, 0);
+
+    if (lockedCost > config.budget) {
+      setIsOptimizing(false);
+      showToast('Không khả thi: Cầu thủ đã khóa vượt quá ngân sách đã chọn!');
+      return null;
+    }
+
+    const lockedClubs: Record<number, number> = {};
+    for (const p of locked) {
+      lockedClubs[p.team_id] = (lockedClubs[p.team_id] || 0) + 1;
+      if (lockedClubs[p.team_id] > 3) {
+        setIsOptimizing(false);
+        showToast('Không khả thi: Các cầu thủ đã khóa có hơn 3 người cùng thuộc 1 CLB!');
+        return null;
+      }
+    }
+
+    const lockedByPos = {
+      GKP: locked.filter((p) => p.element_type === 'GKP'),
+      DEF: locked.filter((p) => p.element_type === 'DEF'),
+      MID: locked.filter((p) => p.element_type === 'MID'),
+      FWD: locked.filter((p) => p.element_type === 'FWD'),
+    };
+
+    if (
+      lockedByPos.GKP.length > 2 ||
+      lockedByPos.DEF.length > 5 ||
+      lockedByPos.MID.length > 5 ||
+      lockedByPos.FWD.length > 3
+    ) {
+      setIsOptimizing(false);
+      showToast('Không khả thi: Số cầu thủ khóa vượt quá hạn mức vị trí (2 GKP, 5 DEF, 5 MID, 3 FWD)!');
+      return null;
+    }
+
+    const remCandidates = pool.filter((p) => !config.lockedPlayerIds.includes(p.id));
+    const remByPos = {
+      GKP: remCandidates.filter((p) => p.element_type === 'GKP'),
+      DEF: remCandidates.filter((p) => p.element_type === 'DEF'),
+      MID: remCandidates.filter((p) => p.element_type === 'MID'),
+      FWD: remCandidates.filter((p) => p.element_type === 'FWD'),
+    };
+
+    const getCombinations = <T,>(arr: T[], k: number): T[][] => {
+      if (k === 0) return [[]];
+      if (arr.length < k) return [];
+      const head = arr[0];
+      const tail = arr.slice(1);
+      return [
+        ...getCombinations(tail, k - 1).map((c) => [head, ...c]),
+        ...getCombinations(tail, k),
+      ];
+    };
+
+    const gkpCombs = getCombinations(remByPos.GKP, 2 - lockedByPos.GKP.length).map((c) => ({
+      players: [...lockedByPos.GKP, ...c],
+      cost: [...lockedByPos.GKP, ...c].reduce((s, p) => s + p.now_cost, 0),
+      xp: [...lockedByPos.GKP, ...c].reduce((s, p) => s + (p.expected_points_next ?? 4), 0),
+      clubs: [...lockedByPos.GKP, ...c].map((p) => p.team_id),
+    }));
+
+    const defCombs = getCombinations(remByPos.DEF, 5 - lockedByPos.DEF.length).map((c) => ({
+      players: [...lockedByPos.DEF, ...c],
+      cost: [...lockedByPos.DEF, ...c].reduce((s, p) => s + p.now_cost, 0),
+      xp: [...lockedByPos.DEF, ...c].reduce((s, p) => s + (p.expected_points_next ?? 4), 0),
+      clubs: [...lockedByPos.DEF, ...c].map((p) => p.team_id),
+    }));
+
+    const midCombs = getCombinations(remByPos.MID, 5 - lockedByPos.MID.length).map((c) => ({
+      players: [...lockedByPos.MID, ...c],
+      cost: [...lockedByPos.MID, ...c].reduce((s, p) => s + p.now_cost, 0),
+      xp: [...lockedByPos.MID, ...c].reduce((s, p) => s + (p.expected_points_next ?? 4), 0),
+      clubs: [...lockedByPos.MID, ...c].map((p) => p.team_id),
+    }));
+
+    const fwdCombs = getCombinations(remByPos.FWD, 3 - lockedByPos.FWD.length).map((c) => ({
+      players: [...lockedByPos.FWD, ...c],
+      cost: [...lockedByPos.FWD, ...c].reduce((s, p) => s + p.now_cost, 0),
+      xp: [...lockedByPos.FWD, ...c].reduce((s, p) => s + (p.expected_points_next ?? 4), 0),
+      clubs: [...lockedByPos.FWD, ...c].map((p) => p.team_id),
+    }));
+
+    let bestSquad: { players: Player[]; cost: number; xp: number } | null = null;
+    let maxXP = -1;
+
+    for (const g of gkpCombs) {
+      for (const d of defCombs) {
+        if (g.cost + d.cost > config.budget - 30) continue;
+        for (const f of fwdCombs) {
+          if (g.cost + d.cost + f.cost > config.budget - 20) continue;
+          for (const m of midCombs) {
+            const totalCost = g.cost + d.cost + f.cost + m.cost;
+            if (totalCost > config.budget + 1e-5) continue;
+
+            // Kiểm tra tối đa 3 cầu thủ mỗi CLB
+            const clubMap: Record<number, number> = {};
+            let validClub = true;
+            for (const cid of [...g.clubs, ...d.clubs, ...f.clubs, ...m.clubs]) {
+              clubMap[cid] = (clubMap[cid] || 0) + 1;
+              if (clubMap[cid] > 3) {
+                validClub = false;
+                break;
+              }
+            }
+            if (!validClub) continue;
+
+            const totalXP = g.xp + d.xp + f.xp + m.xp;
+            if (totalXP > maxXP) {
+              maxXP = totalXP;
+              bestSquad = {
+                players: [...g.players, ...d.players, ...m.players, ...f.players],
+                cost: Math.round(totalCost * 10) / 10,
+                xp: Math.round(totalXP * 10) / 10,
+              };
+            }
+          }
+        }
+      }
+    }
+
+    if (!bestSquad) {
+      setIsOptimizing(false);
+      showToast('Không tìm thấy đội hình thỏa mãn ngân sách này. Vui lòng tăng ngân sách hoặc bỏ bớt cầu thủ khóa!');
+      return null;
+    }
+
+    // Phân bổ 15 cầu thủ thành Starting XI và Bench theo sơ đồ
+    const gkps = bestSquad.players
+      .filter((p) => p.element_type === 'GKP')
+      .sort((a, b) => (b.expected_points_next ?? 0) - (a.expected_points_next ?? 0));
+    const defs = bestSquad.players
+      .filter((p) => p.element_type === 'DEF')
+      .sort((a, b) => (b.expected_points_next ?? 0) - (a.expected_points_next ?? 0));
+    const mids = bestSquad.players
+      .filter((p) => p.element_type === 'MID')
+      .sort((a, b) => (b.expected_points_next ?? 0) - (a.expected_points_next ?? 0));
+    const fwds = bestSquad.players
+      .filter((p) => p.element_type === 'FWD')
+      .sort((a, b) => (b.expected_points_next ?? 0) - (a.expected_points_next ?? 0));
+
+    const startingDefs = defs.slice(0, defCount);
+    const benchDefs = defs.slice(defCount);
+
+    const startingMids = mids.slice(0, midCount);
+    const benchMids = mids.slice(midCount);
+
+    const startingFwds = fwds.slice(0, fwdCount);
+    const benchFwds = fwds.slice(fwdCount);
+
+    const startingXIResult: LineupPlayer[] = [
+      { ...gkps[0], isStarting: true, isCaptain: false, isViceCaptain: false, slotIndex: 0 },
+      ...startingDefs.map((p, idx) => ({
+        ...p,
+        isStarting: true,
+        isCaptain: false,
+        isViceCaptain: false,
+        slotIndex: idx,
+      })),
+      ...startingMids.map((p, idx) => ({
+        ...p,
+        isStarting: true,
+        isCaptain: false,
+        isViceCaptain: false,
+        slotIndex: idx,
+      })),
+      ...startingFwds.map((p, idx) => ({
+        ...p,
+        isStarting: true,
+        isCaptain: false,
+        isViceCaptain: false,
+        slotIndex: idx,
+      })),
+    ];
+
+    const benchSubs = [...benchDefs, ...benchMids, ...benchFwds];
+    const benchResult: LineupPlayer[] = [
+      { ...gkps[1], isStarting: false, isCaptain: false, isViceCaptain: false, slotIndex: 0 },
+      ...benchSubs.slice(0, 3).map((p, idx) => ({
+        ...p,
+        isStarting: false,
+        isCaptain: false,
+        isViceCaptain: false,
+        slotIndex: idx + 1,
+      })),
+    ];
+
+    // Chọn Captain (xP cao nhất Starting XI) và Vice-Captain (xP cao nhì)
+    const sortedStarters = [...startingXIResult].sort(
+      (a, b) => (b.expected_points_next ?? 0) - (a.expected_points_next ?? 0)
+    );
+    const captainId = sortedStarters[0]?.id;
+    const viceCaptainId = sortedStarters[1]?.id;
+
+    const result: OptimizerResult = {
+      status: 'optimal',
+      total_cost: bestSquad.cost,
+      total_expected_points: bestSquad.xp,
+      starting_xi: startingXIResult,
+      bench: benchResult,
+      captain_id: captainId,
+      vice_captain_id: viceCaptainId,
+      formation: selectedForm,
+    };
+
+    setOptimizedResult(result);
+    setIsOptimizing(false);
+    showToast('Đã tìm thấy đội hình tối ưu hoàn hảo trong ngân sách!');
+    setActiveTab('compare');
+    return result;
+  };
+
+  const handleApplyOptimizedLineup = () => {
+    if (!optimizedResult) return;
+
+    if (optimizedResult.total_cost > 100.0) {
+      showToast('Không thể áp dụng: Đội hình tối ưu vượt quá ngân sách £100.0m cho phép!');
+      return;
+    }
+
+    loadSampleLineup(optimizedResult.starting_xi, optimizedResult.bench);
+    setFormation(optimizedResult.formation);
+    setCaptain(optimizedResult.captain_id);
+    setViceCaptain(optimizedResult.vice_captain_id);
+    showToast('Đã áp dụng đội hình tối ưu của AI vào Sân bóng thành công!');
+    setActiveTab('pitch');
+  };
+  const currentFullSquad = [...startingXI, ...bench];
+  const optimizedFullSquad = optimizedResult ? [...optimizedResult.starting_xi, ...optimizedResult.bench] : [];
 
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col font-sans selection:bg-fpl-green selection:text-fpl-purple">
@@ -253,6 +500,7 @@ export function App() {
           </div>
         )}
 
+        {/* Tab Sân Bóng */}
         {activeTab === 'pitch' && (
           <section className="space-y-4">
             <div className="bg-gradient-to-r from-purple-950/60 to-slate-900/60 border border-purple-800/30 rounded-2xl p-4 sm:p-6 backdrop-blur shadow-xl">
@@ -272,6 +520,13 @@ export function App() {
                     className="px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold border border-slate-700 transition-colors"
                   >
                     Tải mẫu FPL
+                  </button>
+                  <button
+                    onClick={() => setActiveTab('optimizer')}
+                    className="px-3.5 py-2 rounded-xl bg-gradient-to-r from-amber-400 to-emerald-400 text-slate-950 font-bold text-xs flex items-center gap-1.5 shadow-lg shadow-emerald-500/20 hover:brightness-110 transition-all"
+                  >
+                    <Zap className="w-3.5 h-3.5 fill-slate-950" />
+                    <span>Auto-Optimize</span>
                   </button>
                   <button
                     onClick={() => setActiveTab('players')}
@@ -298,6 +553,7 @@ export function App() {
           </section>
         )}
 
+        {/* Tab Thị Trường Cầu Thủ */}
         {activeTab === 'players' && (
           <section className="space-y-4">
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
@@ -323,21 +579,32 @@ export function App() {
           </section>
         )}
 
+        {/* Tab Bộ Tối Ưu Hóa (Optimizer) */}
         {activeTab === 'optimizer' && (
-          <section className="bg-slate-900/60 border border-slate-800 rounded-2xl p-6 shadow-xl">
-            <h2 className="text-xl font-bold text-white mb-2">Bộ Tối Ưu Hóa Đội Hình (PuLP Solver)</h2>
-            <p className="text-sm text-slate-400">
-              Khu vực tích hợp component <code className="text-fpl-cyan bg-slate-950 px-2 py-0.5 rounded">OptimizerControl</code> từ Task <strong>P1-NG05</strong>.
-            </p>
+          <section className="space-y-4">
+            <OptimizerControl
+              availablePlayers={SAMPLE_MARKET_PLAYERS}
+              currentSquad={currentFullSquad}
+              onOptimize={handleRunOptimizer}
+              isOptimizing={isOptimizing}
+            />
           </section>
         )}
 
+        {/* Tab So Sánh Đội Hình (Compare) */}
         {activeTab === 'compare' && (
-          <section className="bg-slate-900/60 border border-slate-800 rounded-2xl p-6 shadow-xl">
-            <h2 className="text-xl font-bold text-white mb-2">So Sánh Đội Hình (Radar Chart)</h2>
-            <p className="text-sm text-slate-400">
-              Khu vực tích hợp component <code className="text-fpl-cyan bg-slate-950 px-2 py-0.5 rounded">LineupComparisonView</code> từ Task <strong>P1-NG05</strong>.
-            </p>
+          <section className="space-y-4">
+            <LineupComparisonView
+              lineupA={{
+                title: 'Đội Hình Của Bạn',
+                players: currentFullSquad,
+              }}
+              lineupB={{
+                title: optimizedResult ? 'Đội Hình Tối Ưu (AI Solver)' : 'Đội Hình Mẫu FPL Stars',
+                players: optimizedResult ? optimizedFullSquad : [...INITIAL_STARTING_XI, ...INITIAL_BENCH],
+              }}
+              onApplyLineupB={optimizedResult ? handleApplyOptimizedLineup : undefined}
+            />
           </section>
         )}
       </main>

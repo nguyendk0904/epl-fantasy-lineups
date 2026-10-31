@@ -13,10 +13,10 @@
 
 | Giai đoạn (Phase) | Hoàn thành | Tỷ lệ | Trạng thái |
 | :--- | :---: | :---: | :---: |
-| **Phase 1: Local Full-Stack Product** | **5 / 17** | `29%` | 🟡 Đang thực hiện |
+| **Phase 1: Local Full-Stack Product** | **9 / 17** | `53%` | 🟡 Đang thực hiện |
 | **Phase 2: AWS Services Integration** | **0 / 14** | `0%` | ⚪ Chờ Phase 1 |
 | **Phase 3: Production Deploy & E2E Test** | **0 / 14** | `0%` | ⚪ Chờ Phase 2 |
-| **TỔNG CỘNG TOÀN DỰ ÁN** | **5 / 45** | **11%** | 🟡 Đang thực hiện |
+| **TỔNG CỘNG TOÀN DỰ ÁN** | **9 / 45** | **20%** | 🟡 Đang thực hiện |
 
 ---
 
@@ -31,10 +31,10 @@
 
 ---
 
-## 🚀 PHASE 1: TẠO SẢN PHẨM HOÀN CHỈNH & TEST TRÊN LOCAL (4/17)
+## 🚀 PHASE 1: TẠO SẢN PHẨM HOÀN CHỈNH & TEST TRÊN LOCAL (9/17)
 *Mục tiêu: Chạy toàn bộ hệ thống trên localhost qua Docker Compose, dữ liệu FPL thật, test unit pass 100%.*
 
-### 🎨 Nguyên (Frontend & UI Lead) - [3/5]
+### 🎨 Nguyên (Frontend & UI Lead) - [5/5]
 
 - [X] **`P1-NG01`** *(Level 1)*: Khởi tạo base React + Vite + TailwindCSS + Shadcn/ui
   - *Mô tả:* Setup khung dự án Frontend với Vite, TypeScript, cấu hình Tailwind, font chữ, layout Navbar và Tab điều hướng chính.
@@ -57,14 +57,14 @@
   - *File tạo mới (3 files):* `frontend/src/components/player-list/PlayerTable.tsx`, `frontend/src/components/player-list/PlayerFilters.tsx`, `frontend/src/components/player-list/__tests__/PlayerTable.test.tsx`.
   - *Branch:* `feature/P1-NG03-player-table`
 
-- [ ] **`P1-NG04`** *(Level 2)*: Zustand Store quản lý Lineup & Validation FPL
+- [x] **`P1-NG04`** *(Level 2)*: Zustand Store quản lý Lineup & Validation FPL
   - *Mô tả:* Quản lý state 15 cầu thủ đã chọn, tự động tính tổng tiền và ngân sách còn lại; validate chặn quá 100m, chặn quá 3 người/CLB; tự lưu và tải từ `localStorage`.
   - *Phụ thuộc:* `P1-NG01`
   - *Thư mục:* `frontend/src/stores/`
   - *File tạo mới (2 files):* `frontend/src/stores/lineupStore.ts`, `frontend/src/stores/__tests__/lineupStore.test.ts`.
   - *Branch:* `feature/P1-NG04-lineup-store`
 
-- [ ] **`P1-NG05`** *(Level 2)*: Giao diện Optimizer Control & So sánh Lineup (Radar Chart)
+- [x] **`P1-NG05`** *(Level 2)*: Giao diện Optimizer Control & So sánh Lineup (Radar Chart)
   - *Mô tả:* Bảng điều khiển nút bấm Auto-Optimize (chọn ngân sách, lock cầu thủ) và màn hình so sánh 2 đội hình song song hiển thị biểu đồ Radar (Recharts) chỉ số công/thủ.
   - *Phụ thuộc:* `P1-NG02`, `P1-NG04`
   - *Thư mục:* `frontend/src/components/comparison/`, `frontend/src/components/optimizer/`
@@ -105,9 +105,9 @@
 
 ---
 
-### 🧠 Vũ (Data & Algorithm Engineer) - [0/4]
+### 🧠 Vũ (Data & Algorithm Engineer) - [1/4]
 
-- [ ] **`P1-V01`** *(Level 3)*: Thiết kế Schema PostgreSQL & Alembic Migration
+- [x] **`P1-V01`** *(Level 3)*: Thiết kế Schema PostgreSQL & Alembic Migration
   - *Mô tả:* Khai báo SQLAlchemy ORM models cho bảng `teams`, `players` (kèm indexes vị trí, giá, điểm) và thiết lập file migration đầu tiên bằng Alembic.
   - *Phụ thuộc:* `P1-NH01`
   - *Thư mục:* `backend/app/models/`, `backend/alembic/`
