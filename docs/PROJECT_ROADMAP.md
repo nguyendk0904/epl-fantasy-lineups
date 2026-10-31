@@ -39,7 +39,7 @@ flowchart LR
 | **P1-NG01** | **Nguyên** *(Frontend)* | Khởi tạo base React + Vite + TypeScript + TailwindCSS + Shadcn/ui. Dựng layout điều hướng chung (Navbar, Header, Tabs). | **LEVEL 1** (Low) | Khung sườn Frontend chạy được trên `localhost:5173`. |
 | **P1-NG02** | **Nguyên** *(Frontend)* | Xây dựng Sân bóng ảo (`VirtualPitch`): Hiển thị 11 cầu thủ chính theo sơ đồ và 4 cầu thủ dự bị trên Bench. Nút chọn Captain 'C' và Vice-Captain 'V'. | **LEVEL 2** (Medium) | Component sân bóng tương tác, responsive trên màn hình. |
 | **P1-NG03** | **Nguyên** *(Frontend)* | Xây dựng Bảng danh sách & Bộ lọc cầu thủ (`PlayerTable`): Tìm kiếm theo tên, lọc theo vị trí (GKP/DEF/MID/FWD), CLB, sắp xếp theo giá và điểm số. | **LEVEL 2** (Medium) | Bảng cầu thủ hiển thị mượt, tìm kiếm tức thì. |
-| **P1-NG04** | **Nguyên** *(Frontend)* | Quản lý trạng thái bằng Zustand (`lineupStore`): Validate realtime luật FPL (tổng giá $\rightarrow$\le$\rightarrow$ 100m, max 3 người/CLB, đủ 15 vị trí). Lưu/load trạng thái từ `localStorage`. | **LEVEL 2** (Medium) | Đội hình tự lưu lại khi F5 trang, cảnh báo khi vi phạm luật. |
+| **P1-NG04** | **Nguyên** *(Frontend)* | Quản lý trạng thái bằng Zustand (`lineupStore`): Validate realtime luật FPL (tổng giá $\le$ 100m, max 3 người/CLB, đủ 15 vị trí). Lưu/load trạng thái từ `localStorage`. | **LEVEL 2** (Medium) | Đội hình tự lưu lại khi F5 trang, cảnh báo khi vi phạm luật. |
 | **P1-NG05** | **Nguyên** *(Frontend)* | Xây dựng Giao diện Điều khiển Optimizer & Màn hình So sánh (Side-by-side Compare View) với biểu đồ Radar (Recharts). | **LEVEL 2** (Medium) | Bảng điều khiển tối ưu và màn hình so sánh 2 đội hình trực quan. |
 | **P1-NH01** | **Nhất** *(Backend)* | Khởi tạo base FastAPI, cấu hình CORS, Pydantic Settings, async SQLAlchemy kết nối PostgreSQL local. | **LEVEL 2** (Medium) | Server FastAPI chạy tại `localhost:8000`, có Swagger UI `/docs`. |
 | **P1-NH02** | **Nhất** *(Backend)* | Viết service `fpl_sync.py`: Tự động gọi FPL API (`bootstrap-static`), trích xuất và Upsert dữ liệu 20 CLB và ~650 cầu thủ vào PostgreSQL. | **LEVEL 3** (High) | Dữ liệu FPL được đổ đầy đủ, giá cầu thủ chia 10 chuẩn xác (15.2m). |
@@ -64,7 +64,7 @@ flowchart LR
 ---
 
 ## ☁️ PHASE 2: TÍCH HỢP SỬ DỤNG CÁC DỊCH VỤ CỦA AWS
-**Mục tiêu:** Chuyển dịch hệ thống từ CSDL và lưu trữ local sang sử dụng các dịch vụ Cloud của AWS (AWS Free Tier, kiểm soát chi phí $\rightarrow$0).
+**Mục tiêu:** Chuyển dịch hệ thống từ CSDL và lưu trữ local sang sử dụng các dịch vụ Cloud của AWS (AWS Free Tier, kiểm soát chi phí $0.00).
 
 ### 📋 Danh sách Task Phase 2:
 
@@ -81,7 +81,7 @@ flowchart LR
 | **P2-V03** | **Vũ** *(Algo & Data)* | Nghiên cứu và bổ sung thêm trọng số độ khó trận đấu (FDR - Fixture Difficulty) vào công thức tính điểm dự kiến (xP) của Optimizer. | **LEVEL 2** (Medium) | Đội hình gợi ý thông minh hơn (ưu tiên cầu thủ gặp đối thủ yếu ở vòng tới). |
 | **P2-Q01** | **Quang** *(DevOps)* | Khởi tạo instance **Amazon RDS PostgreSQL (db.t4g.micro)** trên tài khoản AWS của Quang, Single-AZ, dung lượng 20GB gp3 (Free Tier). | **LEVEL 4** (Critical) | RDS PostgreSQL sẵn sàng kết nối. |
 | **P2-Q02** | **Quang** *(DevOps)* | Cấu hình **Security Group** chặt chẽ: Chỉ mở port 5432 cho IP nhóm dev hoặc Security Group của Backend, không mở public `0.0.0.0/0`. | **LEVEL 4** (Critical) | DB được bảo vệ an toàn trước các cuộc quét bot trên Internet. |
-| **P2-Q03** | **Quang** *(DevOps)* | **BẮT BUỘC:** Kích hoạt **AWS Budgets Alert** mức **$\rightarrow$1.00** trên tài khoản của Quang và gửi email cảnh báo tự động về hòm thư. | **LEVEL 4** (Critical) | Chặn đứng hoàn toàn nguy cơ bị trừ tiền ngoài ý muốn trên thẻ cá nhân. |
+| **P2-Q03** | **Quang** *(DevOps)* | **BẮT BUỘC:** Kích hoạt **AWS Budgets Alert** mức **$1.00** trên tài khoản của Quang và gửi email cảnh báo tự động về hòm thư. | **LEVEL 4** (Critical) | Chặn đứng hoàn toàn nguy cơ bị trừ tiền ngoài ý muốn trên thẻ cá nhân. |
 | **P2-Q04** | **Quang** *(DevOps)* | Khởi tạo **AWS S3 Bucket** cấu hình static hosting và chính sách truy cập an toàn. | **LEVEL 3** (High) | S3 bucket sẵn sàng nhận source build từ frontend. |
 
 ### ✅ Tiêu chí nghiệm thu Phase 2 (Definition of Done - DoD):
@@ -110,13 +110,13 @@ flowchart LR
 | **P3-Q01** | **Quang** *(DevOps)* | Triển khai Frontend lên **AWS S3 + AWS CloudFront** (cấu hình SSL HTTPS miễn phí, CDN phân phối toàn cầu). | **LEVEL 4** (Critical) | Website truy cập công khai qua link CloudFront HTTPS. |
 | **P3-Q02** | **Quang** *(DevOps)* | Đóng gói và triển khai Backend FastAPI lên **AWS App Runner** (hoặc EC2 t4g.small chạy Docker Compose). | **LEVEL 4** (Critical) | Backend production online 24/7, tự kết nối RDS. |
 | **P3-Q03** | **Quang** *(DevOps)* | Xây dựng pipeline **GitHub Actions CI/CD**: Khi push vào nhánh `main` $\rightarrow$ Tự động Lint $\rightarrow$ Test $\rightarrow$ Build $\rightarrow$ Deploy lên AWS của Quang. | **LEVEL 4** (Critical) | Quy trình release tự động 100%, không cần deploy thủ công. |
-| **P3-Q04** | **Quang** *(DevOps)* | Kiểm tra hóa đơn AWS Billing, đối soát chi phí $\rightarrow$0.00 và viết báo cáo kiến trúc triển khai Cloud cho đồ án. | **LEVEL 1** (Low) | Báo cáo kiến trúc AWS kèm bằng chứng chi phí nằm trọn trong Free Tier. |
+| **P3-Q04** | **Quang** *(DevOps)* | Kiểm tra hóa đơn AWS Billing, đối soát chi phí $0.00 và viết báo cáo kiến trúc triển khai Cloud cho đồ án. | **LEVEL 1** (Low) | Báo cáo kiến trúc AWS kèm bằng chứng chi phí nằm trọn trong Free Tier. |
 
 ### ✅ Tiêu chí nghiệm thu Phase 3 (Definition of Done - DoD):
 - [ ] Website truy cập công khai qua domain CloudFront / HTTPS ổn định.
 - [ ] Luồng người dùng hoàn chỉnh: Vào web $\rightarrow$ Xem stats cầu thủ $\rightarrow$ Tự xếp đội hình hoặc bấm Auto-Optimize $\rightarrow$ So sánh đội hình $\rightarrow$ Lưu & Chia sẻ link thành công.
 - [ ] GitHub Actions tự động build và deploy khi có commit mới vào `main`.
-- [ ] Chi phí tài khoản AWS hiển thị **$\rightarrow$0.00** (nằm trọn trong Free Tier).
+- [ ] Chi phí tài khoản AWS hiển thị **$0.00** (nằm trọn trong Free Tier).
 - [ ] Đầy đủ slide báo cáo kiến trúc và kịch bản demo cho buổi nghiệm thu đồ án.
 
 ---
@@ -196,10 +196,7 @@ flowchart TD
 | **P4-V03** | **Vũ** *(Algo & Data)* | Nâng cấp PuLP Optimizer: Tự động loại bỏ cầu thủ chấn thương/treo giò và xây dựng chế độ gợi ý 3 lượt Chuyển nhượng Tối ưu nhất (Transfer Optimizer). | **LEVEL 3** (High) | Gợi ý 3 lượt thay cầu thủ mang lại điểm kỳ vọng (xP) cao nhất. |
 | **P4-Q01** | **Quang** *(DevOps)* | Thiết lập **AWS EventBridge Scheduler**: Tự động kích hoạt sync lịch thi đấu trước trận và kích hoạt sync điểm số sau khi trận đấu kết thúc. | **LEVEL 3** (High) | Quy trình sync dữ liệu mùa giải tự động 100% trên Cloud. |
 | **P4-Q02** | **Quang** *(DevOps)* | Tích hợp Redis Caching cho Bảng xếp hạng và Lịch thi đấu để chịu tải hàng ngàn request cùng lúc mà không làm quá tải RDS. | **LEVEL 3** (High) | Tốc độ phản hồi BXH < 20ms ngay cả khi traffic tăng đột biến. |
-| **P4-Q03** | **Quang** *(DevOps)* | Viết kịch bản kiểm thử tích hợp vòng đời tuần thi đấu (Gameweek Lifecycle Test): Chuyển nhượng 3 người $\rightarrow$
-ightarrow$\rightarrow$ Khóa deadline $\rightarrow$
-ightarrow$\rightarrow$ Tính điểm $\rightarrow$
-ightarrow$\rightarrow$ Cập nhật BXH. | **LEVEL 2** (Medium) | Kịch bản test tự động xác nhận toàn bộ luồng game vận hành trơn tru. |
+| **P4-Q03** | **Quang** *(DevOps)* | Viết kịch bản kiểm thử tích hợp vòng đời tuần thi đấu (Gameweek Lifecycle Test): Chuyển nhượng 3 người $\rightarrow$ Khóa deadline $\rightarrow$ Tính điểm $\rightarrow$ Cập nhật BXH. | **LEVEL 2** (Medium) | Kịch bản test tự động xác nhận toàn bộ luồng game vận hành trơn tru. |
 
 ### ✅ Tiêu chí nghiệm thu Phase 4 (Definition of Done - DoD):
 - [ ] Lịch thi đấu hiển thị đầy đủ 38 vòng và tự động cập nhật tỉ số thực tế.
