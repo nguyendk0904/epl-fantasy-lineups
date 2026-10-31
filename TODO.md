@@ -13,10 +13,10 @@
 
 | Giai đoạn (Phase) | Hoàn thành | Tỷ lệ | Trạng thái |
 | :--- | :---: | :---: | :---: |
-| **Phase 1: Local Full-Stack Product** | **4 / 17** | `23.5%` | 🟡 Đang thực hiện |
+| **Phase 1: Local Full-Stack Product** | **5 / 17** | `29%` | 🟡 Đang thực hiện |
 | **Phase 2: AWS Services Integration** | **0 / 14** | `0%` | ⚪ Chờ Phase 1 |
 | **Phase 3: Production Deploy & E2E Test** | **0 / 14** | `0%` | ⚪ Chờ Phase 2 |
-| **TỔNG CỘNG TOÀN DỰ ÁN** | **4 / 45** | **8.8%** | 🟡 Đang thực hiện |
+| **TỔNG CỘNG TOÀN DỰ ÁN** | **5 / 45** | **11%** | 🟡 Đang thực hiện |
 
 ---
 
