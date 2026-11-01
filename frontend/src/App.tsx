@@ -17,6 +17,7 @@ import { VirtualPitch } from './components/pitch/VirtualPitch';
 import { PlayerTable } from './components/player-list/PlayerTable';
 import { OptimizerControl, OptimizerConfig, OptimizerResult } from './components/optimizer/OptimizerControl';
 import { LineupComparisonView } from './components/comparison/LineupComparisonView';
+import { FixturesPanel } from './components/fixtures/FixturesPanel';
 import { PositionType, Player, LineupPlayer, FormationType } from './types';
 import { useLineupStore, TOTAL_BUDGET } from './stores/lineupStore';
 import { useMediaQuery } from './hooks/useMediaQuery';
@@ -616,6 +617,9 @@ export function App() {
                 />
               )}
             </div>
+
+            {/* Bảng Fixtures Ngoại Hạng Anh bên dưới sân */}
+            <FixturesPanel />
           </section>
         )}
 
