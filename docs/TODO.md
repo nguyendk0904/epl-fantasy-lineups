@@ -13,11 +13,11 @@
 
 | Giai đoạn (Phase) | Hoàn thành | Tỷ lệ | Trạng thái |
 | :--- | :---: | :---: | :---: |
-| **Phase 1: Local Full-Stack Product** | **15 / 17** | `88%` | 🟡 Đang thực hiện |
+| **Phase 1: Local Full-Stack Product** | **16 / 17** | `94%` | 🟡 Đang thực hiện |
 | **Phase 2: AWS Services Integration** | **0 / 14** | `0%` | ⚪ Chờ Phase 1 |
 | **Phase 3: Production Deploy & E2E Test** | **0 / 14** | `0%` | ⚪ Chờ Phase 2 |
 | **Phase 4: Live Gamification & League Operations** | **0 / 14** | `0%` | ⚪ Chờ Phase 3 |
-| **TỔNG CỘNG TOÀN DỰ ÁN** | **15 / 59** | `25%` | 🟡 Đang thực hiện |
+| **TỔNG CỘNG TOÀN DỰ ÁN** | **16 / 59** | `27%` | 🟡 Đang thực hiện |
 
 ---
 
@@ -32,7 +32,7 @@
 
 ---
 
-## 🚀 PHASE 1: TẠO SẢN PHẨM HOÀN CHỈNH & TEST TRÊN LOCAL (13/17)
+## 🚀 PHASE 1: TẠO SẢN PHẨM HOÀN CHỈNH & TEST TRÊN LOCAL (16/17)
 *Mục tiêu: Chạy toàn bộ hệ thống trên localhost qua Docker Compose, dữ liệu FPL thật, test unit pass 100%.*
 
 ### 🎨 Nguyên (Frontend & UI Lead) - [5/5]
@@ -165,7 +165,7 @@
 
 ---
 
-### 🐳 Quang (DevOps & AWS Lead) - [2/4]
+### 🐳 Quang (DevOps & AWS Lead) - [3/4]
 
 - [x] **`P1-Q01`** *(Level 2)*: Viết `backend/Dockerfile` và `frontend/Dockerfile`
   - *Mô tả:* Đóng gói Docker đa tầng (multi-stage build) cho Backend (Python 3.11-slim kèm coinor-cbc solver) và Frontend (Vite build sang Nginx alpine phục vụ static file).
@@ -185,7 +185,7 @@
   - *Tiêu chí chấp nhận (Acceptance Criteria):* Chạy `docker compose up` khởi động đồng bộ 3 container postgres, backend, frontend; có healthcheck và persist data qua volume.
   - *Cách kiểm chứng (Verification):* `docker compose ps` hiển thị cả 3 service ở trạng thái `running` hoặc `healthy`.
 
-- [ ] **`P1-Q03`** *(Level 2)*: Viết kịch bản Kiểm thử Tích hợp Local (Integration Test)
+- [x] **`P1-Q03`** *(Level 2)*: Viết kịch bản Kiểm thử Tích hợp Local (Integration Test)
   - *Mô tả:* Script tự động gửi request kiểm tra tính thông suốt của toàn bộ hệ thống: Frontend gọi Backend $\rightarrow$ Backend query Postgres $\rightarrow$ PuLP solver trả kết quả.
   - *Phụ thuộc:* `P1-Q02`, `P1-NH03`, `P1-V03`
   - *Thư mục:* `scripts/`
