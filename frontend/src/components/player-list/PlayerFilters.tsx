@@ -13,6 +13,7 @@ interface PlayerFiltersProps {
   filters: FilterState;
   onFilterChange: (filters: FilterState) => void;
   teams?: { id: number; short_name: string; name: string }[];
+  compact?: boolean;
 }
 
 export const PREMIER_LEAGUE_TEAMS = [
@@ -46,6 +47,7 @@ export const PlayerFilters: React.FC<PlayerFiltersProps> = ({
   filters,
   onFilterChange,
   teams = PREMIER_LEAGUE_TEAMS,
+  compact = false,
 }) => {
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     onFilterChange({ ...filters, search: e.target.value });
@@ -76,33 +78,34 @@ export const PlayerFilters: React.FC<PlayerFiltersProps> = ({
   const isFiltered = filters.search !== '' || filters.position !== 'ALL' || filters.teamId !== 'ALL' || filters.maxPrice < 16.0;
 
   return (
-    <div className="bg-slate-900/90 border border-slate-800 rounded-xl p-4 shadow-lg backdrop-blur-md space-y-3">
-      <div className="flex flex-col md:flex-row items-stretch md:items-center gap-3">
-        {/* Search input */}
-        <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-          <input
-            type="text"
-            role="searchbox"
-            aria-label="Tìm kiếm cầu thủ"
-            value={filters.search}
-            onChange={handleSearchChange}
-            placeholder="Tìm theo tên cầu thủ (VD: Haaland, Saka...)"
-            className="w-full pl-9 pr-3 py-2 bg-slate-950/70 border border-slate-700/80 rounded-lg text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-colors"
-          />
-        </div>
+    <div className={`bg-brand-card/90 border border-brand-border rounded-xl shadow-lg backdrop-blur-md ${compact ? 'p-3 space-y-2.5' : 'p-4 space-y-3'}`}>
+      {/* Search Input Row */}
+      <div className="relative w-full">
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-brand-muted" />
+        <input
+          type="text"
+          role="searchbox"
+          aria-label="Tìm kiếm cầu thủ"
+          value={filters.search}
+          onChange={handleSearchChange}
+          placeholder="Tìm theo tên cầu thủ (VD: Haaland, Saka...)"
+          className="w-full pl-9 pr-3 py-2 bg-brand-darker/70 border border-brand-border rounded-lg text-sm text-brand-white placeholder-brand-muted focus:outline-none focus:border-brand-skyblue focus:ring-1 focus:ring-brand-skyblue transition-colors"
+        />
+      </div>
 
+      {/* Team Dropdown & Max Price Row */}
+      <div className={`flex items-center gap-2.5 ${compact ? 'flex-row' : 'flex-col md:flex-row'}`}>
         {/* Team Dropdown */}
-        <div className="w-full md:w-48">
+        <div className="flex-1 min-w-0">
           <select
             value={filters.teamId}
             onChange={handleTeamChange}
             aria-label="Lọc theo CLB"
-            className="w-full py-2 px-3 bg-slate-950/70 border border-slate-700/80 rounded-lg text-sm text-slate-200 focus:outline-none focus:border-emerald-500 transition-colors"
+            className="w-full py-1.5 px-2.5 bg-brand-darker/70 border border-brand-border rounded-lg text-xs sm:text-sm text-brand-white focus:outline-none focus:border-brand-skyblue transition-colors truncate"
           >
             <option value="ALL">Tất cả CLB ({teams.length})</option>
             {teams.map((t) => (
-              <option key={t.id} value={t.id}>
+              <option key={t.id} value={t.id} className="bg-brand-darker text-brand-white">
                 {t.short_name} - {t.name}
               </option>
             ))}
@@ -110,8 +113,8 @@ export const PlayerFilters: React.FC<PlayerFiltersProps> = ({
         </div>
 
         {/* Max price slider */}
-        <div className="flex items-center gap-2 bg-slate-950/50 px-3 py-1.5 rounded-lg border border-slate-800">
-          <span className="text-xs text-slate-400 font-medium whitespace-nowrap">Tối đa:</span>
+        <div className="flex items-center gap-1.5 bg-brand-darker/50 px-2.5 py-1.5 rounded-lg border border-brand-border shrink-0">
+          <span className="text-[11px] text-brand-muted font-medium whitespace-nowrap">Tối đa:</span>
           <input
             type="range"
             min="4.0"
@@ -119,10 +122,10 @@ export const PlayerFilters: React.FC<PlayerFiltersProps> = ({
             step="0.5"
             value={filters.maxPrice}
             onChange={handleMaxPriceChange}
-            className="w-24 accent-emerald-400 cursor-pointer"
+            className={`${compact ? 'w-16' : 'w-24'} accent-brand-skyblue cursor-pointer`}
             aria-label="Giá tối đa"
           />
-          <span className="text-xs font-bold text-emerald-400 min-w-12 text-right">
+          <span className="text-[11px] font-bold text-brand-skyblue-light min-w-10 text-right">
             £{filters.maxPrice.toFixed(1)}m
           </span>
         </div>
@@ -131,31 +134,31 @@ export const PlayerFilters: React.FC<PlayerFiltersProps> = ({
         {isFiltered && (
           <button
             onClick={handleReset}
-            className="flex items-center gap-1 px-2.5 py-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-xs text-slate-300 hover:text-white transition-colors"
+            className="flex items-center gap-1 px-2 py-1.5 rounded-lg bg-brand-card hover:bg-brand-card-hover border border-brand-hotpink/40 text-xs text-brand-hotpink-light hover:text-brand-white transition-colors shrink-0"
             title="Đặt lại bộ lọc"
           >
             <X className="w-3.5 h-3.5" />
-            <span>Xoá lọc</span>
+            {!compact && <span>Xoá lọc</span>}
           </button>
         )}
       </div>
 
       {/* Position Filter Pills */}
-      <div className="flex items-center gap-2 pt-1 border-t border-slate-800/80">
-        <span className="text-xs text-slate-400 font-medium flex items-center gap-1 mr-1">
-          <Filter className="w-3 h-3 text-emerald-400" /> Vị trí:
+      <div className="flex items-center gap-1.5 pt-1 border-t border-brand-border/80">
+        <span className="text-[11px] text-brand-muted font-medium flex items-center gap-1 mr-1 shrink-0">
+          <Filter className="w-3 h-3 text-brand-skyblue-light" /> Vị trí:
         </span>
-        <div className="flex flex-wrap gap-1.5">
+        <div className="flex flex-wrap gap-1">
           {POSITIONS.map((pos) => {
             const isActive = filters.position === pos.value;
             return (
               <button
                 key={pos.value}
                 onClick={() => handlePositionChange(pos.value)}
-                className={`px-3 py-1 rounded-md text-xs font-bold transition-all ${
+                className={`px-2.5 py-0.5 rounded-md text-xs font-bold transition-all ${
                   isActive
-                    ? 'bg-emerald-500 text-slate-950 shadow-md shadow-emerald-500/20'
-                    : 'bg-slate-800/80 text-slate-400 hover:bg-slate-700 hover:text-slate-200'
+                    ? 'bg-brand-skyblue text-brand-darker shadow-md shadow-brand-skyblue/20'
+                    : 'bg-brand-card text-brand-muted hover:bg-brand-card-hover hover:text-brand-white'
                 }`}
               >
                 {pos.label}
@@ -167,4 +170,3 @@ export const PlayerFilters: React.FC<PlayerFiltersProps> = ({
     </div>
   );
 };
-
