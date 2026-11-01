@@ -135,7 +135,7 @@
   - *Tiêu chí chấp nhận (Acceptance Criteria):* Models ORM chuẩn SQLAlchemy 2.0 async, indexes trên các cột tìm kiếm thường xuyên, script Alembic migration chạy mượt mà.
   - *Cách kiểm chứng (Verification):* `alembic upgrade head` áp dụng thành công tạo đủ bảng trong PostgreSQL.
 
-- [ ] **`P1-V02`** *(Level 3)*: Module Thuật toán `optimizer_solver.py` bằng `PuLP`
+- [x] **`P1-V02`** *(Level 3)*: Module Thuật toán `optimizer_solver.py` bằng `PuLP`
   - *Mô tả:* Mô hình hóa và giải bài toán quy hoạch tuyến tính nguyên 0-1 (0-1 ILP) chọn 15 cầu thủ tối đa hóa điểm kỳ vọng trong ngân sách 100m, max 3/team, hỗ trợ khóa cầu thủ (locked players).
   - *Phụ thuộc:* Không (Chạy pure Python độc lập với mock data ngay Ngày 1).
   - *Thư mục:* `backend/app/services/`
@@ -144,7 +144,7 @@
   - *Tiêu chí chấp nhận (Acceptance Criteria):* Giải ra nghiệm tối ưu điểm xP trong ngân sách $\le$ 100m, không quá 3 người/CLB, đủ 2 GKP, 5 DEF, 5 MID, 3 FWD; thời gian giải < 100ms.
   - *Cách kiểm chứng (Verification):* `pytest backend/tests/test_optimizer.py` pass 100%.
 
-- [ ] **`P1-V03`** *(Level 3)*: Xây dựng REST API `POST /api/v1/optimizer/solve`
+- [x] **`P1-V03`** *(Level 3)*: Xây dựng REST API `POST /api/v1/optimizer/solve`
   - *Mô tả:* Endpoint nhận payload (ngân sách, locked_player_ids, excluded_player_ids, sơ đồ mong muốn), query danh sách cầu thủ từ DB và gọi `PuLP solver` trả về đội hình 15 người.
   - *Phụ thuộc:* `P1-V02`, `P1-NH01`
   - *Thư mục:* `backend/app/api/v1/endpoints/`
