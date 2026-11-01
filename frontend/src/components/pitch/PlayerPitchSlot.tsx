@@ -95,7 +95,7 @@ export function PlayerPitchSlot({
       )}
 
       {/* Glassmorphism Card Container */}
-      <div className={`relative w-full rounded-2xl p-2 pt-2.5 flex flex-col items-center transition-all duration-300
+      <div className={`relative w-full rounded-2xl p-1.5 pt-2 flex flex-col items-center transition-all duration-300
         backdrop-blur-md border shadow-xl group-hover:-translate-y-1 group-hover:shadow-2xl
         ${isBench 
           ? 'bg-brand-card/70 border-brand-border hover:border-brand-border-light' 
@@ -104,7 +104,14 @@ export function PlayerPitchSlot({
         {/* Ánh sáng phản chiếu kính Glass Glare */}
         <div className="absolute inset-x-0 top-0 h-1/2 bg-gradient-to-b from-white/10 to-transparent rounded-t-2xl pointer-events-none" />
 
-        {/* Áo thi đấu chính thức CLB */}
+        {/* 1. Giá hiển thị nhỏ ở trên cùng thẻ theo phong cách FPL */}
+        <div className="w-full text-center mb-1">
+          <span className="inline-block px-1.5 py-0.5 rounded bg-brand-darker/80 border border-brand-skyblue/30 text-[10px] font-bold text-brand-skyblue-light tracking-tight">
+            £{player.now_cost.toFixed(1)}m
+          </span>
+        </div>
+
+        {/* 2. Áo thi đấu chính thức CLB */}
         <div className="relative cursor-pointer h-12 sm:h-14 flex items-center justify-center">
           {!imgError ? (
             <img
@@ -136,17 +143,23 @@ export function PlayerPitchSlot({
           )}
         </div>
 
-        {/* Tên cầu thủ (Glassmorphism Pill) */}
-        <div className="mt-1.5 w-full bg-brand-darker/60 backdrop-blur-md border border-white/10 rounded-lg px-1.5 py-0.5 text-center truncate shadow-inner">
+        {/* 3. Tên cầu thủ (Glassmorphism Pill) + CLB nếu có */}
+        <div className="mt-1 w-full bg-brand-darker/70 backdrop-blur-md border border-white/10 rounded-lg px-1 py-0.5 text-center truncate shadow-inner">
           <p className="text-[11px] sm:text-xs font-bold text-brand-white truncate tracking-tight">
             {player.web_name}
           </p>
+          {player.team_short_name && (
+            <p className="text-[9px] font-medium text-brand-muted tracking-wider uppercase -mt-0.5 truncate">
+              {player.team_short_name}
+            </p>
+          )}
         </div>
 
-        {/* Giá & Điểm số (Glassmorphism Chip) */}
-        <div className="w-full mt-1 bg-brand-darker/70 backdrop-blur-md border border-brand-skyblue/30 rounded-md px-1 py-0.5 text-center flex items-center justify-between text-[10px] text-brand-skyblue-light font-semibold shadow-inner">
-          <span>£{player.now_cost.toFixed(1)}m</span>
-          <span className="text-brand-white font-bold">{player.total_points}p</span>
+        {/* 4. Điểm số (Glassmorphism Chip ở dưới cùng) */}
+        <div className="w-full mt-1 bg-brand-darker/60 backdrop-blur-md border border-brand-border/60 rounded-md py-0.5 text-center shadow-inner">
+          <span className="text-[10px] font-bold text-brand-white">
+            {player.total_points}p
+          </span>
         </div>
       </div>
 

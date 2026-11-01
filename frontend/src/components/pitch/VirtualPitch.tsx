@@ -117,6 +117,19 @@ export function VirtualPitch({
           background: 'repeating-linear-gradient(to bottom, #0C403B 0px, #0C403B 65px, #115246 65px, #115246 130px)',
         }}
       >
+        {/* Banner "Fantasy" chuẩn phong cách web FPL đỉnh sân */}
+        <div className="absolute top-0 inset-x-0 z-20 flex items-center justify-between px-6 py-2 bg-gradient-to-r from-brand-skyblue via-brand-card to-brand-hotpink border-b border-white/20 shadow-md">
+          <div className="flex items-center gap-2">
+            <div className="w-2.5 h-2.5 rounded-full bg-brand-white animate-pulse" />
+            <span className="text-xs font-black tracking-widest text-brand-white uppercase drop-shadow">Fantasy</span>
+          </div>
+          <span className="text-[10px] font-bold text-brand-white/80 tracking-wide uppercase hidden sm:inline">Premier League Official Pitch</span>
+          <div className="flex items-center gap-2">
+            <span className="text-xs font-black tracking-widest text-brand-white uppercase drop-shadow">Fantasy</span>
+            <div className="w-2.5 h-2.5 rounded-full bg-brand-white animate-pulse" />
+          </div>
+        </div>
+
         {/* Lớp ánh sáng Spotlight chiếu giữa sân (Radial Stadium Spotlight) */}
         <div 
           className="absolute inset-0 pointer-events-none"
@@ -138,7 +151,8 @@ export function VirtualPitch({
             <circle cx="300" cy="425" r="75" fill="none" stroke="rgba(252,255,255,0.7)" strokeWidth="2" />
             <circle cx="300" cy="425" r="4.5" fill="#FCFFFF" />
             
-            {/* Vòng cấm địa phía trên (GKP) */}
+            {/* Vòng cấm địa phía trên (GKP) & Khung thành gôn */}
+            <rect x="240" y="8" width="120" height="17" fill="none" stroke="rgba(252,255,255,0.9)" strokeWidth="2" />
             <rect x="160" y="25" width="280" height="135" fill="none" stroke="rgba(252,255,255,0.7)" strokeWidth="2" />
             <rect x="220" y="25" width="160" height="55" fill="none" stroke="rgba(252,255,255,0.7)" strokeWidth="2" />
             <circle cx="300" cy="100" r="3.5" fill="#FCFFFF" />
@@ -160,8 +174,8 @@ export function VirtualPitch({
           </svg>
         </div>
 
-        {/* 11 Vị trí xuất phát chính thức (Starting XI) */}
-        <div className="relative z-10 py-8 sm:py-10 px-4 flex flex-col justify-between min-h-[640px] sm:min-h-[720px]">
+        {/* 11 Vị trí xuất phát chính thức (Starting XI) - pt-12 để tránh đè banner */}
+        <div className="relative z-10 pt-12 pb-8 sm:pb-10 px-4 flex flex-col justify-between min-h-[660px] sm:min-h-[740px]">
           {/* Hàng 1: Thủ Môn (GKP) */}
           <div className="flex justify-center items-center">
             <PlayerPitchSlot

@@ -400,30 +400,44 @@ export function App() {
             </div>
           </div>
 
-          {/* Quick Lineup Status Widgets */}
-          <div className="flex items-center gap-2 sm:gap-4 text-xs sm:text-sm">
-            <div className="flex items-center gap-2 bg-brand-darker/80 border border-brand-border px-3 py-1.5 rounded-lg shadow-inner">
-              <Wallet className="w-4 h-4 text-brand-skyblue-light" />
-              <span className="text-brand-muted hidden sm:inline">Ngân sách:</span>
-              <span className={`font-bold ${remainingBudget >= 0 ? 'text-brand-skyblue-light' : 'text-brand-hotpink-light'}`}>
-                £{remainingBudget.toFixed(1)}m
-              </span>
-              <span className="text-brand-muted">/</span>
-              <span className="text-brand-muted">£{TOTAL_BUDGET.toFixed(1)}m</span>
+          {/* Quick Lineup Status Widgets (FPL Pill Design: Bank & Players selected) */}
+          <div className="flex items-center gap-2 sm:gap-3 text-xs sm:text-sm">
+            {/* Bank Pill */}
+            <div className="flex items-center bg-brand-darker/90 border border-brand-border rounded-full p-1 pr-3 shadow-inner">
+              <div className="w-7 h-7 rounded-full bg-brand-skyblue/15 border border-brand-skyblue/30 flex items-center justify-center mr-2 text-brand-skyblue-light">
+                <Wallet className="w-3.5 h-3.5" />
+              </div>
+              <div className="flex flex-col text-left">
+                <span className="text-[9px] uppercase tracking-wider text-brand-muted font-bold leading-none">Bank</span>
+                <div className="flex items-baseline gap-1 mt-0.5">
+                  <span className={`font-extrabold text-xs sm:text-sm leading-none ${remainingBudget >= 0 ? 'text-brand-skyblue-light' : 'text-brand-hotpink-light'}`}>
+                    £{remainingBudget.toFixed(1)}m
+                  </span>
+                  <span className="text-[10px] text-brand-muted leading-none">/ £{TOTAL_BUDGET.toFixed(1)}m</span>
+                </div>
+              </div>
             </div>
 
-            <div className="flex items-center gap-2 bg-brand-darker/80 border border-brand-border px-3 py-1.5 rounded-lg shadow-inner">
-              <Users className="w-4 h-4 text-brand-skyblue-light" />
-              <span className="text-brand-muted hidden sm:inline">Đội hình:</span>
-              <span className={`font-bold ${totalPlayers === 15 ? 'text-brand-skyblue-light' : 'text-brand-hotpink-light'}`}>
-                {totalPlayers}/15
-              </span>
+            {/* Players Selected Pill */}
+            <div className="flex items-center bg-brand-darker/90 border border-brand-border rounded-full p-1 pr-3 shadow-inner">
+              <div className="w-7 h-7 rounded-full bg-brand-hotpink/15 border border-brand-hotpink/30 flex items-center justify-center mr-2 text-brand-hotpink-light">
+                <Users className="w-3.5 h-3.5" />
+              </div>
+              <div className="flex flex-col text-left">
+                <span className="text-[9px] uppercase tracking-wider text-brand-muted font-bold leading-none">Players</span>
+                <div className="flex items-baseline gap-1 mt-0.5">
+                  <span className={`font-extrabold text-xs sm:text-sm leading-none ${totalPlayers === 15 ? 'text-brand-skyblue-light' : 'text-brand-hotpink-light'}`}>
+                    {totalPlayers}
+                  </span>
+                  <span className="text-[10px] text-brand-muted leading-none">/ 15</span>
+                </div>
+              </div>
             </div>
 
             {/* Reset button */}
             <button
               onClick={() => resetLineup()}
-              className="p-1.5 rounded-lg bg-brand-darker/80 hover:bg-brand-hotpink-dark/30 border border-brand-border hover:border-brand-hotpink/50 text-brand-muted hover:text-brand-hotpink-light transition-colors"
+              className="p-2 rounded-full bg-brand-darker/90 hover:bg-brand-hotpink-dark/30 border border-brand-border hover:border-brand-hotpink/50 text-brand-muted hover:text-brand-hotpink-light transition-all shadow-sm active:scale-95"
               title="Đặt lại đội hình"
             >
               <RotateCcw className="w-4 h-4" />
