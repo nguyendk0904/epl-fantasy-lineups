@@ -91,15 +91,15 @@ export const OptimizerControl: React.FC<OptimizerControlProps> = ({
   };
 
   return (
-    <div className="bg-slate-900/90 border border-purple-900/30 rounded-2xl p-5 shadow-2xl backdrop-blur-md space-y-6">
+    <div className="bg-brand-card/90 border border-brand-border rounded-2xl p-5 shadow-2xl backdrop-blur-md space-y-6">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 border-b border-slate-800 pb-4">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 border-b border-brand-border pb-4">
         <div>
-          <h3 className="text-lg font-bold text-white flex items-center gap-2">
-            <Sparkles className="w-5 h-5 text-amber-300" />
+          <h3 className="text-lg font-bold text-brand-white flex items-center gap-2">
+            <Sparkles className="w-5 h-5 text-brand-skyblue-light" />
             Bảng Điều Khiển Auto-Optimizer (PuLP Solver)
           </h3>
-          <p className="text-xs text-slate-400 mt-1">
+          <p className="text-xs text-brand-muted mt-1">
             Thiết lập ngân sách, khóa trụ cột và để thuật toán 0-1 Integer Linear Programming tìm đội hình đạt điểm kỳ vọng cao nhất.
           </p>
         </div>
@@ -107,7 +107,7 @@ export const OptimizerControl: React.FC<OptimizerControlProps> = ({
         <button
           onClick={handleRunOptimizer}
           disabled={isOptimizing}
-          className="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-gradient-to-r from-amber-400 via-emerald-400 to-teal-400 text-slate-950 font-black text-sm flex items-center justify-center gap-2 shadow-lg shadow-emerald-500/25 hover:brightness-110 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+          className="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-brand-hotpink-dark hover:bg-brand-hotpink text-brand-white font-black text-sm flex items-center justify-center gap-2 shadow-lg shadow-brand-hotpink/25 hover:brightness-110 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
         >
           {isOptimizing ? (
             <>
@@ -116,7 +116,7 @@ export const OptimizerControl: React.FC<OptimizerControlProps> = ({
             </>
           ) : (
             <>
-              <Zap className="w-4 h-4 fill-slate-950" />
+              <Zap className="w-4 h-4 fill-brand-white" />
               <span>Tối Ưu Hóa Đội Hình</span>
             </>
           )}
@@ -126,13 +126,13 @@ export const OptimizerControl: React.FC<OptimizerControlProps> = ({
       {/* Control Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
         {/* Slider Ngân sách */}
-        <div className="bg-slate-950/60 border border-slate-800/80 rounded-xl p-4 space-y-3">
+        <div className="bg-brand-darker/60 border border-brand-border rounded-xl p-4 space-y-3">
           <div className="flex items-center justify-between text-xs sm:text-sm">
-            <span className="text-slate-300 font-semibold flex items-center gap-1.5">
+            <span className="text-brand-white font-semibold flex items-center gap-1.5">
               <span>Ngân sách tối đa:</span>
-              <span className="text-slate-500 text-xs font-normal">(FPL: £100.0m)</span>
+              <span className="text-brand-muted text-xs font-normal">(FPL: £100.0m)</span>
             </span>
-            <span className="font-extrabold text-emerald-400 text-base">
+            <span className="font-extrabold text-brand-skyblue-light text-base">
               £{budget.toFixed(1)}m
             </span>
           </div>
@@ -144,11 +144,11 @@ export const OptimizerControl: React.FC<OptimizerControlProps> = ({
             step="0.5"
             value={budget}
             onChange={(e) => setBudget(Number(e.target.value))}
-            className="w-full accent-emerald-400 cursor-pointer"
+            className="w-full accent-brand-skyblue cursor-pointer"
             aria-label="Ngân sách tối đa cho optimizer"
           />
 
-          <div className="flex justify-between text-[10px] text-slate-500">
+          <div className="flex justify-between text-[10px] text-brand-muted">
             <span>£80.0m (Tiết kiệm)</span>
             <span>£100.0m (Chuẩn)</span>
             <span>£105.0m (Mở rộng)</span>
@@ -156,10 +156,10 @@ export const OptimizerControl: React.FC<OptimizerControlProps> = ({
         </div>
 
         {/* Lựa chọn Sơ đồ mong muốn */}
-        <div className="bg-slate-950/60 border border-slate-800/80 rounded-xl p-4 space-y-3">
+        <div className="bg-brand-darker/60 border border-brand-border rounded-xl p-4 space-y-3">
           <div className="flex items-center justify-between text-xs sm:text-sm">
-            <span className="text-slate-300 font-semibold">Sơ đồ chiến thuật:</span>
-            <span className="text-xs font-bold text-fpl-cyan">
+            <span className="text-brand-white font-semibold">Sơ đồ chiến thuật:</span>
+            <span className="text-xs font-bold text-brand-skyblue-light">
               {targetFormation === 'auto' ? 'AI Tự Động Chọn Sơ Đồ Tốt Nhất' : targetFormation}
             </span>
           </div>
@@ -167,33 +167,33 @@ export const OptimizerControl: React.FC<OptimizerControlProps> = ({
           <select
             value={targetFormation}
             onChange={(e) => setTargetFormation(e.target.value as FormationType | 'auto')}
-            className="w-full py-2 px-3 bg-slate-900 border border-slate-700 rounded-lg text-sm text-slate-200 focus:outline-none focus:border-emerald-500 transition-colors"
+            className="w-full py-2 px-3 bg-brand-darker border border-brand-border rounded-lg text-sm text-brand-white focus:outline-none focus:border-brand-skyblue transition-colors"
             aria-label="Chọn sơ đồ chiến thuật cho optimizer"
           >
             {FORMATIONS.map((form) => (
-              <option key={form} value={form}>
+              <option key={form} value={form} className="bg-brand-darker text-brand-white">
                 {form === 'auto' ? '✨ Tự động tìm sơ đồ điểm cao nhất' : `Sơ đồ ${form}`}
               </option>
             ))}
           </select>
 
-          <p className="text-[11px] text-slate-400 flex items-center gap-1">
-            <Info className="w-3.5 h-3.5 text-slate-500" />
+          <p className="text-[11px] text-brand-muted flex items-center gap-1">
+            <Info className="w-3.5 h-3.5 text-brand-muted" />
             <span>Mặc định solver sẽ thử nghiệm tất cả 8 sơ đồ hợp lệ của FPL để chọn ra kết quả tối ưu.</span>
           </p>
         </div>
       </div>
 
       {/* Quản lý Lock & Exclude Cầu thủ */}
-      <div className="bg-slate-950/60 border border-slate-800/80 rounded-xl p-4 space-y-3">
-        <div className="flex items-center justify-between border-b border-slate-800/80 pb-3">
+      <div className="bg-brand-darker/60 border border-brand-border rounded-xl p-4 space-y-3">
+        <div className="flex items-center justify-between border-b border-brand-border pb-3">
           <div className="flex items-center gap-2">
             <button
               onClick={() => setActiveTab('locked')}
               className={`px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-all ${
                 activeTab === 'locked'
-                  ? 'bg-amber-400/20 text-amber-300 border border-amber-400/40'
-                  : 'text-slate-400 hover:text-slate-200'
+                  ? 'bg-brand-skyblue/20 text-brand-skyblue-light border border-brand-skyblue/40'
+                  : 'text-brand-muted hover:text-brand-white'
               }`}
             >
               <Lock className="w-3.5 h-3.5" />
@@ -204,8 +204,8 @@ export const OptimizerControl: React.FC<OptimizerControlProps> = ({
               onClick={() => setActiveTab('excluded')}
               className={`px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-all ${
                 activeTab === 'excluded'
-                  ? 'bg-rose-500/20 text-rose-300 border border-rose-500/40'
-                  : 'text-slate-400 hover:text-slate-200'
+                  ? 'bg-brand-hotpink/20 text-brand-hotpink-light border border-brand-hotpink/40'
+                  : 'text-brand-muted hover:text-brand-white'
               }`}
             >
               <Ban className="w-3.5 h-3.5" />
@@ -223,19 +223,19 @@ export const OptimizerControl: React.FC<OptimizerControlProps> = ({
             return (
               <div
                 key={player.id}
-                className="flex items-center justify-between px-3 py-2 bg-slate-900/60 hover:bg-slate-900 border border-slate-800/60 rounded-lg text-xs transition-colors"
+                className="flex items-center justify-between px-3 py-2 bg-brand-card/60 hover:bg-brand-card border border-brand-border/60 rounded-lg text-xs transition-colors"
               >
                 <div className="flex items-center gap-2">
-                  <span className="font-bold text-slate-200">{player.web_name}</span>
-                  <span className="text-[10px] px-1.5 py-0.2 bg-slate-800 text-slate-400 rounded">
+                  <span className="font-bold text-brand-white">{player.web_name}</span>
+                  <span className="text-[10px] px-1.5 py-0.2 bg-brand-darker text-brand-muted rounded">
                     {player.element_type}
                   </span>
-                  <span className="text-[10px] text-slate-400">{player.team_short_name}</span>
+                  <span className="text-[10px] text-brand-muted">{player.team_short_name}</span>
                 </div>
 
                 <div className="flex items-center gap-3">
-                  <span className="text-slate-400">£{player.now_cost.toFixed(1)}m</span>
-                  <span className="font-semibold text-emerald-400">{player.total_points}p</span>
+                  <span className="text-brand-muted">£{player.now_cost.toFixed(1)}m</span>
+                  <span className="font-semibold text-brand-skyblue-light">{player.total_points}p</span>
 
                   <div className="flex items-center gap-1.5">
                     {/* Nút Lock */}
@@ -243,8 +243,8 @@ export const OptimizerControl: React.FC<OptimizerControlProps> = ({
                       onClick={() => toggleLockPlayer(player.id)}
                       className={`p-1.5 rounded-md transition-colors ${
                         isLocked
-                          ? 'bg-amber-400 text-slate-950 shadow'
-                          : 'bg-slate-800 text-slate-400 hover:text-amber-300'
+                          ? 'bg-brand-skyblue text-brand-darker shadow font-bold'
+                          : 'bg-brand-card text-brand-muted hover:text-brand-skyblue-light'
                       }`}
                       title={isLocked ? 'Đã khóa cầu thủ này' : 'Khóa bắt buộc giữ'}
                     >
@@ -256,8 +256,8 @@ export const OptimizerControl: React.FC<OptimizerControlProps> = ({
                       onClick={() => toggleExcludePlayer(player.id)}
                       className={`p-1.5 rounded-md transition-colors ${
                         isExcluded
-                          ? 'bg-rose-500 text-white shadow'
-                          : 'bg-slate-800 text-slate-400 hover:text-rose-400'
+                          ? 'bg-brand-hotpink-dark text-brand-white shadow'
+                          : 'bg-brand-card text-brand-muted hover:text-brand-hotpink-light'
                       }`}
                       title={isExcluded ? 'Đã loại trừ cầu thủ này' : 'Loại trừ khỏi thuật toán'}
                     >
@@ -273,4 +273,3 @@ export const OptimizerControl: React.FC<OptimizerControlProps> = ({
     </div>
   );
 };
-

@@ -377,45 +377,45 @@ export function App() {
   const optimizedFullSquad = optimizedResult ? [...optimizedResult.starting_xi, ...optimizedResult.bench] : [];
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col font-sans selection:bg-fpl-green selection:text-fpl-purple">
+    <div className="min-h-screen bg-brand-dark text-brand-white flex flex-col font-sans selection:bg-brand-hotpink-dark selection:text-brand-white">
       {/* Toast Notification */}
       {notification && (
-        <div className="fixed top-20 right-6 z-50 bg-emerald-500 text-slate-950 font-bold px-4 py-2.5 rounded-xl shadow-2xl border border-emerald-400 flex items-center gap-2 animate-bounce">
+        <div className="fixed top-20 right-6 z-50 bg-brand-skyblue text-brand-darker font-bold px-4 py-2.5 rounded-xl shadow-2xl border border-brand-skyblue-light flex items-center gap-2 animate-toast-in">
           <span>{notification}</span>
         </div>
       )}
 
       {/* Top Navbar */}
-      <header className="border-b border-purple-900/40 bg-[#240029]/80 backdrop-blur-md sticky top-0 z-40">
+      <header className="border-b border-brand-border bg-brand-darker/80 backdrop-blur-md sticky top-0 z-40">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-fpl-purple to-fpl-magenta flex items-center justify-center shadow-lg shadow-purple-950/50 border border-fpl-green/30">
-              <Trophy className="w-5 h-5 text-fpl-green" />
+            <div className="w-10 h-10 rounded-xl bg-gradient-brand flex items-center justify-center shadow-lg shadow-brand-darker/50 border border-brand-skyblue/30">
+              <Trophy className="w-5 h-5 text-brand-white" />
             </div>
             <div>
               <h1 className="font-extrabold text-lg sm:text-xl tracking-tight text-white flex items-center gap-2">
-                FPL LINEUP <span className="text-fpl-green font-black">BUILDER</span>
+                FPL LINEUP <span className="text-brand-skyblue-light font-black">BUILDER</span>
               </h1>
-              <p className="text-xs text-purple-300/70 hidden sm:block">AI-Powered Fantasy Premier League Optimizer</p>
+              <p className="text-xs text-brand-muted hidden sm:block">AI-Powered Fantasy Premier League Optimizer</p>
             </div>
           </div>
 
           {/* Quick Lineup Status Widgets */}
           <div className="flex items-center gap-2 sm:gap-4 text-xs sm:text-sm">
-            <div className="flex items-center gap-2 bg-slate-900/80 border border-slate-800 px-3 py-1.5 rounded-lg shadow-inner">
-              <Wallet className="w-4 h-4 text-emerald-400" />
-              <span className="text-slate-400 hidden sm:inline">Ngân sách:</span>
-              <span className={`font-bold ${remainingBudget >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
+            <div className="flex items-center gap-2 bg-brand-darker/80 border border-brand-border px-3 py-1.5 rounded-lg shadow-inner">
+              <Wallet className="w-4 h-4 text-brand-skyblue-light" />
+              <span className="text-brand-muted hidden sm:inline">Ngân sách:</span>
+              <span className={`font-bold ${remainingBudget >= 0 ? 'text-brand-skyblue-light' : 'text-brand-hotpink-light'}`}>
                 £{remainingBudget.toFixed(1)}m
               </span>
-              <span className="text-slate-600">/</span>
-              <span className="text-slate-400">£{TOTAL_BUDGET.toFixed(1)}m</span>
+              <span className="text-brand-muted">/</span>
+              <span className="text-brand-muted">£{TOTAL_BUDGET.toFixed(1)}m</span>
             </div>
 
-            <div className="flex items-center gap-2 bg-slate-900/80 border border-slate-800 px-3 py-1.5 rounded-lg shadow-inner">
-              <Users className="w-4 h-4 text-sky-400" />
-              <span className="text-slate-400 hidden sm:inline">Đội hình:</span>
-              <span className={`font-bold ${totalPlayers === 15 ? 'text-emerald-400' : 'text-amber-400'}`}>
+            <div className="flex items-center gap-2 bg-brand-darker/80 border border-brand-border px-3 py-1.5 rounded-lg shadow-inner">
+              <Users className="w-4 h-4 text-brand-skyblue-light" />
+              <span className="text-brand-muted hidden sm:inline">Đội hình:</span>
+              <span className={`font-bold ${totalPlayers === 15 ? 'text-brand-skyblue-light' : 'text-brand-hotpink-light'}`}>
                 {totalPlayers}/15
               </span>
             </div>
@@ -423,7 +423,7 @@ export function App() {
             {/* Reset button */}
             <button
               onClick={() => resetLineup()}
-              className="p-1.5 rounded-lg bg-slate-900/80 hover:bg-rose-950/50 border border-slate-800 hover:border-rose-500/50 text-slate-400 hover:text-rose-400 transition-colors"
+              className="p-1.5 rounded-lg bg-brand-darker/80 hover:bg-brand-hotpink-dark/30 border border-brand-border hover:border-brand-hotpink/50 text-brand-muted hover:text-brand-hotpink-light transition-colors"
               title="Đặt lại đội hình"
             >
               <RotateCcw className="w-4 h-4" />
@@ -432,13 +432,13 @@ export function App() {
         </div>
 
         {/* Tab Navigation Bar */}
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex space-x-1 sm:space-x-2 border-t border-purple-900/30">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex space-x-1 sm:space-x-2 border-t border-brand-border/60">
           <button
             onClick={() => setActiveTab('pitch')}
             className={`py-3 px-3 sm:px-4 text-xs sm:text-sm font-semibold border-b-2 flex items-center gap-2 transition-all ${
               activeTab === 'pitch'
-                ? 'border-fpl-green text-fpl-green bg-purple-950/30'
-                : 'border-transparent text-slate-400 hover:text-slate-200 hover:bg-slate-900/40'
+                ? 'border-brand-skyblue text-brand-skyblue-light bg-brand-skyblue/10'
+                : 'border-transparent text-brand-muted hover:text-brand-white hover:bg-brand-card/40'
             }`}
           >
             <Layers className="w-4 h-4" />
@@ -449,8 +449,8 @@ export function App() {
             onClick={() => setActiveTab('players')}
             className={`py-3 px-3 sm:px-4 text-xs sm:text-sm font-semibold border-b-2 flex items-center gap-2 transition-all ${
               activeTab === 'players'
-                ? 'border-fpl-green text-fpl-green bg-purple-950/30'
-                : 'border-transparent text-slate-400 hover:text-slate-200 hover:bg-slate-900/40'
+                ? 'border-brand-skyblue text-brand-skyblue-light bg-brand-skyblue/10'
+                : 'border-transparent text-brand-muted hover:text-brand-white hover:bg-brand-card/40'
             }`}
           >
             <Users className="w-4 h-4" />
@@ -461,11 +461,11 @@ export function App() {
             onClick={() => setActiveTab('optimizer')}
             className={`py-3 px-3 sm:px-4 text-xs sm:text-sm font-semibold border-b-2 flex items-center gap-2 transition-all ${
               activeTab === 'optimizer'
-                ? 'border-fpl-green text-fpl-green bg-purple-950/30'
-                : 'border-transparent text-slate-400 hover:text-slate-200 hover:bg-slate-900/40'
+                ? 'border-brand-skyblue text-brand-skyblue-light bg-brand-skyblue/10'
+                : 'border-transparent text-brand-muted hover:text-brand-white hover:bg-brand-card/40'
             }`}
           >
-            <Sparkles className="w-4 h-4 text-amber-300" />
+            <Sparkles className="w-4 h-4 text-brand-skyblue-light" />
             <span>Bộ Tối Ưu (Optimizer)</span>
           </button>
 
@@ -473,11 +473,11 @@ export function App() {
             onClick={() => setActiveTab('compare')}
             className={`py-3 px-3 sm:px-4 text-xs sm:text-sm font-semibold border-b-2 flex items-center gap-2 transition-all ${
               activeTab === 'compare'
-                ? 'border-fpl-green text-fpl-green bg-purple-950/30'
-                : 'border-transparent text-slate-400 hover:text-slate-200 hover:bg-slate-900/40'
+                ? 'border-brand-skyblue text-brand-skyblue-light bg-brand-skyblue/10'
+                : 'border-transparent text-brand-muted hover:text-brand-white hover:bg-brand-card/40'
             }`}
           >
-            <GitCompare className="w-4 h-4 text-fpl-cyan" />
+            <GitCompare className="w-4 h-4 text-brand-skyblue-light" />
             <span>So Sánh (Compare)</span>
           </button>
         </div>
@@ -487,11 +487,11 @@ export function App() {
       <main className="flex-1 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 w-full">
         {/* Warning Banner if Lineup has validation errors */}
         {!validation.isValid && totalPlayers > 0 && (
-          <div className="mb-4 bg-amber-500/10 border border-amber-500/30 rounded-xl p-3 text-xs sm:text-sm text-amber-300 flex items-start gap-2.5 shadow-lg">
-            <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5 text-amber-400" />
+          <div className="mb-4 bg-brand-hotpink/10 border border-brand-hotpink/30 rounded-xl p-3 text-xs sm:text-sm text-brand-hotpink-light flex items-start gap-2.5 shadow-lg">
+            <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5 text-brand-hotpink" />
             <div>
               <p className="font-bold">Đội hình chưa hoàn tất yêu cầu của FPL:</p>
-              <ul className="list-disc list-inside mt-1 space-y-0.5 text-slate-300">
+              <ul className="list-disc list-inside mt-1 space-y-0.5 text-brand-white/80">
                 {validation.errors.map((err, i) => (
                   <li key={i}>{err}</li>
                 ))}
@@ -503,34 +503,34 @@ export function App() {
         {/* Tab Sân Bóng */}
         {activeTab === 'pitch' && (
           <section className="space-y-4">
-            <div className="bg-gradient-to-r from-purple-950/60 to-slate-900/60 border border-purple-800/30 rounded-2xl p-4 sm:p-6 backdrop-blur shadow-xl">
+            <div className="bg-gradient-to-r from-brand-card/80 to-brand-darker/80 border border-brand-border rounded-2xl p-4 sm:p-6 backdrop-blur shadow-xl">
               <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-4">
                 <div>
                   <h2 className="text-xl font-bold text-white flex items-center gap-2">
-                    <ShieldCheck className="w-5 h-5 text-fpl-green" />
+                    <ShieldCheck className="w-5 h-5 text-brand-skyblue-light" />
                     Đội hình thi đấu chính thức (Gameweek)
                   </h2>
-                  <p className="text-slate-400 text-sm mt-1">
+                  <p className="text-brand-muted text-sm mt-1">
                     Chọn đủ 15 cầu thủ (11 đá chính, 4 dự bị) trong ngân sách £100.0m và tối đa 3 người/CLB. Tự động lưu LocalStorage.
                   </p>
                 </div>
                 <div className="flex items-center gap-2">
                   <button
                     onClick={() => loadSampleLineup(INITIAL_STARTING_XI, INITIAL_BENCH)}
-                    className="px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold border border-slate-700 transition-colors"
+                    className="px-3 py-2 rounded-xl bg-brand-card hover:bg-brand-card-hover text-brand-white text-xs font-semibold border border-brand-skyblue/40 transition-colors"
                   >
                     Tải mẫu FPL
                   </button>
                   <button
                     onClick={() => setActiveTab('optimizer')}
-                    className="px-3.5 py-2 rounded-xl bg-gradient-to-r from-amber-400 to-emerald-400 text-slate-950 font-bold text-xs flex items-center gap-1.5 shadow-lg shadow-emerald-500/20 hover:brightness-110 transition-all"
+                    className="px-3.5 py-2 rounded-xl bg-brand-hotpink-dark hover:bg-brand-hotpink text-brand-white font-bold text-xs flex items-center gap-1.5 shadow-lg shadow-brand-hotpink/20 hover:brightness-110 transition-all"
                   >
-                    <Zap className="w-3.5 h-3.5 fill-slate-950" />
+                    <Zap className="w-3.5 h-3.5 fill-brand-white" />
                     <span>Auto-Optimize</span>
                   </button>
                   <button
                     onClick={() => setActiveTab('players')}
-                    className="px-4 py-2 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-400 text-slate-950 font-bold text-sm flex items-center gap-2 shadow-lg shadow-emerald-500/20 hover:brightness-110 transition-all"
+                    className="px-4 py-2 rounded-xl bg-brand-hotpink-dark hover:bg-brand-hotpink text-brand-white font-bold text-sm flex items-center gap-2 shadow-lg shadow-brand-hotpink/20 hover:brightness-110 transition-all"
                   >
                     <span>Chợ cầu thủ</span>
                     <ArrowRight className="w-4 h-4" />
@@ -559,10 +559,10 @@ export function App() {
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
               <div>
                 <h2 className="text-xl font-bold text-white flex items-center gap-2">
-                  <Users className="w-5 h-5 text-fpl-cyan" />
+                  <Users className="w-5 h-5 text-brand-skyblue-light" />
                   Thị Trường Chuyển Nhượng Cầu Thủ Premier League
                 </h2>
-                <p className="text-sm text-slate-400 mt-0.5">
+                <p className="text-sm text-brand-muted mt-0.5">
                   Lọc theo vị trí, CLB, tìm kiếm tên tức thì và bấm <strong>+ Chọn</strong> để đưa vào đội hình.
                 </p>
               </div>
@@ -610,7 +610,7 @@ export function App() {
       </main>
 
       {/* Footer */}
-      <footer className="border-t border-slate-900 bg-slate-950/80 py-4 mt-auto text-center text-xs text-slate-500">
+      <footer className="border-t border-brand-border bg-brand-darker/80 py-4 mt-auto text-center text-xs text-brand-muted">
         <p>Fantasy Football Lineup Builder & Optimizer • Cloud Computing Project 2026</p>
       </footer>
     </div>

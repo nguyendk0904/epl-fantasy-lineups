@@ -62,13 +62,13 @@ export function PlayerPitchSlot({
         className={`flex flex-col items-center justify-center p-2 rounded-2xl transition-all cursor-pointer group select-none
           backdrop-blur-md border border-dashed hover:scale-105 duration-200
           ${isBench 
-            ? 'w-20 sm:w-24 h-28 sm:h-32 bg-slate-900/40 border-slate-700/50 hover:border-fpl-green/60 hover:bg-slate-800/50' 
-            : 'w-20 sm:w-24 h-28 sm:h-32 bg-slate-950/40 border-white/20 hover:border-fpl-green/60 hover:bg-slate-900/60 shadow-lg'}`}
+            ? 'w-20 sm:w-24 h-28 sm:h-32 bg-brand-darker/40 border-brand-border/60 hover:border-brand-skyblue hover:bg-brand-card/50' 
+            : 'w-20 sm:w-24 h-28 sm:h-32 bg-brand-darker/40 border-white/20 hover:border-brand-skyblue hover:bg-brand-card/60 shadow-lg'}`}
       >
-        <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-full bg-white/5 border border-white/10 flex items-center justify-center text-slate-400 group-hover:text-fpl-green group-hover:bg-fpl-green/10 group-hover:scale-110 transition-all shadow-inner">
+        <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-full bg-white/5 border border-white/10 flex items-center justify-center text-brand-muted group-hover:text-brand-skyblue-light group-hover:bg-brand-skyblue/10 group-hover:scale-110 transition-all shadow-inner">
           <Plus className="w-5 h-5" />
         </div>
-        <span className="text-[11px] font-bold text-slate-300 mt-2 tracking-wider">
+        <span className="text-[11px] font-bold text-brand-white mt-2 tracking-wider">
           {expectedPosition}
         </span>
       </div>
@@ -79,14 +79,14 @@ export function PlayerPitchSlot({
 
   return (
     <div className="relative group flex flex-col items-center w-20 sm:w-24 select-none pb-7">
-      {/* Nút Xóa (X) Glassmorphism */}
+      {/* Nút Xóa (X) Glassmorphism - luôn hiển thị trên mobile/touch */}
       {onRemovePlayer && (
         <button
           onClick={(e) => {
             e.stopPropagation();
             onRemovePlayer(player.id);
           }}
-          className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-rose-500/80 backdrop-blur-md border border-rose-300/40 text-white flex items-center justify-center shadow-lg opacity-0 group-hover:opacity-100 hover:scale-110 hover:bg-rose-600 transition-all z-30"
+          className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-brand-hotpink-dark backdrop-blur-md border border-brand-hotpink/40 text-brand-white flex items-center justify-center shadow-lg hover:scale-110 hover:bg-brand-hotpink transition-all z-30"
           title="Xóa cầu thủ"
           aria-label={`Xóa ${player.web_name}`}
         >
@@ -98,13 +98,13 @@ export function PlayerPitchSlot({
       <div className={`relative w-full rounded-2xl p-2 pt-2.5 flex flex-col items-center transition-all duration-300
         backdrop-blur-md border shadow-xl group-hover:-translate-y-1 group-hover:shadow-2xl
         ${isBench 
-          ? 'bg-slate-900/60 border-slate-700/50 hover:border-slate-500' 
-          : 'bg-slate-950/50 border-white/15 hover:border-fpl-green/60 shadow-black/40'}`}
+          ? 'bg-brand-card/70 border-brand-border hover:border-brand-border-light' 
+          : 'bg-brand-card/70 border-white/15 hover:border-brand-skyblue shadow-black/40'}`}
       >
         {/* Ánh sáng phản chiếu kính Glass Glare */}
         <div className="absolute inset-x-0 top-0 h-1/2 bg-gradient-to-b from-white/10 to-transparent rounded-t-2xl pointer-events-none" />
 
-        {/* Áo thi đấu chính thức CLB (Premier League Jersey) */}
+        {/* Áo thi đấu chính thức CLB */}
         <div className="relative cursor-pointer h-12 sm:h-14 flex items-center justify-center">
           {!imgError ? (
             <img
@@ -116,49 +116,49 @@ export function PlayerPitchSlot({
             />
           ) : (
             // Fallback nếu ảnh không tải được
-            <div className="w-11 h-11 rounded-xl bg-gradient-to-b from-purple-600 to-indigo-800 border border-purple-300 shadow-md flex items-center justify-center text-white">
+            <div className="w-11 h-11 rounded-xl bg-gradient-to-b from-brand-skyblue-dark to-brand-skyblue border border-brand-skyblue/40 shadow-md flex items-center justify-center text-brand-white">
               <Shield className="w-6 h-6 drop-shadow" />
             </div>
           )}
 
-          {/* Badge Captain (C) - Glassmorphism Vàng */}
+          {/* Badge Captain (C) */}
           {player.isCaptain && (
-            <div className="absolute -bottom-1 -left-1.5 w-5 h-5 rounded-full bg-gradient-to-tr from-amber-500 to-yellow-300 text-slate-950 font-black text-[10px] flex items-center justify-center shadow-lg border border-white ring-2 ring-amber-400/50 shadow-amber-500/50 z-20">
+            <div className="absolute -bottom-1 -left-1.5 w-5 h-5 rounded-full bg-brand-hotpink-dark text-brand-white font-black text-[10px] flex items-center justify-center shadow-lg border border-brand-white ring-2 ring-brand-hotpink/50 shadow-brand-hotpink/50 z-20">
               C
             </div>
           )}
 
-          {/* Badge Vice-Captain (V) - Glassmorphism Xanh Neon */}
+          {/* Badge Vice-Captain (V) */}
           {player.isViceCaptain && (
-            <div className="absolute -bottom-1 -left-1.5 w-5 h-5 rounded-full bg-gradient-to-tr from-cyan-400 to-sky-300 text-slate-950 font-black text-[10px] flex items-center justify-center shadow-lg border border-white ring-2 ring-sky-400/50 shadow-cyan-500/50 z-20">
+            <div className="absolute -bottom-1 -left-1.5 w-5 h-5 rounded-full bg-brand-skyblue text-brand-darker font-black text-[10px] flex items-center justify-center shadow-lg border border-brand-white ring-2 ring-brand-skyblue/50 shadow-brand-skyblue/50 z-20">
               V
             </div>
           )}
         </div>
 
         {/* Tên cầu thủ (Glassmorphism Pill) */}
-        <div className="mt-1.5 w-full bg-black/40 backdrop-blur-md border border-white/10 rounded-lg px-1.5 py-0.5 text-center truncate shadow-inner">
-          <p className="text-[11px] sm:text-xs font-bold text-white truncate tracking-tight">
+        <div className="mt-1.5 w-full bg-brand-darker/60 backdrop-blur-md border border-white/10 rounded-lg px-1.5 py-0.5 text-center truncate shadow-inner">
+          <p className="text-[11px] sm:text-xs font-bold text-brand-white truncate tracking-tight">
             {player.web_name}
           </p>
         </div>
 
         {/* Giá & Điểm số (Glassmorphism Chip) */}
-        <div className="w-full mt-1 bg-emerald-950/60 backdrop-blur-md border border-emerald-500/30 rounded-md px-1 py-0.5 text-center flex items-center justify-between text-[10px] text-emerald-300 font-semibold shadow-inner">
+        <div className="w-full mt-1 bg-brand-darker/70 backdrop-blur-md border border-brand-skyblue/30 rounded-md px-1 py-0.5 text-center flex items-center justify-between text-[10px] text-brand-skyblue-light font-semibold shadow-inner">
           <span>£{player.now_cost.toFixed(1)}m</span>
-          <span className="text-white font-bold">{player.total_points}p</span>
+          <span className="text-brand-white font-bold">{player.total_points}p</span>
         </div>
       </div>
 
-      {/* Menu thao tác nhanh chọn C / V khi di chuột - Vùng hover liền mạch & hiển thị mượt mà */}
+      {/* Menu thao tác nhanh chọn C / V khi di chuột */}
       {!isBench && (
-        <div className="absolute bottom-0 left-1/2 -translate-x-1/2 opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto transition-all duration-200 flex items-center gap-1.5 bg-slate-900/95 backdrop-blur-md border border-emerald-500/40 px-2 py-1 rounded-xl shadow-[0_10px_25px_rgba(0,0,0,0.8)] z-40">
+        <div className="absolute bottom-0 left-1/2 -translate-x-1/2 opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto transition-all duration-200 flex items-center gap-1.5 bg-brand-darker/95 backdrop-blur-md border border-brand-skyblue/40 px-2 py-1 rounded-xl shadow-[0_10px_25px_rgba(4,22,32,0.8)] z-40">
           <button
             onClick={() => onSelectCaptain && onSelectCaptain(player.id)}
             className={`px-2 py-0.5 rounded-md text-[11px] font-black transition-all ${
               player.isCaptain 
-                ? 'bg-amber-400 text-slate-950 ring-2 ring-amber-300/50 shadow-sm' 
-                : 'bg-slate-800 text-slate-300 hover:bg-amber-400 hover:text-slate-950'
+                ? 'bg-brand-hotpink-dark text-brand-white ring-2 ring-brand-hotpink/50 shadow-sm' 
+                : 'bg-brand-card text-brand-muted hover:bg-brand-hotpink-dark hover:text-brand-white'
             }`}
             title="Chọn làm Captain (x2 điểm)"
           >
@@ -168,8 +168,8 @@ export function PlayerPitchSlot({
             onClick={() => onSelectViceCaptain && onSelectViceCaptain(player.id)}
             className={`px-2 py-0.5 rounded-md text-[11px] font-black transition-all ${
               player.isViceCaptain 
-                ? 'bg-sky-400 text-slate-950 ring-2 ring-sky-300/50 shadow-sm' 
-                : 'bg-slate-800 text-slate-300 hover:bg-sky-400 hover:text-slate-950'
+                ? 'bg-brand-skyblue text-brand-darker ring-2 ring-brand-skyblue/50 shadow-sm' 
+                : 'bg-brand-card text-brand-muted hover:bg-brand-skyblue hover:text-brand-darker'
             }`}
             title="Chọn làm Vice-Captain"
           >
