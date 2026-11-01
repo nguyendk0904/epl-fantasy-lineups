@@ -29,7 +29,7 @@ const INITIAL_STARTING_XI: LineupPlayer[] = [
   { id: 2, web_name: 'Saliba', team_id: 1, element_type: 'DEF', now_cost: 6.0, total_points: 85, expected_points_next: 4.5, isStarting: true, isCaptain: false, isViceCaptain: false, slotIndex: 0 },
   { id: 3, web_name: 'Gabriel', team_id: 1, element_type: 'DEF', now_cost: 6.0, total_points: 82, expected_points_next: 4.2, isStarting: true, isCaptain: false, isViceCaptain: false, slotIndex: 1 },
   { id: 4, web_name: 'Konsa', team_id: 2, element_type: 'DEF', now_cost: 4.5, total_points: 55, expected_points_next: 3.0, isStarting: true, isCaptain: false, isViceCaptain: false, slotIndex: 2 },
-  { id: 5, web_name: 'Robinson', team_id: 9, element_type: 'DEF', now_cost: 4.5, total_points: 60, expected_points_next: 3.2, isStarting: true, isCaptain: false, isViceCaptain: false, slotIndex: 3 },
+  { id: 5, web_name: 'Robinson', team_id: 8, element_type: 'DEF', now_cost: 4.5, total_points: 60, expected_points_next: 3.2, isStarting: true, isCaptain: false, isViceCaptain: false, slotIndex: 3 },
   { id: 6, web_name: 'Saka', team_id: 1, element_type: 'MID', now_cost: 10.0, total_points: 120, expected_points_next: 6.5, isStarting: true, isCaptain: false, isViceCaptain: true, slotIndex: 0 },
   { id: 7, web_name: 'Palmer', team_id: 5, element_type: 'MID', now_cost: 10.5, total_points: 135, expected_points_next: 7.2, isStarting: true, isCaptain: false, isViceCaptain: false, slotIndex: 1 },
   { id: 8, web_name: 'Rogers', team_id: 2, element_type: 'MID', now_cost: 5.0, total_points: 70, expected_points_next: 4.5, isStarting: true, isCaptain: false, isViceCaptain: false, slotIndex: 2 },
@@ -41,7 +41,7 @@ const INITIAL_STARTING_XI: LineupPlayer[] = [
 const INITIAL_BENCH: LineupPlayer[] = [
   { id: 12, web_name: 'Turner', team_id: 13, element_type: 'GKP', now_cost: 4.0, total_points: 20, expected_points_next: 1.0, isStarting: false, isCaptain: false, isViceCaptain: false, slotIndex: 0 },
   { id: 13, web_name: 'Dunk', team_id: 4, element_type: 'DEF', now_cost: 4.5, total_points: 50, expected_points_next: 2.8, isStarting: false, isCaptain: false, isViceCaptain: false, slotIndex: 1 },
-  { id: 14, web_name: 'Smith Rowe', team_id: 9, element_type: 'MID', now_cost: 5.5, total_points: 65, expected_points_next: 3.8, isStarting: false, isCaptain: false, isViceCaptain: false, slotIndex: 2 },
+  { id: 14, web_name: 'Smith Rowe', team_id: 8, element_type: 'MID', now_cost: 5.5, total_points: 65, expected_points_next: 3.8, isStarting: false, isCaptain: false, isViceCaptain: false, slotIndex: 2 },
   { id: 15, web_name: 'Semenyo', team_id: 3, element_type: 'MID', now_cost: 5.5, total_points: 75, expected_points_next: 4.5, isStarting: false, isCaptain: false, isViceCaptain: false, slotIndex: 3 },
 ];
 
@@ -50,7 +50,7 @@ export const SAMPLE_MARKET_PLAYERS: Player[] = [
   { id: 2, web_name: 'Saliba', first_name: 'William', second_name: 'Saliba', team_id: 1, team_short_name: 'ARS', element_type: 'DEF', now_cost: 6.0, total_points: 85, form: 5.0, expected_points_next: 4.5, status: 'a' },
   { id: 3, web_name: 'Gabriel', first_name: 'Gabriel', second_name: 'Magalhaes', team_id: 1, team_short_name: 'ARS', element_type: 'DEF', now_cost: 6.0, total_points: 82, form: 4.8, expected_points_next: 4.2, status: 'a' },
   { id: 4, web_name: 'Konsa', first_name: 'Ezri', second_name: 'Konsa', team_id: 2, team_short_name: 'AVL', element_type: 'DEF', now_cost: 4.5, total_points: 55, form: 3.5, expected_points_next: 3.0, status: 'a' },
-  { id: 5, web_name: 'Robinson', first_name: 'Antonee', second_name: 'Robinson', team_id: 9, team_short_name: 'FUL', element_type: 'DEF', now_cost: 4.5, total_points: 60, form: 4.0, expected_points_next: 3.2, status: 'a' },
+  { id: 5, web_name: 'Robinson', first_name: 'Antonee', second_name: 'Robinson', team_id: 8, team_short_name: 'FUL', element_type: 'DEF', now_cost: 4.5, total_points: 60, form: 4.0, expected_points_next: 3.2, status: 'a' },
   { id: 6, web_name: 'Saka', first_name: 'Bukayo', second_name: 'Saka', team_id: 1, team_short_name: 'ARS', element_type: 'MID', now_cost: 10.0, total_points: 120, form: 6.8, expected_points_next: 6.5, status: 'a' },
   { id: 7, web_name: 'Palmer', first_name: 'Cole', second_name: 'Palmer', team_id: 5, team_short_name: 'CHE', element_type: 'MID', now_cost: 10.5, total_points: 135, form: 7.5, expected_points_next: 7.2, status: 'a' },
   { id: 8, web_name: 'Rogers', first_name: 'Morgan', second_name: 'Rogers', team_id: 2, team_short_name: 'AVL', element_type: 'MID', now_cost: 5.0, total_points: 70, form: 5.2, expected_points_next: 4.5, status: 'a' },
@@ -59,7 +59,7 @@ export const SAMPLE_MARKET_PLAYERS: Player[] = [
   { id: 11, web_name: 'Delap', first_name: 'Liam', second_name: 'Delap', team_id: 10, team_short_name: 'MCI', element_type: 'FWD', now_cost: 5.5, total_points: 80, form: 4.5, expected_points_next: 4.0, status: 'a' },
   { id: 12, web_name: 'Turner', first_name: 'Matt', second_name: 'Turner', team_id: 13, team_short_name: 'NFO', element_type: 'GKP', now_cost: 4.0, total_points: 20, form: 1.0, expected_points_next: 1.0, status: 's' },
   { id: 13, web_name: 'Dunk', first_name: 'Lewis', second_name: 'Dunk', team_id: 4, team_short_name: 'BHA', element_type: 'DEF', now_cost: 4.5, total_points: 50, form: 3.2, expected_points_next: 2.8, status: 'a' },
-  { id: 14, web_name: 'Smith Rowe', first_name: 'Emile', second_name: 'Smith Rowe', team_id: 9, team_short_name: 'FUL', element_type: 'MID', now_cost: 5.5, total_points: 65, form: 4.0, expected_points_next: 3.8, status: 'a' },
+  { id: 14, web_name: 'Smith Rowe', first_name: 'Emile', second_name: 'Smith Rowe', team_id: 8, team_short_name: 'FUL', element_type: 'MID', now_cost: 5.5, total_points: 65, form: 4.0, expected_points_next: 3.8, status: 'a' },
   { id: 15, web_name: 'Semenyo', first_name: 'Antoine', second_name: 'Semenyo', team_id: 3, team_short_name: 'BRE', element_type: 'MID', now_cost: 5.5, total_points: 75, form: 5.0, expected_points_next: 4.5, status: 'a' },
   { id: 16, web_name: 'Salah', first_name: 'Mohamed', second_name: 'Salah', team_id: 9, team_short_name: 'LIV', element_type: 'MID', now_cost: 12.8, total_points: 170, form: 8.8, expected_points_next: 8.5, status: 'a' },
   { id: 17, web_name: 'Son', first_name: 'Heung-Min', second_name: 'Son', team_id: 14, team_short_name: 'TOT', element_type: 'MID', now_cost: 9.8, total_points: 110, form: 6.2, expected_points_next: 6.0, status: 'd' },

@@ -3,26 +3,22 @@ import { PositionType, LineupPlayer } from '../../types';
 import { X, Plus, Shield } from 'lucide-react';
 
 export const TEAM_CODE_MAP: Record<number, number> = {
-  1: 3,    // Arsenal
-  2: 7,    // Aston Villa
-  3: 91,   // Bournemouth
-  4: 94,   // Brentford
-  5: 36,   // Brighton
-  6: 8,    // Chelsea
-  7: 31,   // Crystal Palace
-  8: 11,   // Everton
-  9: 54,   // Fulham
-  10: 40,  // Ipswich
-  11: 13,  // Leicester
-  12: 14,  // Liverpool
-  13: 43,  // Man City
-  14: 1,   // Man Utd
-  15: 4,   // Newcastle
-  16: 17,  // Nottingham Forest
-  17: 20,  // Southampton
-  18: 6,   // Spurs
-  19: 21,  // West Ham
-  20: 39,  // Wolves
+  1: 3,    // Arsenal (ARS)
+  2: 7,    // Aston Villa (AVL)
+  3: 94,   // Brentford (BRE)
+  4: 36,   // Brighton (BHA)
+  5: 8,    // Chelsea (CHE)
+  6: 31,   // Crystal Palace (CRY)
+  7: 11,   // Everton (EVE)
+  8: 54,   // Fulham (FUL)
+  9: 14,   // Liverpool (LIV)
+  10: 43,  // Man City (MCI)
+  11: 1,   // Man Utd (MUN)
+  12: 4,   // Newcastle (NEW)
+  13: 17,  // Nottingham Forest (NFO)
+  14: 6,   // Tottenham (TOT)
+  15: 21,  // West Ham (WHU)
+  16: 39,  // Wolves (WOL)
 };
 
 export function getPlayerKitUrl(teamId: number, position: PositionType, teamCode?: number): string {
