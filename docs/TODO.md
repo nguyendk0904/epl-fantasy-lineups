@@ -13,11 +13,11 @@
 
 | Giai đoạn (Phase) | Hoàn thành | Tỷ lệ | Trạng thái |
 | :--- | :---: | :---: | :---: |
-| **Phase 1: Local Full-Stack Product** | **12 / 17** | `71%` | 🟡 Đang thực hiện |
+| **Phase 1: Local Full-Stack Product** | **13 / 17** | `76%` | 🟡 Đang thực hiện |
 | **Phase 2: AWS Services Integration** | **0 / 14** | `0%` | ⚪ Chờ Phase 1 |
 | **Phase 3: Production Deploy & E2E Test** | **0 / 14** | `0%` | ⚪ Chờ Phase 2 |
 | **Phase 4: Live Gamification & League Operations** | **0 / 14** | `0%` | ⚪ Chờ Phase 3 |
-| **TỔNG CỘNG TOÀN DỰ ÁN** | **12 / 59** | **20%** | 🟡 Đang thực hiện |
+| **TỔNG CỘNG TOÀN DỰ ÁN** | **13 / 59** | **22%** | 🟡 Đang thực hiện |
 
 ---
 
@@ -32,7 +32,7 @@
 
 ---
 
-## 🚀 PHASE 1: TẠO SẢN PHẨM HOÀN CHỈNH & TEST TRÊN LOCAL (12/17)
+## 🚀 PHASE 1: TẠO SẢN PHẨM HOÀN CHỈNH & TEST TRÊN LOCAL (13/17)
 *Mục tiêu: Chạy toàn bộ hệ thống trên localhost qua Docker Compose, dữ liệu FPL thật, test unit pass 100%.*
 
 ### 🎨 Nguyên (Frontend & UI Lead) - [5/5]
@@ -124,7 +124,7 @@
 
 ---
 
-### 🧠 Vũ (Data & Algorithm Engineer) - [3/4]
+### 🧠 Vũ (Data & Algorithm Engineer) - [4/4]
 
 - [x] **`P1-V01`** *(Level 3)*: Thiết kế Schema PostgreSQL & Alembic Migration
   - *Mô tả:* Khai báo SQLAlchemy ORM models cho bảng `teams`, `players` (kèm indexes vị trí, giá, điểm) và thiết lập file migration đầu tiên bằng Alembic.
@@ -153,7 +153,7 @@
   - *Tiêu chí chấp nhận (Acceptance Criteria):* Nhận payload JSON hợp lệ, gọi solver PuLP và trả về đội hình 15 người (Starting XI + Bench) kèm captain; xử lý an toàn ca vô nghiệm (status: infeasible).
   - *Cách kiểm chứng (Verification):* `pytest backend/tests/test_optimizer_api.py` pass 100%.
 
-- [ ] **`P1-V04`** *(Level 2)*: Xây dựng REST API `POST /api/v1/lineups/compare`
+- [x] **`P1-V04`** *(Level 2)*: Xây dựng REST API `POST /api/v1/lineups/compare`
   - *Mô tả:* Endpoint nhận vào 2 danh sách ID đội hình A và B, tính toán mức chênh lệch ngân sách, chênh lệch điểm xP, chỉ số sức mạnh từng tuyến và danh sách cầu thủ khác biệt.
   - *Phụ thuộc:* `P1-NH01`
   - *Thư mục:* `backend/app/api/v1/endpoints/`
