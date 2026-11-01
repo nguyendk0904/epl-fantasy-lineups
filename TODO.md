@@ -13,11 +13,11 @@
 
 | Giai đoạn (Phase) | Hoàn thành | Tỷ lệ | Trạng thái |
 | :--- | :---: | :---: | :---: |
-| **Phase 1: Local Full-Stack Product** | **14 / 17** | `82%` | 🟡 Đang thực hiện |
+| **Phase 1: Local Full-Stack Product** | **15 / 17** | `88%` | 🟡 Đang thực hiện |
 | **Phase 2: AWS Services Integration** | **0 / 14** | `0%` | ⚪ Chờ Phase 1 |
 | **Phase 3: Production Deploy & E2E Test** | **0 / 14** | `0%` | ⚪ Chờ Phase 2 |
 | **Phase 4: Live Gamification & League Operations** | **0 / 14** | `0%` | ⚪ Chờ Phase 3 |
-| **TỔNG CỘNG TOÀN DỰ ÁN** | **14 / 59** | `24%` | 🟡 Đang thực hiện |
+| **TỔNG CỘNG TOÀN DỰ ÁN** | **15 / 59** | `25%` | 🟡 Đang thực hiện |
 
 ---
 
@@ -74,7 +74,7 @@
 
 ---
 
-### ⚙️ Nhất (Backend Core & FPL Sync Lead) - [3/4]
+### ⚙️ Nhất (Backend Core & FPL Sync Lead) - [4/4]
 
 - [x] **`P1-NH01`** *(Level 2)*: Khởi tạo base FastAPI, CORS, SQLAlchemy Async
   - *Mô tả:* Dựng khung ứng dụng FastAPI, cấu hình CORS cho frontend, thiết lập file config biến môi trường Pydantic và session async kết nối PostgreSQL.
@@ -97,12 +97,13 @@
   - *File tạo mới (3 files):* `backend/app/schemas/player.py`, `backend/app/api/v1/endpoints/players.py`, `backend/tests/test_players_api.py`.
   - *Branch:* `feature/P1-NH03-players-api`
 
-- [ ] **`P1-NH04`** *(Level 1)*: Xây dựng REST API `GET /api/v1/teams`
+- [x] **`P1-NH04`** *(Level 1)*: Xây dựng REST API `GET /api/v1/teams`
   - *Mô tả:* API trả về danh sách 20 đội bóng Premier League kèm tên viết tắt (ARS, MCI,...), chỉ số sức mạnh tổng thể và sức mạnh công/thủ.
   - *Phụ thuộc:* `P1-NH02`
   - *Thư mục:* `backend/app/api/v1/endpoints/`
   - *File tạo mới (3 files):* `backend/app/schemas/team.py`, `backend/app/api/v1/endpoints/teams.py`, `backend/tests/test_teams_api.py`.
   - *Branch:* `feature/P1-NH04-teams-api`
+  - *Kiểm thử:* 5/5 test Teams API pass; bộ kiểm thử Teams, Players, main và models: 37/37 pass trên SQLite. Chưa xác minh dữ liệu 20 CLB trên PostgreSQL thật; chưa chạy lint vì môi trường chưa có công cụ.
 
 ---
 

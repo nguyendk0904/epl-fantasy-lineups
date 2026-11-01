@@ -2,6 +2,7 @@ from fastapi import FastAPI, APIRouter
 from fastapi.middleware.cors import CORSMiddleware
 from app.core.config import settings
 from app.api.v1.endpoints.players import router as players_router
+from app.api.v1.endpoints.teams import router as teams_router
 from app.api.v1.endpoints.optimizer import router as optimizer_router
 from app.api.v1.endpoints.lineups import router as lineups_router
 
@@ -39,6 +40,7 @@ async def api_health_check():
 
 # Include endpoint routers
 api_v1_router.include_router(players_router, prefix="/players")
+api_v1_router.include_router(teams_router, prefix="/teams")
 api_v1_router.include_router(optimizer_router)
 api_v1_router.include_router(lineups_router)
 
