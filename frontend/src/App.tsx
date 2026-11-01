@@ -19,6 +19,7 @@ import { OptimizerControl, OptimizerConfig, OptimizerResult } from './components
 import { LineupComparisonView } from './components/comparison/LineupComparisonView';
 import { PositionType, Player, LineupPlayer, FormationType } from './types';
 import { useLineupStore, TOTAL_BUDGET } from './stores/lineupStore';
+import { useMediaQuery } from './hooks/useMediaQuery';
 
 export type TabType = 'pitch' | 'players' | 'optimizer' | 'compare';
 
@@ -72,6 +73,7 @@ export const SAMPLE_MARKET_PLAYERS: Player[] = [
 ];
 
 export function App() {
+  const isSplit = useMediaQuery('(min-width: 1280px)');
   const [activeTab, setActiveTab] = useState<TabType>('pitch');
   const [isOptimizing, setIsOptimizing] = useState<boolean>(false);
   const [optimizedResult, setOptimizedResult] = useState<OptimizerResult | null>(null);
@@ -107,6 +109,13 @@ export function App() {
     }
   }, []);
 
+  // Tự động chuyển tab 'players' sang 'pitch' khi màn hình lớn chia đôi
+  useEffect(() => {
+    if (isSplit && activeTab === 'players') {
+      setActiveTab('pitch');
+    }
+  }, [isSplit, activeTab]);
+
   // Tự tắt Toast sau 3 giây
   useEffect(() => {
     if (notification) {
@@ -125,7 +134,9 @@ export function App() {
 
   const handleAddPlayerClick = (position: PositionType, slotIndex?: number, isBench?: boolean) => {
     setTargetSlot({ position, slotIndex, isBench: !!isBench });
-    setActiveTab('players');
+    if (!isSplit) {
+      setActiveTab('players');
+    }
   };
 
   const handleSelectPlayerFromMarket = (player: Player) => {
@@ -387,7 +398,7 @@ export function App() {
 
       {/* Top Navbar */}
       <header className="border-b border-brand-border bg-brand-darker/80 backdrop-blur-md sticky top-0 z-40">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+        <div className={`mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between ${isSplit ? "max-w-screen-2xl" : "max-w-7xl"}`}>
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl bg-gradient-brand flex items-center justify-center shadow-lg shadow-brand-darker/50 border border-brand-skyblue/30">
               <Trophy className="w-5 h-5 text-brand-white" />
@@ -446,7 +457,7 @@ export function App() {
         </div>
 
         {/* Tab Navigation Bar */}
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex space-x-1 sm:space-x-2 border-t border-brand-border/60">
+        <div className={`mx-auto px-4 sm:px-6 lg:px-8 flex space-x-1 sm:space-x-2 border-t border-brand-border/60 ${isSplit ? "max-w-screen-2xl" : "max-w-7xl"}`}>
           <button
             onClick={() => setActiveTab('pitch')}
             className={`py-3 px-3 sm:px-4 text-xs sm:text-sm font-semibold border-b-2 flex items-center gap-2 transition-all ${
@@ -459,6 +470,7 @@ export function App() {
             <span>Sân Bóng (Pitch View)</span>
           </button>
 
+          {!isSplit && (
           <button
             onClick={() => setActiveTab('players')}
             className={`py-3 px-3 sm:px-4 text-xs sm:text-sm font-semibold border-b-2 flex items-center gap-2 transition-all ${
@@ -470,6 +482,7 @@ export function App() {
             <Users className="w-4 h-4" />
             <span>Thị Trường Cầu Thủ (Player Table)</span>
           </button>
+          )}
 
           <button
             onClick={() => setActiveTab('optimizer')}
@@ -498,7 +511,7 @@ export function App() {
       </header>
 
       {/* Main Content Area */}
-      <main className="flex-1 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 w-full">
+      <main className={`flex-1 mx-auto px-4 sm:px-6 lg:px-8 py-6 w-full ${isSplit ? "max-w-screen-2xl" : "max-w-7xl"}`}>
         {/* Warning Banner if Lineup has validation errors */}
         {!validation.isValid && totalPlayers > 0 && (
           <div className="mb-4 bg-brand-hotpink/10 border border-brand-hotpink/30 rounded-xl p-3 text-xs sm:text-sm text-brand-hotpink-light flex items-start gap-2.5 shadow-lg">
@@ -542,6 +555,7 @@ export function App() {
                     <Zap className="w-3.5 h-3.5 fill-brand-white" />
                     <span>Auto-Optimize</span>
                   </button>
+                  {!isSplit && (
                   <button
                     onClick={() => setActiveTab('players')}
                     className="px-4 py-2 rounded-xl bg-brand-hotpink-dark hover:bg-brand-hotpink text-brand-white font-bold text-sm flex items-center gap-2 shadow-lg shadow-brand-hotpink/20 hover:brightness-110 transition-all"
@@ -549,20 +563,58 @@ export function App() {
                     <span>Chợ cầu thủ</span>
                     <ArrowRight className="w-4 h-4" />
                   </button>
+                  )}
                 </div>
               </div>
 
-              {/* Integrated VirtualPitch Component */}
-              <VirtualPitch
-                startingXI={startingXI}
-                bench={bench}
-                formation={formation}
-                onFormationChange={setFormation}
-                onSelectCaptain={setCaptain}
-                onSelectViceCaptain={setViceCaptain}
-                onRemovePlayer={removePlayer}
-                onAddPlayerClick={handleAddPlayerClick}
-              />
+              {/* Integrated VirtualPitch Component (Chia đôi 2 cột khi isSplit >= 1280px) */}
+              {isSplit ? (
+                <div className="grid grid-cols-[400px_minmax(0,1fr)] gap-6 items-start">
+                  {/* Cột trái: Bảng thị trường cầu thủ sticky */}
+                  <div className="sticky top-20 max-h-[calc(100vh-6.5rem)] overflow-y-auto pr-1 space-y-3">
+                    <div className="border-b border-brand-border pb-2 flex items-center justify-between">
+                      <h3 className="text-sm font-bold text-brand-white flex items-center gap-1.5">
+                        <Users className="w-4 h-4 text-brand-skyblue-light" />
+                        <span>Player Selection</span>
+                      </h3>
+                      <span className="text-[11px] text-brand-muted">Chọn max 3/CLB</span>
+                    </div>
+                    <PlayerTable
+                      players={SAMPLE_MARKET_PLAYERS}
+                      selectedPlayerIds={selectedPlayerIds}
+                      targetSlot={targetSlot}
+                      onCancelTargetSlot={() => setTargetSlot(null)}
+                      onSelectPlayer={handleSelectPlayerFromMarket}
+                      variant="compact"
+                    />
+                  </div>
+
+                  {/* Cột phải: Sân bóng ảo */}
+                  <div className="min-w-0">
+                    <VirtualPitch
+                      startingXI={startingXI}
+                      bench={bench}
+                      formation={formation}
+                      onFormationChange={setFormation}
+                      onSelectCaptain={setCaptain}
+                      onSelectViceCaptain={setViceCaptain}
+                      onRemovePlayer={removePlayer}
+                      onAddPlayerClick={handleAddPlayerClick}
+                    />
+                  </div>
+                </div>
+              ) : (
+                <VirtualPitch
+                  startingXI={startingXI}
+                  bench={bench}
+                  formation={formation}
+                  onFormationChange={setFormation}
+                  onSelectCaptain={setCaptain}
+                  onSelectViceCaptain={setViceCaptain}
+                  onRemovePlayer={removePlayer}
+                  onAddPlayerClick={handleAddPlayerClick}
+                />
+              )}
             </div>
           </section>
         )}

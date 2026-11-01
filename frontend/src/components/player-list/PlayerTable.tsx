@@ -7,6 +7,7 @@ import {
   SortingState,
   ColumnDef,
   flexRender,
+  VisibilityState,
 } from '@tanstack/react-table';
 import {
   ArrowUpDown,
@@ -34,6 +35,7 @@ export interface PlayerTableProps {
   } | null;
   onCancelTargetSlot?: () => void;
   className?: string;
+  variant?: 'default' | 'compact';
 }
 
 const POSITION_BADGE_COLORS: Record<PositionType, string> = {
@@ -50,7 +52,10 @@ export const PlayerTable: React.FC<PlayerTableProps> = ({
   targetSlot = null,
   onCancelTargetSlot,
   className = '',
+  variant = 'default',
 }) => {
+  const isCompact = variant === 'compact';
+
   const [sorting, setSorting] = useState<SortingState>([
     { id: 'total_points', desc: true },
   ]);
@@ -114,9 +119,9 @@ export const PlayerTable: React.FC<PlayerTableProps> = ({
 
           return (
             <div className="flex items-center gap-2">
-              <div className="flex flex-col">
-                <div className="flex items-center gap-1.5">
-                  <span className="font-semibold text-brand-white text-sm hover:text-brand-skyblue-light transition-colors">
+              <div className="flex flex-col min-w-0">
+                <div className="flex items-center gap-1.5 flex-wrap">
+                  <span className="font-semibold text-brand-white text-xs sm:text-sm hover:text-brand-skyblue-light transition-colors truncate">
                     {player.web_name}
                   </span>
                   {isInjured && (
@@ -135,8 +140,11 @@ export const PlayerTable: React.FC<PlayerTableProps> = ({
                     </span>
                   )}
                 </div>
-                <span className="text-xs text-brand-muted font-medium">
-                  {player.team_short_name ?? `Team ${player.team_id}`}
+                {/* Ở chế độ compact hiển thị dòng phụ 'CLB · VỊ TRÍ' giống web gốc FPL */}
+                <span className="text-[11px] text-brand-muted font-medium">
+                  {isCompact 
+                    ? `${player.team_short_name ?? `Team ${player.team_id}`} · ${player.element_type}`
+                    : (player.team_short_name ?? `Team ${player.team_id}`)}
                 </span>
               </div>
             </div>
@@ -177,7 +185,7 @@ export const PlayerTable: React.FC<PlayerTableProps> = ({
           </button>
         ),
         cell: ({ row }) => (
-          <span className="font-bold text-brand-white text-sm">
+          <span className="font-bold text-brand-white text-xs sm:text-sm">
             £{row.original.now_cost.toFixed(1)}m
           </span>
         ),
@@ -200,7 +208,7 @@ export const PlayerTable: React.FC<PlayerTableProps> = ({
           </button>
         ),
         cell: ({ row }) => (
-          <span className="font-black text-brand-skyblue-light text-sm">
+          <span className="font-black text-brand-skyblue-light text-xs sm:text-sm">
             {row.original.total_points}
           </span>
         ),
@@ -223,7 +231,7 @@ export const PlayerTable: React.FC<PlayerTableProps> = ({
           </button>
         ),
         cell: ({ row }) => (
-          <span className="text-brand-white text-sm">
+          <span className="text-brand-white text-xs sm:text-sm">
             {row.original.form !== undefined ? row.original.form.toFixed(1) : '-'}
           </span>
         ),
@@ -246,7 +254,7 @@ export const PlayerTable: React.FC<PlayerTableProps> = ({
           </button>
         ),
         cell: ({ row }) => (
-          <span className="text-brand-white font-semibold text-sm">
+          <span className="text-brand-white font-semibold text-xs sm:text-sm">
             {row.original.expected_points_next !== undefined
               ? row.original.expected_points_next.toFixed(1)
               : '-'}
@@ -264,7 +272,7 @@ export const PlayerTable: React.FC<PlayerTableProps> = ({
             <button
               onClick={() => onSelectPlayer && onSelectPlayer(player)}
               disabled={isSelected}
-              className={`px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1 transition-all ${
+              className={`px-2.5 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1 transition-all ${
                 isSelected
                   ? 'bg-brand-card text-brand-muted cursor-not-allowed'
                   : 'bg-brand-hotpink-dark hover:bg-brand-hotpink text-brand-white shadow-md shadow-brand-hotpink/20 active:scale-95'
@@ -274,7 +282,7 @@ export const PlayerTable: React.FC<PlayerTableProps> = ({
               {isSelected ? (
                 <>
                   <Check className="w-3.5 h-3.5" />
-                  <span>Đã chọn</span>
+                  <span className={isCompact ? 'hidden' : 'inline'}>Đã chọn</span>
                 </>
               ) : (
                 <>
@@ -287,14 +295,27 @@ export const PlayerTable: React.FC<PlayerTableProps> = ({
         },
       },
     ],
-    [onSelectPlayer, selectedSet]
+    [onSelectPlayer, selectedSet, isCompact]
   );
+
+  // Column visibility for compact mode
+  const columnVisibility = useMemo<VisibilityState>(() => {
+    if (isCompact) {
+      return {
+        element_type: false,
+        form: false,
+        expected_points_next: false,
+      };
+    }
+    return {};
+  }, [isCompact]);
 
   const table = useReactTable({
     data: filteredData,
     columns,
     state: {
       sorting,
+      columnVisibility,
     },
     onSortingChange: setSorting,
     getCoreRowModel: getCoreRowModel(),
@@ -308,43 +329,45 @@ export const PlayerTable: React.FC<PlayerTableProps> = ({
   });
 
   return (
-    <div className={`space-y-4 ${className}`}>
+    <div className={`space-y-3 ${className}`}>
       {/* Target Slot Banner */}
       {targetSlot && (
-        <div className="bg-gradient-to-r from-brand-card via-brand-darker to-brand-darker border border-brand-skyblue/50 rounded-xl p-3.5 flex items-center justify-between shadow-lg shadow-brand-skyblue/10 backdrop-blur-md">
-          <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-lg bg-brand-skyblue/20 border border-brand-skyblue/40 flex items-center justify-center text-brand-skyblue-light">
+        <div className="bg-gradient-to-r from-brand-card via-brand-darker to-brand-darker border border-brand-skyblue/50 rounded-xl p-3 flex items-center justify-between shadow-lg shadow-brand-skyblue/10 backdrop-blur-md">
+          <div className="flex items-center gap-2.5">
+            <div className="w-7 h-7 rounded-lg bg-brand-skyblue/20 border border-brand-skyblue/40 flex items-center justify-center text-brand-skyblue-light shrink-0">
               <Target className="w-4 h-4" />
             </div>
             <div>
-              <p className="text-sm font-bold text-brand-skyblue-light flex items-center gap-2">
-                <span>Đang chọn cầu thủ cho vị trí:</span>
-                <span className="px-2 py-0.5 rounded bg-brand-skyblue text-brand-darker font-black text-xs uppercase">
+              <p className="text-xs sm:text-sm font-bold text-brand-skyblue-light flex items-center gap-1.5 flex-wrap">
+                <span>Vị trí nhắm:</span>
+                <span className="px-1.5 py-0.2 rounded bg-brand-skyblue text-brand-darker font-black text-xs uppercase">
                   {targetSlot.position}
                 </span>
                 <span className="text-brand-muted text-xs font-normal">
-                  ({targetSlot.isBench ? 'Ghế dự bị' : 'Đội hình chính thức'})
+                  ({targetSlot.isBench ? 'Dự bị' : 'Chính thức'})
                 </span>
               </p>
-              <p className="text-xs text-brand-muted mt-0.5">
-                Bảng đã tự động lọc các cầu thủ vị trí <strong>{targetSlot.position}</strong>. Bấm nút <strong>+ Chọn</strong> để đưa ngay vào vị trí này!
-              </p>
+              {!isCompact && (
+                <p className="text-[11px] text-brand-muted mt-0.5">
+                  Bảng đã lọc cầu thủ <strong>{targetSlot.position}</strong>. Bấm <strong>+ Chọn</strong> để đưa vào slot!
+                </p>
+              )}
             </div>
           </div>
           {onCancelTargetSlot && (
             <button
               onClick={onCancelTargetSlot}
-              className="flex items-center gap-1 px-3 py-1.5 rounded-lg bg-brand-card hover:bg-brand-card-hover text-xs text-brand-muted hover:text-brand-white border border-brand-border transition-colors"
+              className="flex items-center gap-1 px-2.5 py-1 rounded-lg bg-brand-card hover:bg-brand-card-hover text-xs text-brand-muted hover:text-brand-white border border-brand-border transition-colors shrink-0"
             >
               <X className="w-3.5 h-3.5" />
-              <span>Hủy nhắm vị trí</span>
+              <span className={isCompact ? 'hidden' : 'inline'}>Hủy nhắm vị trí</span>
             </button>
           )}
         </div>
       )}
 
       {/* Filters */}
-      <PlayerFilters filters={filters} onFilterChange={setFilters} />
+      <PlayerFilters filters={filters} onFilterChange={setFilters} compact={isCompact} />
 
       {/* Table Container */}
       <div className="bg-brand-card/90 border border-brand-border rounded-xl overflow-hidden shadow-xl backdrop-blur-md">
@@ -356,7 +379,7 @@ export const PlayerTable: React.FC<PlayerTableProps> = ({
                   {headerGroup.headers.map((header) => (
                     <th
                       key={header.id}
-                      className="px-4 py-3 text-xs font-bold uppercase tracking-wider text-brand-muted"
+                      className={`${isCompact ? 'px-2.5 py-2' : 'px-4 py-3'} text-xs font-bold uppercase tracking-wider text-brand-muted`}
                     >
                       {header.isPlaceholder
                         ? null
@@ -374,7 +397,7 @@ export const PlayerTable: React.FC<PlayerTableProps> = ({
                     className="hover:bg-brand-card-hover transition-colors group"
                   >
                     {row.getVisibleCells().map((cell) => (
-                      <td key={cell.id} className="px-4 py-3 text-sm">
+                      <td key={cell.id} className={`${isCompact ? 'px-2.5 py-2' : 'px-4 py-3'} text-sm`}>
                         {flexRender(cell.column.columnDef.cell, cell.getContext())}
                       </td>
                     ))}
@@ -382,9 +405,9 @@ export const PlayerTable: React.FC<PlayerTableProps> = ({
                 ))
               ) : (
                 <tr>
-                  <td colSpan={columns.length} className="px-4 py-12 text-center text-brand-muted">
-                    <UserCheck className="w-8 h-8 mx-auto mb-2 text-brand-muted" />
-                    <p className="text-sm font-medium">Không tìm thấy cầu thủ nào phù hợp với bộ lọc</p>
+                  <td colSpan={columns.length} className="px-4 py-8 text-center text-brand-muted">
+                    <UserCheck className="w-7 h-7 mx-auto mb-1.5 text-brand-muted" />
+                    <p className="text-xs font-medium">Không tìm thấy cầu thủ phù hợp</p>
                   </td>
                 </tr>
               )}
@@ -393,24 +416,21 @@ export const PlayerTable: React.FC<PlayerTableProps> = ({
         </div>
 
         {/* Pagination & Status Bar */}
-        <div className="flex flex-col sm:flex-row items-center justify-between px-4 py-3 border-t border-brand-border bg-brand-darker/60 gap-3">
+        <div className="flex flex-col sm:flex-row items-center justify-between px-3 py-2.5 border-t border-brand-border bg-brand-darker/60 gap-2">
           <div className="text-xs text-brand-muted">
-            Hiển thị <span className="font-semibold text-brand-white">{filteredData.length}</span> cầu thủ
-            {players.length !== filteredData.length && (
-              <span> (lọc từ tổng số {players.length})</span>
-            )}
+            <span className="font-semibold text-brand-white">{filteredData.length}</span> cầu thủ
           </div>
 
-          <div className="flex items-center gap-2">
-            <span className="text-xs text-brand-muted mr-2">
-              Trang <span className="font-semibold text-brand-white">{table.getState().pagination.pageIndex + 1}</span> /{' '}
+          <div className="flex items-center gap-1.5">
+            <span className="text-xs text-brand-muted mr-1.5">
+              <span className="font-semibold text-brand-white">{table.getState().pagination.pageIndex + 1}</span> /{' '}
               <span className="font-semibold text-brand-white">{Math.max(1, table.getPageCount())}</span>
             </span>
 
             <button
               onClick={() => table.previousPage()}
               disabled={!table.getCanPreviousPage()}
-              className="p-1.5 rounded-lg bg-brand-card hover:bg-brand-card-hover border border-brand-border disabled:opacity-40 disabled:cursor-not-allowed text-brand-white transition-colors"
+              className="p-1 rounded-lg bg-brand-card hover:bg-brand-card-hover border border-brand-border disabled:opacity-40 disabled:cursor-not-allowed text-brand-white transition-colors"
               aria-label="Trang trước"
             >
               <ChevronLeft className="w-4 h-4" />
@@ -419,7 +439,7 @@ export const PlayerTable: React.FC<PlayerTableProps> = ({
             <button
               onClick={() => table.nextPage()}
               disabled={!table.getCanNextPage()}
-              className="p-1.5 rounded-lg bg-brand-card hover:bg-brand-card-hover border border-brand-border disabled:opacity-40 disabled:cursor-not-allowed text-brand-white transition-colors"
+              className="p-1 rounded-lg bg-brand-card hover:bg-brand-card-hover border border-brand-border disabled:opacity-40 disabled:cursor-not-allowed text-brand-white transition-colors"
               aria-label="Trang kế tiếp"
             >
               <ChevronRight className="w-4 h-4" />
