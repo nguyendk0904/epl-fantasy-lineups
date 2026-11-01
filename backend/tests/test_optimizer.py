@@ -1,9 +1,14 @@
 from collections import Counter
 from pathlib import Path
+from types import SimpleNamespace
 
 import pytest
 import pulp
+from fastapi import FastAPI
+from httpx import ASGITransport, AsyncClient
 
+from app.api.v1.endpoints.optimizer import router as optimizer_router
+from app.core.database import get_db
 from app.services.optimizer_solver import (
     PlayerCandidate,
     _build_optimizer_model,
@@ -236,3 +241,160 @@ def test_solver_reports_infeasible_position_pool():
 
     with pytest.raises(ValueError, match="No feasible 15-player squad"):
         optimize_squad(players, budget=100.0)
+
+
+def _optimizer_api_rows():
+    positions = ["GKP"] * 2 + ["DEF"] * 5 + ["MID"] * 5 + ["FWD"] * 3
+    points = [9, 3, 10, 9, 8, 7, 6, 10, 9, 8, 7, 6, 10, 9, 8]
+    return [
+        SimpleNamespace(
+            id=index + 1,
+            team_id=index + 1,
+            element_type=position,
+            now_cost=1.0,
+            expected_points_next=point,
+            web_name=f"Player {index + 1}",
+        )
+        for index, (position, point) in enumerate(zip(positions, points))
+    ]
+
+
+def _optimizer_api_app(rows=None):
+    app = FastAPI()
+    app.include_router(optimizer_router, prefix="/api/v1")
+    player_rows = rows if rows is not None else _optimizer_api_rows()
+
+    class FakeResult:
+        def scalars(self):
+            return self
+
+        def all(self):
+            return player_rows
+
+    class FakeSession:
+        async def execute(self, _query):
+            return FakeResult()
+
+    async def override_get_db():
+        return FakeSession()
+
+    app.dependency_overrides[get_db] = override_get_db
+    return app
+
+
+@pytest.mark.asyncio
+async def test_optimizer_api_returns_optimal_xi_captain_and_bench():
+    app = _optimizer_api_app()
+    async with AsyncClient(
+        transport=ASGITransport(app=app), base_url="http://test"
+    ) as client:
+        response = await client.post(
+            "/api/v1/optimizer/solve",
+            json={"budget": 20, "target_formation": "3-4-3"},
+        )
+
+    assert response.status_code == 200
+    data = response.json()
+    assert data["status"] == "optimal"
+    assert len(data["starting_xi"]) == 11
+    assert len(data["bench"]) == 4
+    assert Counter(p["element_type"] for p in data["starting_xi"]) == {
+        "GKP": 1,
+        "DEF": 3,
+        "MID": 4,
+        "FWD": 3,
+    }
+    assert data["bench"][0]["element_type"] == "GKP"
+    assert data["formation"] == "3-4-3"
+    starter_ids = {p["id"] for p in data["starting_xi"]}
+    assert data["captain_id"] in starter_ids
+    assert data["vice_captain_id"] in starter_ids
+    assert data["vice_captain_id"] != data["captain_id"]
+    starting_points = sum(p["expected_points_next"] for p in data["starting_xi"])
+    captain_points = next(
+        p["expected_points_next"]
+        for p in data["starting_xi"]
+        if p["id"] == data["captain_id"]
+    )
+    assert data["total_expected_points"] == starting_points + captain_points
+
+
+@pytest.mark.asyncio
+async def test_optimizer_api_automatically_selects_a_valid_formation():
+    app = _optimizer_api_app()
+    async with AsyncClient(
+        transport=ASGITransport(app=app), base_url="http://test"
+    ) as client:
+        response = await client.post("/api/v1/optimizer/solve", json={"budget": 20})
+
+    data = response.json()
+    assert response.status_code == 200
+    assert data["status"] == "optimal"
+    counts = Counter(p["element_type"] for p in data["starting_xi"])
+    assert counts["GKP"] == 1
+    assert 3 <= counts["DEF"] <= 5
+    assert 2 <= counts["MID"] <= 5
+    assert 1 <= counts["FWD"] <= 3
+    assert data["formation"] == f"{counts['DEF']}-{counts['MID']}-{counts['FWD']}"
+
+
+@pytest.mark.asyncio
+async def test_optimizer_api_returns_infeasible_status_when_budget_is_too_low():
+    app = _optimizer_api_app()
+    async with AsyncClient(
+        transport=ASGITransport(app=app), base_url="http://test"
+    ) as client:
+        response = await client.post("/api/v1/optimizer/solve", json={"budget": 1})
+
+    assert response.status_code == 200
+    assert response.json()["status"] == "infeasible"
+    assert response.json()["starting_xi"] == []
+    assert response.json()["bench"] == []
+
+
+@pytest.mark.asyncio
+async def test_optimizer_api_rejects_conflicting_locked_and_excluded_players():
+    app = _optimizer_api_app()
+    async with AsyncClient(
+        transport=ASGITransport(app=app), base_url="http://test"
+    ) as client:
+        response = await client.post(
+            "/api/v1/optimizer/solve",
+            json={"budget": 20, "locked_player_ids": [1], "excluded_player_ids": [1]},
+        )
+
+    assert response.status_code == 422
+
+
+@pytest.mark.asyncio
+async def test_optimizer_api_applies_locked_and_excluded_ids_to_squad_solver():
+    rows = _optimizer_api_rows()
+    rows.append(
+        SimpleNamespace(
+            id=16,
+            team_id=16,
+            element_type="GKP",
+            now_cost=1.0,
+            expected_points_next=20.0,
+            web_name="Extra goalkeeper",
+        )
+    )
+    app = _optimizer_api_app(rows)
+    async with AsyncClient(
+        transport=ASGITransport(app=app), base_url="http://test"
+    ) as client:
+        response = await client.post(
+            "/api/v1/optimizer/solve",
+            json={
+                "budget": 20,
+                "locked_player_ids": [2],
+                "excluded_player_ids": [16],
+            },
+        )
+
+    data = response.json()
+    squad_ids = {p["id"] for p in data["starting_xi"] + data["bench"]}
+    assert response.status_code == 200
+    assert data["status"] == "optimal"
+    assert 2 in squad_ids
+    assert 16 not in squad_ids
