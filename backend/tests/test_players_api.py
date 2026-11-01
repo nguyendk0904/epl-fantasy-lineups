@@ -12,6 +12,42 @@ from app.models.player import Player
 TEST_DATABASE_URL = "sqlite+aiosqlite:///:memory:"
 
 
+@pytest.mark.asyncio
+@pytest.mark.parametrize("parameter,value", [
+    ("position", "INVALID"),
+    ("position", "fwd"),
+    ("position", ""),
+    ("sort_by", "INVALID"),
+    ("sort_by", "id"),
+    ("sort_by", ""),
+])
+async def test_invalid_contract_values_return_422(test_session, parameter, value):
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
+        response = await client.get("/api/v1/players", params={parameter: value})
+    assert response.status_code == 422
+    assert any(error["loc"] == ["query", parameter] for error in response.json()["detail"])
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("position", ["GKP", "DEF", "MID", "FWD"])
+async def test_all_contract_positions_are_accepted(test_session, position):
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
+        response = await client.get("/api/v1/players", params={"position": position})
+    assert response.status_code == 200
+    assert response.json()["total"] > 0
+    assert all(item["element_type"] == position for item in response.json()["items"])
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("sort_by", ["total_points", "now_cost", "form", "expected_points_next"])
+async def test_all_contract_sort_fields_are_accepted(test_session, sort_by):
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
+        response = await client.get("/api/v1/players", params={"sort_by": sort_by})
+    assert response.status_code == 200
+    values = [item[sort_by] for item in response.json()["items"]]
+    assert values == sorted(values, reverse=True)
+
+
 @pytest_asyncio.fixture
 async def test_session():
     engine = create_async_engine(TEST_DATABASE_URL, echo=False)

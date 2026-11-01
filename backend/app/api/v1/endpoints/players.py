@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Literal, Optional
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy import select, func, or_, desc, asc
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -21,11 +21,11 @@ SORT_COLUMN_MAP = {
 
 @router.get("", response_model=PlayerListResponse)
 async def get_players(
-    position: Optional[str] = Query(None, description="Position filter: GKP, DEF, MID, FWD"),
+    position: Optional[Literal["GKP", "DEF", "MID", "FWD"]] = Query(None, description="Position filter: GKP, DEF, MID, FWD"),
     team_id: Optional[int] = Query(None, description="Filter by team ID"),
     max_cost: Optional[float] = Query(None, ge=0.0, description="Filter by maximum price (£m)"),
     search: Optional[str] = Query(None, description="Search player by name"),
-    sort_by: Optional[str] = Query("total_points", description="Sort by: total_points, now_cost, form, expected_points_next"),
+    sort_by: Literal["total_points", "now_cost", "form", "expected_points_next"] = Query("total_points", description="Sort by: total_points, now_cost, form, expected_points_next"),
     order: Optional[str] = Query("desc", pattern="^(asc|desc)$", description="Sort direction: asc or desc"),
     page: int = Query(1, ge=1, description="Page number"),
     limit: int = Query(50, ge=1, le=100, description="Items per page"),
@@ -36,7 +36,7 @@ async def get_players(
     conditions = []
 
     if position:
-        conditions.append(Player.element_type == position.upper())
+        conditions.append(Player.element_type == position)
 
     if team_id is not None:
         conditions.append(Player.team_id == team_id)
@@ -62,7 +62,7 @@ async def get_players(
     total = total_result.scalar_one()
 
     # 2. Sorting
-    sort_col = SORT_COLUMN_MAP.get(sort_by, Player.total_points)
+    sort_col = SORT_COLUMN_MAP[sort_by]
     order_func = asc if order == "asc" else desc
 
     # 3. Data query with join to get team short_name
