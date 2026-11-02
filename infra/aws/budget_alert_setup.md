@@ -40,7 +40,7 @@
 | **Notification channel** | **SNS topic** `fpl-budget-alert-topic` | Budgets **không tự gửi email** — bắt buộc phải có SNS topic + subscription làm kênh trung chuyển. |
 | **Subscription** | `email` → `phanhuyquang1101@gmail.com` | Chỉ chấp nhận bằng link xác nhận (**double opt-in**) → không ai có thể subscribe hộ. |
 | **Topic policy** | Chỉ `budgets.amazonaws.com` được `SNS:Publish`, có điều kiện `aws:SourceAccount` | **Least privilege**: không `Principal: "*"`, chặn service lạ bơm message vào topic. |
-| **Số budget toàn tài khoản** | **2** (1 mặc định của AWS + 1 của task) | **2 budget đầu tiên MIỄN PHÍ**; từ budget thứ 3 trở đi mới bị tính $0.02/ngày → dừng ở 2. |
+| **Số budget toàn tài khoản** | **1** (`fpl-freetier-guard-1usd`); budget mặc định `My Zero-Spend Budget` đã được xoá ngày `02/11/2026` | **2 budget đầu tiên MIỄN PHÍ** — task dùng **1/2 slot**, còn **1 slot dự phòng**. Từ budget thứ 3 trở đi mới bị tính $0.02/ngày → **hard rule: không tạo budget thứ 3**. |
 | **IaC** | AWS CLI + `budget_policy.json` (không thêm file `.tf`) | Tôn trọng giới hạn **2 file** của task; sẽ migrate sang Terraform ở Phase 3 (mục 15). |
 
 > 📌 **Thứ tự thi hành:** `P2-Q03` (task này) → `P2-Q02` (Security Group RDS) → `P2-Q04` (S3). Việc làm trước `P2-Q02` là **chủ ý**: `P2-Q02` sẽ mở port 5432 theo IP whitelist — nếu cấu hình sai, nguy cơ phát sinh phí/truy cập lạ cao hơn nhiều so với một bucket S3 rỗng. Có guard $1.00 trước thì mọi rủi ro đều được báo động.
@@ -54,15 +54,17 @@ Khảo sát **read-only** trước khi triển khai (ngày `2026-11-02`, region 
 | Hạng mục | Kết quả khảo sát | Ý nghĩa |
 | :--- | :--- | :--- |
 | Identity | `arn:aws:iam::711695043505:user/quang-devops` (policy `AdministratorAccess`) | Đúng tài khoản của Quang, đủ quyền tạo SNS + Budgets. |
-| AWS Budgets | **1 budget**: `My Zero-Spend Budget` (limit `$1.00`, notification `ACTUAL > $0.01`) | Budget này **KHÔNG có subscriber** → cảnh báo được tạo ra nhưng **không gửi tới ai**. |
+| AWS Budgets | **1 budget**: `My Zero-Spend Budget` (limit `$1.00`, notification `ACTUAL > $0.01`) — *(budget này đã được dọn ngày `02/11/2026`, xem ghi chú dưới bảng)* | Budget này **KHÔNG có subscriber** → cảnh báo được tạo ra nhưng **không gửi tới ai**. |
 | AWS SNS | **0 topic**, **0 subscription** | Không có kênh nhận tin ⇒ **mọi cảnh báo đều bị nuốt im lặng**. |
 | Chi phí tháng hiện tại | `UnblendedCost = $0.00` | Tài khoản còn sạch, đúng thời điểm dựng guard. |
 
 > 🚨 **Kết luận: tài khoản đang ở trạng thái "có cảnh báo nhưng không có người nghe".** Đây đúng là lỗ hổng mà `P2-Q03` phải vá. Sau task này:
 > - Kênh nhận tin: **SNS topic + email subscription** (mới).
-> - Bộ luật cảnh báo: **budget `fpl-freetier-guard-1usd`** với 3 ngưỡng (mới) — độc lập với budget mặc định của AWS (giữ nguyên, không xoá, không sửa).
+> - Bộ luật cảnh báo: **budget `fpl-freetier-guard-1usd`** với 3 ngưỡng (mới) — độc lập với budget mặc định của AWS.
 >
 > 💡 *Tuỳ chọn nâng cao (KHÔNG bật trong task này):* có thể gắn thêm subscriber SNS vào budget `My Zero-Spend Budget` để nhận cảnh báo ngay từ $0.01. Việc này bị **cố tình bỏ qua** nhằm tránh trùng lặp email rác và tránh sửa tài nguyên mặc định do AWS quản lý. Nếu Tech Lead yêu cầu, thực hiện ở task khác.
+>
+> 🧹 **Cập nhật hiện trạng `02/11/2026`:** budget mặc định `My Zero-Spend Budget` **đã được xoá** (dọn dẹp sau khi guard của task hoạt động ổn định), nên tài khoản hiện chỉ còn **1 budget = `fpl-freetier-guard-1usd`**. Lựa chọn này an toàn với Free Tier (1/2 slot) và không ảnh hưởng bất kỳ tiêu chí nghiệm thu nào của `P2-Q03`.
 
 ---
 
@@ -92,7 +94,7 @@ flowchart LR
 
 | Dịch vụ | Hạn mức Free Tier | Task này dùng | Kết luận |
 | :--- | :--- | :--- | :--- |
-| **AWS Budgets** | **2 budget đầu tiên miễn phí**; budget thứ 3 trở đi ~$0.02/ngày/budget | **2** (1 mặc định + 1 của task) | **$0.00** ✅ — *đây là lý do tuyệt đối không tạo budget thứ 3* |
+| **AWS Budgets** | **2 budget đầu tiên miễn phí**; budget thứ 3 trở đi ~$0.02/ngày/budget | **1** (budget mặc định đã dọn ngày 02/11/2026) | **$0.00** ✅ — *còn 1 slot miễn phí; đây là lý do tuyệt đối không tạo budget thứ 3* |
 | **AWS Budgets alerts** | Không giới hạn số notification trên mỗi budget | 3 notification | **$0.00** ✅ |
 | **Amazon SNS** | ~1.000 email notification/tháng miễn phí (kèm 1M request publish) | Vài email/tháng | **$0.00** ✅ |
 | **CloudWatch metrics** | Budgets không tạo custom metric tốn phí | 0 | **$0.00** ✅ |
@@ -232,6 +234,7 @@ Kết quả thực tế (đã chạy):
 
 > 📬 Ngay sau lệnh này AWS gửi email **"AWS Notification - Subscription Confirmation"** tới `$ALERT_EMAIL`.
 > Trạng thái lúc này vẫn là **`PendingConfirmation`** → **phải bấm link "Confirm subscription"** thì mới nhận được cảnh báo (mục 10).
+> ✅ **Đã xử lý ngày `02/11/2026`:** Quang đã bấm Confirm → subscription chuyển sang **`Confirmed`** (ARN đầy đủ, xem **V5** ở mục 9).
 
 ### 6.5. Bước 4 — Tạo budget $1.00 + 3 notification
 
@@ -424,12 +427,17 @@ aws budgets describe-subscribers-for-notification --account-id 711695043505 \
 aws sns list-subscriptions-by-topic --topic-arn "$BUDGET_TOPIC_ARN" \
   --region ap-southeast-1 --query 'Subscriptions[].[Protocol,Endpoint,SubscriptionArn]' --output text
 ```
-**Kết quả thật (ngay sau khi tạo):**
+**Kết quả thật:**
 
-```
+```text
+# (a) Ngay sau khi tạo — trước khi Quang confirm:
 email   phanhuyquang1101@gmail.com   PendingConfirmation
+
+# (b) Hiện tại, sau khi Quang confirm (02/11/2026):
+phanhuyquang1101@gmail.com   arn:aws:sns:ap-southeast-1:711695043505:fpl-budget-alert-topic:58680ef7-9c19-4d1b-8c15-9c10741a2c5e
 ```
-⚠️ `PendingConfirmation` = **chưa nhận được cảnh báo** → phải làm mục 10. Sau khi confirm sẽ thành ARN đầy đủ (`...:58680ef7-9c19-4d1b-8c15-9c10741a2c5e`).
+✅ **`PendingConfirmation` → `Confirmed`**: subscription đã kích hoạt, hòm thư nhóm chính thức nhận được cảnh báo.
+⚠️ Nếu vẫn thấy `PendingConfirmation` = **chưa nhận được cảnh báo** → phải làm mục 10.
 
 ### V6 — Topic policy đúng (xem mục 8.4) — `Id = fpl-budget-alert-topic-policy`
 
@@ -439,7 +447,7 @@ email   phanhuyquang1101@gmail.com   PendingConfirmation
 aws budgets describe-budgets --account-id 711695043505 --region ap-southeast-1 \
   --query 'length(Budgets)' --output text
 ```
-**Kết quả thật:** `2` ✅ (`My Zero-Spend Budget`, `fpl-freetier-guard-1usd`)
+**Kết quả thật:** `1` ✅ (`fpl-freetier-guard-1usd`) — *budget mặc định `My Zero-Spend Budget` đã được dọn ngày 02/11/2026; vẫn còn **1 slot miễn phí**.*
 
 ### V8 — Chi phí hiện tại vẫn $0.00
 
@@ -449,6 +457,38 @@ aws ce get-cost-and-usage --time-period Start=2026-11-01,End=2026-12-01 \
   --query 'ResultsByTime[0].Total.UnblendedCost.Amount' --output text
 ```
 **Kết quả thật:** `0` ✅
+
+### V9 — Bằng chứng END-TO-END: SNS đã thực sự gửi mail (CloudWatch metrics)
+
+Đây là bằng chứng **không thể làm giả** (số liệu do AWS ghi nhận, độc lập với screenshot hộp thư):
+
+```bash
+aws cloudwatch get-metric-statistics --namespace AWS/SNS \
+  --metric-name NumberOfNotificationsDelivered \
+  --dimensions Name=TopicName,Value=fpl-budget-alert-topic \
+  --start-time 2026-11-01T00:00:00Z --end-time 2026-11-03T00:00:00Z \
+  --period 3600 --statistics Sum --region ap-southeast-1 \
+  --query 'Datapoints[?Sum>`0`].[Timestamp,Sum]' --output text
+```
+**Kết quả thật (`02/11/2026`):**
+
+```text
+2026-11-02T16:00:00+07:00   1.0    <- mail "Subscription Confirmation" (đã bấm Confirm)
+2026-11-02T17:00:00+07:00   1.0    <- mail test E2E (lệnh mục 11.1)
+```
+
+```bash
+aws cloudwatch get-metric-statistics --namespace AWS/SNS \
+  --metric-name NumberOfMessagesPublished \
+  --dimensions Name=TopicName,Value=fpl-budget-alert-topic \
+  --start-time 2026-11-01T00:00:00Z --end-time 2026-11-03T00:00:00Z \
+  --period 3600 --statistics Sum --region ap-southeast-1 \
+  --query 'Datapoints[?Sum>`0`].[Timestamp,Sum]' --output text
+```
+**Kết quả thật:** `2026-11-02T17:00:00+07:00   1.0` (message test do Quang publish theo mục 11.1)
+
+✅ **`NumberOfNotificationsDelivered = 2`** ⇒ **2 email thực tế đã tới hòm thư** ⇒ đường ống `Budgets → SNS → Email` chạy đầu-cuối, không notification nào bị SNS loại bỏ vì thiếu topic policy.
+ℹ️ Các notification tiếp theo sẽ do chính **Budgets** phát ra khi chi phí vượt ngưỡng (`NotificationState` chuyển `IN_ALARM`), và sẽ xuất hiện trên cùng metric này.
 
 ### 9.1. Kiểm tra trên Console (bằng chứng chụp màn hình để nộp đồ án)
 
@@ -630,7 +670,7 @@ aws budgets describe-budgets --account-id 711695043505 --region ap-southeast-1 -
 aws sns list-topics --region ap-southeast-1 --query 'Topics[].TopicArn' --output text
 ```
 
-> 🚫 **KHÔNG xoá budget `My Zero-Spend Budget`** (budget mặc định của AWS) trừ khi có lý do rõ ràng — nó vô hại và giúp giữ số budget ≤ 2.
+> 🚫 **Chỉ xoá đúng budget của task** (`delete-budget --budget-name fpl-freetier-guard-1usd`). Budget mặc định `My Zero-Spend Budget` đã được dọn từ `02/11/2026`, nên sau khi rollback tài khoản sẽ còn **0 budget** ⇒ nếu vẫn còn tài nguyên AWS khác đang chạy thì **phải tạo lại guard ngay**, đừng để tài khoản "mù" về chi phí.
 >
 > ⚠️ Sau khi rollback, **tài khoản trở lại trạng thái không có cảnh báo** ⇒ chỉ rollback khi kết thúc đồ án hoặc khi đổi sang Terraform quản lý (mục 15).
 
@@ -679,16 +719,16 @@ aws sns list-topics --region ap-southeast-1 --query 'Topics[].TopicArn' --output
 | **AC-2** | Cảnh báo cấu hình ở **80% ($0.80)** và **100% ($1.00)** | ✅ **ĐẠT** | 3 notification: `ACTUAL > 80%`, `ACTUAL > 100%`, `FORECASTED > 100%` (V3) |
 | **AC-3** | Notification trỏ tới **SNS topic** có subscriber email nhóm | ✅ **ĐẠT** | `Subscribers = SNS arn:...:fpl-budget-alert-topic` (V4) · subscription email `phanhuyquang1101@gmail.com` (V5) |
 | **AC-4** | Topic policy an toàn (chỉ `budgets.amazonaws.com` publish, không wildcard) | ✅ **ĐẠT** | `Id = fpl-budget-alert-topic-policy` (mục 8.4) |
-| **AC-5** | Chi phí duy trì **$0.00** (Free Tier) | ✅ **ĐẠT** | 2 budget (hạn mức free) · 0 SMS · `UnblendedCost = 0` (V7, V8) |
-| **AC-6** | **Nhận email xác nhận subscription từ AWS SNS** | 🟡 **CHỜ QUANG** | Email `AWS Notification - Subscription Confirmation` đã được gửi tới `phanhuyquang1101@gmail.com` — **cần bấm Confirm** (mục 10). Bước này **không thể tự động hoá** (double opt-in của AWS). |
+| **AC-5** | Chi phí duy trì **$0.00** (Free Tier) | ✅ **ĐẠT** | **1/2** budget miễn phí · 0 SMS · `UnblendedCost = 0` (V7, V8) |
+| **AC-6** | **Nhận email xác nhận subscription từ AWS SNS** | ✅ **ĐẠT** (`02/11/2026`) | Subscription = **`Confirmed`** (V5) + **V9**: CloudWatch ghi nhận **2 notification delivered** (1 mail xác nhận subscription + 1 mail test E2E) tới hòm thư `phanhuyquang1101@gmail.com` |
 
 ### 16.2. Checklist dành cho Quang (DevOps Guardian)
 
-- [ ] Bấm **Confirm subscription** trong email SNS (mục 10) → chạy lại V5 thấy ARN đầy đủ.
-- [ ] Chạy **11.1** (`sns publish` test) và xác nhận nhận được email test.
+- [x] Bấm **Confirm subscription** trong email SNS (mục 10) → V5 hiện ARN đầy đủ — **hoàn tất `02/11/2026`**.
+- [x] Chạy **11.1** (`sns publish` test) và xác nhận nhận được email test — **hoàn tất `02/11/2026`**, minh chứng ở **V9**.
 - [ ] Chụp màn hình 4 bằng chứng ở mục 9.1 (Budgets / Alerts / SNS Subscriptions / hộp thư).
-- [ ] Mở `docs/TODO.md` → tích **`[x]`** vào `P2-Q03`.
-- [ ] `git diff` review 2 file mới trước khi cho phép commit.
+- [x] Mở `docs/TODO.md` → tích **`[x]`** vào `P2-Q03` — **đã cập nhật** (`19/59`, Phase 2 = `2/14`, Quang = `2/4`).
+- [x] `git diff` review 2 file mới trước khi cho phép commit — **đã review & commit `a22b65a`**.
 - [ ] Tạo label/filter `AWS-Budget` trong Gmail để cảnh báo không bị chôn.
 - [ ] Ghi nhớ: **không** tạo budget thứ 3.
 
