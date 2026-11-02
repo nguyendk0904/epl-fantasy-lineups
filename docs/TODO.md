@@ -14,10 +14,10 @@
 | Giai đoạn (Phase) | Hoàn thành | Tỷ lệ | Trạng thái |
 | :--- | :---: | :---: | :---: |
 | **Phase 1: Local Full-Stack Product** | **17 / 17** | `100%` | 🟡 Đang thực hiện |
-| **Phase 2: AWS Services Integration** | **1 / 14** | `7%` | ⚪ Chờ Phase 1 |
+| **Phase 2: AWS Services Integration** | **2 / 14** | `14%` | ⚪ Chờ Phase 1 |
 | **Phase 3: Production Deploy & E2E Test** | **0 / 14** | `0%` | ⚪ Chờ Phase 2 |
 | **Phase 4: Live Gamification & League Operations** | **0 / 14** | `0%` | ⚪ Chờ Phase 3 |
-| **TỔNG CỘNG TOÀN DỰ ÁN** | **18 / 59** | `30%` | 🟡 Đang thực hiện |
+| **TỔNG CỘNG TOÀN DỰ ÁN** | **19 / 59** | `32%` | 🟡 Đang thực hiện |
 
 ---
 
@@ -205,7 +205,7 @@
 
 ---
 
-## ☁️ PHASE 2: TÍCH HỢP SỬ DỤNG CÁC DỊCH VỤ CỦA AWS (1/14)
+## ☁️ PHASE 2: TÍCH HỢP SỬ DỤNG CÁC DỊCH VỤ CỦA AWS (2/14)
 *Mục tiêu: Đưa CSDL lên Amazon RDS, lưu trữ static web trên S3, tối ưu Connection Pool cho db.t4g.micro, bổ sung độ khó trận đấu FDR và kích hoạt AWS Budgets Alert ($1.00) bảo vệ tài khoản của Quang.*
 
 ### 🎨 Nguyên (Frontend & UI Lead) - [0/3]
@@ -301,7 +301,7 @@
 
 ---
 
-### 🐳 Quang (DevOps & AWS Lead) - [1/4]
+### 🐳 Quang (DevOps & AWS Lead) - [2/4]
 
 - [x] **`P2-Q01`** *(Level 4)*: Khởi tạo instance Amazon RDS PostgreSQL (`db.t4g.micro`, 20GB gp3)
   - *Mô tả:* Khởi tạo instance Amazon RDS PostgreSQL 15 (`db.t4g.micro`, Single-AZ, 20GB gp3 storage - Free Tier) trên tài khoản AWS của Quang; lưu tài liệu thông số kết nối an toàn.
@@ -321,7 +321,7 @@
   - *Tiêu chí chấp nhận (Acceptance Criteria):* Port 5432 chỉ mở cho IP dev và backend; kết nối từ IP lạ bên ngoài bị từ chối truy cập ngay lập tức.
   - *Cách kiểm chứng (Verification):* Quét port từ IP ngoài mạng bị chặn kết nối (Connection timed out).
 
-- [ ] **`P2-Q03`** *(Level 4)*: **BẮT BUỘC:** Kích hoạt AWS Budgets Alert mức $1.00 bảo vệ tài khoản
+- [x] **`P2-Q03`** *(Level 4)*: **BẮT BUỘC:** Kích hoạt AWS Budgets Alert mức $1.00 bảo vệ tài khoản
   - *Mô tả:* Tạo cảnh báo ngân sách AWS Budgets với ngưỡng $1.00; cấu hình SNS topic tự động gửi email cảnh báo về hòm thư nhóm ngay khi chi phí vượt 80% ($0.80) hoặc 100% ($1.00).
   - *Phụ thuộc:* Không (Bắt đầu ngay).
   - *Thư mục:* `infra/aws/`
