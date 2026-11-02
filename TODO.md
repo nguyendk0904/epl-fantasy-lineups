@@ -14,10 +14,10 @@
 | Giai đoạn (Phase) | Hoàn thành | Tỷ lệ | Trạng thái |
 | :--- | :---: | :---: | :---: |
 | **Phase 1: Local Full-Stack Product** | **17 / 17** | `100%` | 🟡 Đang thực hiện |
-| **Phase 2: AWS Services Integration** | **1 / 14** | `7%` | ⚪ Chờ Phase 1 |
+| **Phase 2: AWS Services Integration** | **3 / 14** | `21%` | 🟡 Đang thực hiện |
 | **Phase 3: Production Deploy & E2E Test** | **0 / 14** | `0%` | ⚪ Chờ Phase 2 |
 | **Phase 4: Live Gamification & League Operations** | **0 / 14** | `0%` | ⚪ Chờ Phase 3 |
-| **TỔNG CỘNG TOÀN DỰ ÁN** | **18 / 59** | `30%` | 🟡 Đang thực hiện |
+| **TỔNG CỘNG TOÀN DỰ ÁN** | **20 / 59** | `34%` | 🟡 Đang thực hiện |
 
 ---
 
@@ -171,7 +171,7 @@
 
 ---
 
-## ☁️ PHASE 2: TÍCH HỢP SỬ DỤNG CÁC DỊCH VỤ CỦA AWS (1/14)
+## ☁️ PHASE 2: TÍCH HỢP SỬ DỤNG CÁC DỊCH VỤ CỦA AWS (3/14)
 *Mục tiêu: Đưa CSDL lên Amazon RDS, lưu trữ static web trên S3, kích hoạt AWS Budgets Alert ($\rightarrow$1.00) bảo vệ tài khoản của Quang.*
 
 ### 🎨 Nguyên (Frontend) - [0/3]
@@ -189,10 +189,10 @@
 - [ ] **`P2-V02`** *(Level 3)*: Tinh chỉnh Connection Pool (pool_size, max_overflow) tối ưu riêng cho instance `db.t4g.micro`. *(Branch: `feature/P2-V02-db-pool-tuning`, Thư mục: `backend/app/core/`, Files: `database.py`)*
 - [ ] **`P2-V03`** *(Level 2)*: Bổ sung trọng số độ khó trận đấu (FDR) vào công thức tính điểm dự kiến (xP) của Optimizer. *(Branch: `feature/P2-V03-fdr-weighting`, Thư mục: `backend/app/services/`, Files: `optimizer_solver.py`)*
 
-### 🐳 Quang (DevOps & AWS) - [1/4]
+### 🐳 Quang (DevOps & AWS) - [3/4]
 - [x] **`P2-Q01`** *(Level 4)*: Khởi tạo instance Amazon RDS PostgreSQL (`db.t4g.micro`, Single-AZ, 20GB gp3) trên tài khoản AWS của Quang. *(Branch: `feature/P2-Q01-aws-rds-init`, Thư mục: `infra/aws/`, Files: `rds_setup.md`)*
-- [ ] **`P2-Q02`** *(Level 4)*: Cấu hình Security Group an toàn: Chỉ mở port 5432 cho IP nhóm dev hoặc Backend. *(Branch: `feature/P2-Q02-rds-security-group`, Thư mục: `infra/aws/`, Files: `security_groups.md`)*
-- [ ] **`P2-Q03`** *(Level 4)*: **BẮT BUỘC:** Kích hoạt AWS Budgets Alert mức $\rightarrow$1.00 gửi email cảnh báo tự động về hòm thư của nhóm. *(Branch: `feature/P2-Q03-aws-budget-guard`, Thư mục: `infra/aws/`, Files: `budget_alert_setup.md`)*
+- [x] **`P2-Q02`** *(Level 4)*: Cấu hình Security Group an toàn: Chỉ mở port 5432 cho IP nhóm dev hoặc Backend. *(Branch: `feature/P2-Q02-rds-security-group`, Thư mục: `infra/aws/`, Files: `security_groups.md`)*
+- [x] **`P2-Q03`** *(Level 4)*: **BẮT BUỘC:** Kích hoạt AWS Budgets Alert mức $\rightarrow$1.00 gửi email cảnh báo tự động về hòm thư của nhóm. *(Branch: `feature/P2-Q03-aws-budget-guard`, Thư mục: `infra/aws/`, Files: `budget_alert_setup.md`)*
 - [ ] **`P2-Q04`** *(Level 3)*: Khởi tạo AWS S3 Bucket cấu hình static hosting và chính sách truy cập an toàn. *(Branch: `feature/P2-Q04-s3-bucket-setup`, Thư mục: `infra/aws/`, Files: `s3_policy.json`)*
 
 ---
