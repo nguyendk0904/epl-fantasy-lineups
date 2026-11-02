@@ -13,11 +13,11 @@
 
 | Giai đoạn (Phase) | Hoàn thành | Tỷ lệ | Trạng thái |
 | :--- | :---: | :---: | :---: |
-| **Phase 1: Local Full-Stack Product** | **15 / 17** | `88%` | 🟡 Đang thực hiện |
+| **Phase 1: Local Full-Stack Product** | **17 / 17** | `100%` | 🟡 Đang thực hiện |
 | **Phase 2: AWS Services Integration** | **0 / 14** | `0%` | ⚪ Chờ Phase 1 |
 | **Phase 3: Production Deploy & E2E Test** | **0 / 14** | `0%` | ⚪ Chờ Phase 2 |
 | **Phase 4: Live Gamification & League Operations** | **0 / 14** | `0%` | ⚪ Chờ Phase 3 |
-| **TỔNG CỘNG TOÀN DỰ ÁN** | **15 / 59** | `25%` | 🟡 Đang thực hiện |
+| **TỔNG CỘNG TOÀN DỰ ÁN** | **17 / 59** | `28%` | 🟡 Đang thực hiện |
 
 ---
 
@@ -32,7 +32,7 @@
 
 ---
 
-## 🚀 PHASE 1: TẠO SẢN PHẨM HOÀN CHỈNH & TEST TRÊN LOCAL (9/17)
+## 🚀 PHASE 1: TẠO SẢN PHẨM HOÀN CHỈNH & TEST TRÊN LOCAL (17/17)
 *Mục tiêu: Chạy toàn bộ hệ thống trên localhost qua Docker Compose, dữ liệu FPL thật, test unit pass 100%.*
 
 ### 🎨 Nguyên (Frontend & UI Lead) - [5/5]
@@ -107,7 +107,7 @@
 
 ---
 
-### 🧠 Vũ (Data & Algorithm Engineer) - [1/4]
+### 🧠 Vũ (Data & Algorithm Engineer) - [4/4]
 
 - [x] **`P1-V01`** *(Level 3)*: Thiết kế Schema PostgreSQL & Alembic Migration
   - *Mô tả:* Khai báo SQLAlchemy ORM models cho bảng `teams`, `players` (kèm indexes vị trí, giá, điểm) và thiết lập file migration đầu tiên bằng Alembic.
@@ -116,21 +116,21 @@
   - *File tạo mới (4 files):* `backend/app/models/team.py`, `backend/app/models/player.py`, `backend/alembic/env.py`, `backend/alembic/versions/001_initial_schema.py`.
   - *Branch:* `feature/P1-V01-db-schema`
 
-- [ ] **`P1-V02`** *(Level 3)*: Module Thuật toán `optimizer_solver.py` bằng `PuLP`
+- [x] **`P1-V02`** *(Level 3)*: Module Thuật toán `optimizer_solver.py` bằng `PuLP`
   - *Mô tả:* Mô hình hóa và giải bài toán quy hoạch tuyến tính nguyên 0-1 (0-1 ILP) chọn 15 cầu thủ tối đa hóa điểm kỳ vọng trong ngân sách 100m, max 3/team, hỗ trợ khóa cầu thủ (locked players).
   - *Phụ thuộc:* Không (Chạy pure Python độc lập với mock data ngay Ngày 1).
   - *Thư mục:* `backend/app/services/`
   - *File tạo mới (2 files):* `backend/app/services/optimizer_solver.py`, `backend/tests/test_optimizer.py`.
   - *Branch:* `feature/P1-V02-pulp-optimizer`
 
-- [ ] **`P1-V03`** *(Level 3)*: Xây dựng REST API `POST /api/v1/optimizer/solve`
+- [x] **`P1-V03`** *(Level 3)*: Xây dựng REST API `POST /api/v1/optimizer/solve`
   - *Mô tả:* Endpoint nhận payload (ngân sách, locked_player_ids, excluded_player_ids, sơ đồ mong muốn), query danh sách cầu thủ từ DB và gọi `PuLP solver` trả về đội hình 15 người.
   - *Phụ thuộc:* `P1-V02`, `P1-NH01`
   - *Thư mục:* `backend/app/api/v1/endpoints/`
   - *File tạo mới (3 files):* `backend/app/schemas/optimizer.py`, `backend/app/api/v1/endpoints/optimizer.py`, `backend/tests/test_optimizer_api.py`.
   - *Branch:* `feature/P1-V03-optimizer-api`
 
-- [ ] **`P1-V04`** *(Level 2)*: Xây dựng REST API `POST /api/v1/lineups/compare`
+- [x] **`P1-V04`** *(Level 2)*: Xây dựng REST API `POST /api/v1/lineups/compare`
   - *Mô tả:* Endpoint nhận vào 2 danh sách ID đội hình A và B, tính toán mức chênh lệch ngân sách, chênh lệch điểm xP, chỉ số sức mạnh từng tuyến và danh sách cầu thủ khác biệt.
   - *Phụ thuộc:* `P1-NH01`
   - *Thư mục:* `backend/app/api/v1/endpoints/`
@@ -139,7 +139,7 @@
 
 ---
 
-### 🐳 Quang (DevOps & AWS Lead) - [2/4]
+### 🐳 Quang (DevOps & AWS Lead) - [4/4]
 
 - [x] **`P1-Q01`** *(Level 2)*: Viết `backend/Dockerfile` và `frontend/Dockerfile`
   - *Mô tả:* Đóng gói Docker đa tầng (multi-stage build) cho Backend (Python 3.11-slim kèm coinor-cbc solver) và Frontend (Vite build sang Nginx alpine phục vụ static file).
@@ -155,14 +155,14 @@
   - *File tạo mới (2 files):* `infra/docker-compose.yml`, `infra/init.sql`.
   - *Branch:* `feature/P1-Q02-docker-compose`
 
-- [ ] **`P1-Q03`** *(Level 2)*: Viết kịch bản Kiểm thử Tích hợp Local (Integration Test)
+- [x] **`P1-Q03`** *(Level 2)*: Viết kịch bản Kiểm thử Tích hợp Local (Integration Test)
   - *Mô tả:* Script tự động gửi request kiểm tra tính thông suốt của toàn bộ hệ thống: Frontend gọi Backend $\rightarrow$ Backend query Postgres $\rightarrow$ PuLP solver trả kết quả.
   - *Phụ thuộc:* `P1-Q02`, `P1-NH03`, `P1-V03`
   - *Thư mục:* `scripts/`
   - *File tạo mới (2 files):* `scripts/test_local_integration.sh` (hoặc `.ps1`), `scripts/seed_demo_data.py`.
   - *Branch:* `feature/P1-Q03-local-integration-test`
 
-- [ ] **`P1-Q04`** *(Level 1)*: Viết tài liệu `LOCAL_SETUP_GUIDE.md`
+- [x] **`P1-Q04`** *(Level 1)*: Viết tài liệu `LOCAL_SETUP_GUIDE.md`
   - *Mô tả:* Hướng dẫn chi tiết bằng markdown cho 3 bạn còn lại clone repo về, cài đặt Docker Desktop và gõ 1 lệnh `docker compose up` là toàn bộ app chạy mượt mà.
   - *Phụ thuộc:* `P1-Q02`
   - *Thư mục:* Root
