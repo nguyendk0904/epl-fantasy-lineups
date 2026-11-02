@@ -13,11 +13,11 @@
 
 | Giai đoạn (Phase) | Hoàn thành | Tỷ lệ | Trạng thái |
 | :--- | :---: | :---: | :---: |
-| **Phase 1: Local Full-Stack Product** | **16 / 17** | `94%` | 🟡 Đang thực hiện |
+| **Phase 1: Local Full-Stack Product** | **17 / 17** | `100%` | 🟡 Đang thực hiện |
 | **Phase 2: AWS Services Integration** | **0 / 14** | `0%` | ⚪ Chờ Phase 1 |
 | **Phase 3: Production Deploy & E2E Test** | **0 / 14** | `0%` | ⚪ Chờ Phase 2 |
 | **Phase 4: Live Gamification & League Operations** | **0 / 14** | `0%` | ⚪ Chờ Phase 3 |
-| **TỔNG CỘNG TOÀN DỰ ÁN** | **16 / 59** | `27%` | 🟡 Đang thực hiện |
+| **TỔNG CỘNG TOÀN DỰ ÁN** | **17 / 59** | `28%` | 🟡 Đang thực hiện |
 
 ---
 
@@ -32,7 +32,7 @@
 
 ---
 
-## 🚀 PHASE 1: TẠO SẢN PHẨM HOÀN CHỈNH & TEST TRÊN LOCAL (16/17)
+## 🚀 PHASE 1: TẠO SẢN PHẨM HOÀN CHỈNH & TEST TRÊN LOCAL (17/17)
 *Mục tiêu: Chạy toàn bộ hệ thống trên localhost qua Docker Compose, dữ liệu FPL thật, test unit pass 100%.*
 
 ### 🎨 Nguyên (Frontend & UI Lead) - [5/5]
@@ -165,7 +165,7 @@
 
 ---
 
-### 🐳 Quang (DevOps & AWS Lead) - [3/4]
+### 🐳 Quang (DevOps & AWS Lead) - [4/4]
 
 - [x] **`P1-Q01`** *(Level 2)*: Viết `backend/Dockerfile` và `frontend/Dockerfile`
   - *Mô tả:* Đóng gói Docker đa tầng (multi-stage build) cho Backend (Python 3.11-slim kèm coinor-cbc solver) và Frontend (Vite build sang Nginx alpine phục vụ static file).
@@ -194,7 +194,7 @@
   - *Tiêu chí chấp nhận (Acceptance Criteria):* Script tự động kiểm tra kết nối API, tính toàn vẹn CSDL, gọi thử optimizer solver và trả về exit code 0 khi tất cả đều thông suốt.
   - *Cách kiểm chứng (Verification):* Chạy `scripts/test_local_integration.sh` (hoặc `.ps1`) báo cáo `All 5 integration checks passed`.
 
-- [ ] **`P1-Q04`** *(Level 1)*: Viết tài liệu `LOCAL_SETUP_GUIDE.md`
+- [x] **`P1-Q04`** *(Level 1)*: Viết tài liệu `LOCAL_SETUP_GUIDE.md`
   - *Mô tả:* Hướng dẫn chi tiết bằng markdown cho 3 bạn còn lại clone repo về, cài đặt Docker Desktop và gõ 1 lệnh `docker compose up` là toàn bộ app chạy mượt mà.
   - *Phụ thuộc:* `P1-Q02`
   - *Thư mục:* Root
