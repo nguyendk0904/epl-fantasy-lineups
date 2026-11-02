@@ -205,7 +205,7 @@
 
 ---
 
-## ☁️ PHASE 2: TÍCH HỢP SỬ DỤNG CÁC DỊCH VỤ CỦA AWS (3/14)
+## ☁️ PHASE 2: TÍCH HỢP SỬ DỤNG CÁC DỊCH VỤ CỦA AWS (4/14)
 *Mục tiêu: Đưa CSDL lên Amazon RDS, lưu trữ static web trên S3, tối ưu Connection Pool cho db.t4g.micro, bổ sung độ khó trận đấu FDR và kích hoạt AWS Budgets Alert ($1.00) bảo vệ tài khoản của Quang.*
 
 ### 🎨 Nguyên (Frontend & UI Lead) - [0/3]
@@ -301,7 +301,7 @@
 
 ---
 
-### 🐳 Quang (DevOps & AWS Lead) - [3/4]
+### 🐳 Quang (DevOps & AWS Lead) - [4/4]
 
 - [x] **`P2-Q01`** *(Level 4)*: Khởi tạo instance Amazon RDS PostgreSQL (`db.t4g.micro`, 20GB gp3)
   - *Mô tả:* Khởi tạo instance Amazon RDS PostgreSQL 15 (`db.t4g.micro`, Single-AZ, 20GB gp3 storage - Free Tier) trên tài khoản AWS của Quang; lưu tài liệu thông số kết nối an toàn.
@@ -330,7 +330,7 @@
   - *Tiêu chí chấp nhận (Acceptance Criteria):* Budget Alert kích hoạt thành công trên AWS Budgets ở mức $1.00; nhận email xác nhận subscription từ AWS SNS.
   - *Cách kiểm chứng (Verification):* Email xác nhận đăng ký cảnh báo từ AWS Notification được nhận trong hòm thư của Quang.
 
-- [ ] **`P2-Q04`** *(Level 3)*: Khởi tạo AWS S3 Bucket cấu hình static hosting
+- [x] **`P2-Q04`** *(Level 3)*: Khởi tạo AWS S3 Bucket cấu hình static hosting
   - *Mô tả:* Tạo bucket S3 trên AWS region ap-southeast-1, bật tính năng Static Website Hosting, cấu hình index.html/error.html và thiết lập S3 Bucket Policy cho phép CloudFront truy cập.
   - *Phụ thuộc:* Không.
   - *Thư mục:* `infra/aws/`
@@ -338,6 +338,7 @@
   - *Branch:* `feature/P2-Q04-s3-bucket-setup`
   - *Tiêu chí chấp nhận (Acceptance Criteria):* Bucket S3 được tạo ở region ap-southeast-1, cấu hình quyền truy cập qua CloudFront Origin Access Control.
   - *Cách kiểm chứng (Verification):* Upload thử file `index.html` và kiểm tra phản hồi HTTP 200 qua S3 API.
+  - *Ghi chú triển khai (02/11/2026):* Static Website Hosting **cố ý để OFF** (OAC không hỗ trợ website endpoint); bucket private 100% (`BlockPublicAccess` 4/4) + OAC `E2IX1YDEAHD87E`, kiểm chứng `HTTP 200` bằng S3 API có chữ ký SigV4, truy cập nặc danh `403`. **P3-Q01** phải gắn OAC vào distribution và siết policy `AWS:SourceAccount` → `AWS:SourceArn` (chi tiết: `infra/aws/s3_setup.md` §13.2).
 
 ---
 

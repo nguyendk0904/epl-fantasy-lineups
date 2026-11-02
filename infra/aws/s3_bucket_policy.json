@@ -1,0 +1,271 @@
+{
+  "Metadata": {
+    "TaskId": "P2-Q04",
+    "Title": "S3 static-hosting bucket - private origin, CloudFront OAC read-only access",
+    "Owner": "Quang (DevOps & AWS Lead)",
+    "RiskLevel": "LEVEL 3 (High) assigned by docs/TODO.md; docs/AI_GUIDELINES.md risk matrix classifies AWS infrastructure as LEVEL 4 (Critical) - handled as LEVEL 4: Dev + Tech Lead review, Free Tier + Budget Alert check",
+    "GitBranch": "feature/P2-Q04-s3-bucket-setup",
+    "SchemaVersion": "1.0.0",
+    "LastReviewed": "2026-11-02",
+    "AwsAccountId": "711695043505",
+    "AwsRegion": "ap-southeast-1",
+    "BucketName": "fpl-lineup-frontend-prod",
+    "ThreatModel": "Bucket static-hosting nao de 'Principal: *' hoac public-read se bi bot quet va bi dung lam pha phat tan malware / dot tien CDN trong vai gio. Vi vay bucket nay private 100%: 4/4 Block Public Access bat, ACL tat (BucketOwnerEnforced), chi CloudFront OAC duoc phep s3:GetObject. Khong co READ cong khai, khong co WRITE tu Internet, khong bat S3 website endpoint (OAC khong hoat dong voi website endpoint).",
+    "SourceOfTruth": [
+      "docs/PROJECT_SSOT.md",
+      "docs/AI_GUIDELINES.md",
+      "docs/TODO.md",
+      "infra/aws/s3_setup.md",
+      "infra/aws/budget_policy.json"
+    ],
+    "AppliedAt": "2026-11-02 (see infra/aws/s3_setup.md section 9 - live evidence)",
+    "HowToApply": {
+      "WhyEnvelope": "This file is an audit envelope (Metadata + PolicyDocument + guards), not a bare policy document, so that traceability and forbidden examples live next to the policy. S3 only accepts a bare policy document -> extract PolicyDocument first (section 5.3 of s3_setup.md).",
+      "ExtractAndApply": "python -c \"import json;d=json.load(open('infra/aws/s3_bucket_policy.json',encoding='utf-8'));json.dump(d['PolicyDocument'],open('applied.json','w',encoding='utf-8'),indent=2)\" && aws s3api put-bucket-policy --bucket fpl-lineup-frontend-prod --policy file://applied.json",
+      "Verify": "aws s3api get-bucket-policy --bucket fpl-lineup-frontend-prod --query Policy --output text"
+    }
+  },
+
+  "BucketIdentity": {
+    "BucketArn": "arn:aws:s3:::fpl-lineup-frontend-prod",
+    "Region": "ap-southeast-1",
+    "RESTEndpoint": "https://fpl-lineup-frontend-prod.s3.ap-southeast-1.amazonaws.com",
+    "WebsiteEndpoint": "NOT ENABLED - OAC only signs requests to the S3 REST endpoint; the website endpoint cannot be used behind OAC (AWS CloudFront Developer Guide: 'If your origin is an Amazon S3 bucket configured as a website endpoint ... you can't use OAC')",
+    "ObjectOwnership": "BucketOwnerEnforced (ACL disabled - required by OAC)",
+    "BlockPublicAccess": {
+      "BlockPublicAcls": true,
+      "IgnorePublicAcls": true,
+      "BlockPublicPolicy": true,
+      "RestrictPublicBuckets": true
+    },
+    "DefaultEncryption": {
+      "SSEAlgorithm": "AES256",
+      "BucketKeyEnabled": true,
+      "Note": "SSE-S3 is free and covers every object; no KMS CMK -> no KMS request charges."
+    },
+    "Versioning": "Enabled",
+    "LifecycleRules": [
+      "abort-incomplete-multipart-7d",
+      "expire-noncurrent-versions-30d",
+      "expire-old-delete-markers-7d"
+    ],
+    "CloudFrontOriginAccessControl": {
+      "Id": "E2IX1YDEAHD87E",
+      "Arn": "arn:aws:cloudfront::711695043505:origin-access-control/E2IX1YDEAHD87E",
+      "Name": "fpl-frontend-oac",
+      "SigningProtocol": "sigv4",
+      "SigningBehavior": "always",
+      "OriginAccessControlOriginType": "s3",
+      "AttachedToDistribution": "NO - attached by P3-Q01 when the distribution is created (Origin.OriginAccessControlId)"
+    },
+    "CostEnvelope": "S3 Standard Free Tier: 5 GB storage + 20,000 GET + 2,000 PUT/month. Frontend build is a few MB -> effectively $0.00."
+  },
+
+
+  "PolicyDocument": {
+    "Version": "2012-10-17",
+    "Id": "fpl-p2q04-frontend-bucket-policy",
+    "Statement": [
+      {
+        "Sid": "DenyInsecureTransport",
+        "Effect": "Deny",
+        "Principal": "*",
+        "Action": "s3:*",
+        "Resource": [
+          "arn:aws:s3:::fpl-lineup-frontend-prod",
+          "arn:aws:s3:::fpl-lineup-frontend-prod/*"
+        ],
+        "Condition": {
+          "Bool": {
+            "aws:SecureTransport": "false"
+          }
+        }
+      },
+      {
+        "Sid": "DenyUnencryptedObjectUploads",
+        "Effect": "Deny",
+        "Principal": "*",
+        "Action": "s3:PutObject",
+        "Resource": "arn:aws:s3:::fpl-lineup-frontend-prod/*",
+        "Condition": {
+          "StringNotEqualsIfExists": {
+            "s3:x-amz-server-side-encryption": [
+              "AES256",
+              "aws:kms"
+            ]
+          }
+        }
+      },
+      {
+        "Sid": "AllowCloudFrontOACReadOnly",
+        "Effect": "Allow",
+        "Principal": {
+          "Service": "cloudfront.amazonaws.com"
+        },
+        "Action": "s3:GetObject",
+        "Resource": "arn:aws:s3:::fpl-lineup-frontend-prod/*",
+        "Condition": {
+          "StringEquals": {
+            "AWS:SourceAccount": "711695043505"
+          }
+        }
+      }
+    ]
+  },
+
+
+  "PolicyDocumentDeferredStatement_P3Q01": {
+    "Why": "The strictest form pins AWS:SourceArn to one distribution. A distribution does not exist yet in P2-Q04 (creating it is P3-Q01), and an ARN that does not exist would make the policy useless/incorrect. P2-Q04 therefore pins the account (AWS:SourceAccount) and P3-Q01 MUST tighten it to AWS:SourceArn.",
+    "ApplyWhen": "P3-Q01 (AWS CloudFront distribution) - replace statement Sid 'AllowCloudFrontOACReadOnly' with the statement below",
+    "Statement": {
+      "Sid": "AllowCloudFrontOACReadOnly",
+      "Effect": "Allow",
+      "Principal": {
+        "Service": "cloudfront.amazonaws.com"
+      },
+      "Action": "s3:GetObject",
+      "Resource": "arn:aws:s3:::fpl-lineup-frontend-prod/*",
+      "Condition": {
+        "StringEquals": {
+          "AWS:SourceArn": "arn:aws:cloudfront::711695043505:distribution/CLOUDFRONT_DISTRIBUTION_ID_PLACEHOLDER"
+        }
+      }
+    },
+    "ResolveDistributionId": "aws cloudfront list-distributions --query \"Distributions.Items[?Origins.Items[0].DomainName=='fpl-lineup-frontend-prod.s3.ap-southeast-1.amazonaws.com'].Id\" --output text",
+    "AcceptanceAfterSwap": "aws s3api get-bucket-policy --bucket fpl-lineup-frontend-prod --query Policy --output text | grep -c 'distribution/'  # must print 1"
+  },
+
+
+  "ForbiddenPolicyExamples_DO_NOT_APPLY": [
+    {
+      "Why": "Cho phep ca the gioi doc bucket (chinh sach 'static website' co dien). Vi pham Acceptance Criteria (phai qua CloudFront OAC) va se bi BlockPublicPolicy tu choi (AccessDenied) - 2 lop chan.",
+      "Policy": {
+        "Version": "2012-10-17",
+        "Statement": [
+          {
+            "Sid": "PublicReadGetObject",
+            "Effect": "Allow",
+            "Principal": "*",
+            "Action": "s3:GetObject",
+            "Resource": "arn:aws:s3:::fpl-lineup-frontend-prod/*"
+          }
+        ]
+      }
+    },
+    {
+      "Why": "Service principal CloudFront nhung KHONG co Condition -> bat ky tai khoan AWS nao tao distribution tro ve bucket nay deu doc duoc (confused deputy). Phai luon co AWS:SourceAccount (P2-Q04) hoac AWS:SourceArn (P3-Q01).",
+      "Policy": {
+        "Version": "2012-10-17",
+        "Statement": [
+          {
+            "Effect": "Allow",
+            "Principal": {
+              "Service": "cloudfront.amazonaws.com"
+            },
+            "Action": "s3:GetObject",
+            "Resource": "arn:aws:s3:::fpl-lineup-frontend-prod/*"
+          }
+        ]
+      }
+    },
+    {
+      "Why": "Cap s3:* cho CloudFront -> CDN co the ghi/xoa object neu OAC bi loi dung. Chi duoc cap dung s3:GetObject.",
+      "Policy": {
+        "Version": "2012-10-17",
+        "Statement": [
+          {
+            "Effect": "Allow",
+            "Principal": {
+              "Service": "cloudfront.amazonaws.com"
+            },
+            "Action": "s3:*",
+            "Resource": "arn:aws:s3:::fpl-lineup-frontend-prod/*",
+            "Condition": {
+              "StringEquals": {
+                "AWS:SourceAccount": "711695043505"
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "Why": "Cho phep ListBucket cong khai -> lo toan bo danh sach file build (enumeration) va vo hieu hoa y do 'private origin'.",
+      "Policy": {
+        "Version": "2012-10-17",
+        "Statement": [
+          {
+            "Effect": "Allow",
+            "Principal": "*",
+            "Action": "s3:ListBucket",
+            "Resource": "arn:aws:s3:::fpl-lineup-frontend-prod"
+          }
+        ]
+      }
+    },
+    {
+      "Why": "Bao ve bang aws:Referer - header do client tu gui, gia mao trong 1 dong curl. Khong phai co che xac thuc.",
+      "Policy": {
+        "Version": "2012-10-17",
+        "Statement": [
+          {
+            "Effect": "Allow",
+            "Principal": "*",
+            "Action": "s3:GetObject",
+            "Resource": "arn:aws:s3:::fpl-lineup-frontend-prod/*",
+            "Condition": {
+              "StringLike": {
+                "aws:Referer": "https://example.com/*"
+              }
+            }
+          }
+        ]
+      }
+    }
+  ],
+
+
+  "ComplianceGuards": {
+    "RequiredPublicAccessBlock": {
+      "BlockPublicAcls": true,
+      "IgnorePublicAcls": true,
+      "BlockPublicPolicy": true,
+      "RestrictPublicBuckets": true
+    },
+    "RequiredObjectOwnership": "BucketOwnerEnforced",
+    "RequiredVersioning": "Enabled",
+    "RequiredDefaultEncryption": "AES256 (SSE-S3, BucketKeyEnabled=true)",
+    "ForbiddenPrincipals": [
+      "*",
+      "arn:aws:iam::*:root (foreign account root)",
+      "any principal without a CloudFront condition"
+    ],
+    "ForbiddenActionsForCloudFrontPrincipal": [
+      "s3:PutObject",
+      "s3:DeleteObject",
+      "s3:*"
+    ],
+    "MaxNonGetPermissions": 0,
+    "AuditSchedule": "weekly",
+    "AuditCommands": [
+      "aws s3api get-public-access-block --bucket fpl-lineup-frontend-prod --output json",
+      "aws s3api get-bucket-policy-status --bucket fpl-lineup-frontend-prod --output json   # IsPublic must be false",
+      "aws s3api get-bucket-acl --bucket fpl-lineup-frontend-prod --output json            # no URI=AllUsers / AuthenticatedUsers grant",
+      "curl -s -o /dev/null -w '%{http_code}' https://fpl-lineup-frontend-prod.s3.ap-southeast-1.amazonaws.com/index.html   # must be 403",
+      "aws s3api get-bucket-policy --bucket fpl-lineup-frontend-prod --query Policy --output text"
+    ],
+    "ForbiddenCidrsNotApplicable": "S3 is not VPC-scoped; network allow-lists cannot protect the bucket. Access control is IAM/bucket-policy + OAC only - do not mistake a Security Group for bucket protection."
+  },
+
+  "VerificationMatrix": {
+    "V0_Region": "aws s3api get-bucket-location --bucket fpl-lineup-frontend-prod  ->  ap-southeast-1",
+    "V1_PublicAccessBlock": "get-public-access-block  ->  4/4 true",
+    "V2_PolicyStatus": "get-bucket-policy-status  ->  IsPublic=false",
+    "V3_AnonymousReadBlocked": "curl https://<rest-endpoint>/index.html  ->  403 AccessDenied",
+    "V4_AuthenticatedRead": "aws s3api get-object --bucket ... --key index.html  ->  HTTPStatusCode 200",
+    "V5_WebsiteEndpointOff": "aws s3api get-bucket-website  ->  NoSuchWebsiteConfiguration",
+    "V6_OACExists": "aws cloudfront get-origin-access-control --id E2IX1YDEAHD87E  ->  sigv4 / always / s3",
+    "V7_Encryption": "get-bucket-encryption  ->  AES256 + BucketKeyEnabled true"
+  }
+}
+
