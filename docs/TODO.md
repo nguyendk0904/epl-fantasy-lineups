@@ -13,11 +13,11 @@
 
 | Giai đoạn (Phase) | Hoàn thành | Tỷ lệ | Trạng thái |
 | :--- | :---: | :---: | :---: |
-| **Phase 1: Local Full-Stack Product** | **9 / 17** | `53%` | 🟡 Đang thực hiện |
+| **Phase 1: Local Full-Stack Product** | **16 / 17** | `94%` | 🟡 Đang thực hiện |
 | **Phase 2: AWS Services Integration** | **0 / 14** | `0%` | ⚪ Chờ Phase 1 |
 | **Phase 3: Production Deploy & E2E Test** | **0 / 14** | `0%` | ⚪ Chờ Phase 2 |
 | **Phase 4: Live Gamification & League Operations** | **0 / 14** | `0%` | ⚪ Chờ Phase 3 |
-| **TỔNG CỘNG TOÀN DỰ ÁN** | **9 / 59** | **15%** | 🟡 Đang thực hiện |
+| **TỔNG CỘNG TOÀN DỰ ÁN** | **16 / 59** | `27%` | 🟡 Đang thực hiện |
 
 ---
 
@@ -32,7 +32,7 @@
 
 ---
 
-## 🚀 PHASE 1: TẠO SẢN PHẨM HOÀN CHỈNH & TEST TRÊN LOCAL (9/17)
+## 🚀 PHASE 1: TẠO SẢN PHẨM HOÀN CHỈNH & TEST TRÊN LOCAL (16/17)
 *Mục tiêu: Chạy toàn bộ hệ thống trên localhost qua Docker Compose, dữ liệu FPL thật, test unit pass 100%.*
 
 ### 🎨 Nguyên (Frontend & UI Lead) - [5/5]
@@ -84,7 +84,7 @@
 
 ---
 
-### ⚙️ Nhất (Backend Core & FPL Sync Lead) - [1/4]
+### ⚙️ Nhất (Backend Core & FPL Sync Lead) - [4/4]
 
 - [x] **`P1-NH01`** *(Level 2)*: Khởi tạo base FastAPI, CORS, SQLAlchemy Async
   - *Mô tả:* Dựng khung ứng dụng FastAPI, cấu hình CORS cho frontend, thiết lập file config biến môi trường Pydantic và session async kết nối PostgreSQL.
@@ -95,7 +95,7 @@
   - *Tiêu chí chấp nhận (Acceptance Criteria):* Server FastAPI khởi chạy tại port 8000, cấu hình CORS cho origin localhost:5173, Swagger UI `/docs` hoạt động, session async kết nối DB sẵn sàng.
   - *Cách kiểm chứng (Verification):* `curl http://localhost:8000/docs` trả về HTTP 200.
 
-- [ ] **`P1-NH02`** *(Level 3)*: Viết service `fpl_sync.py` kéo & Upsert dữ liệu FPL
+- [x] **`P1-NH02`** *(Level 3)*: Viết service `fpl_sync.py` kéo & Upsert dữ liệu FPL
   - *Mô tả:* Worker kéo JSON từ FPL API (`bootstrap-static`), chuẩn hóa giá chia 10 (£15.2m), map vị trí chữ (GKP/DEF/MID/FWD) và upsert dữ liệu 20 CLB, ~650 cầu thủ vào PostgreSQL.
   - *Phụ thuộc:* `P1-NH01`, `P1-V01` (Cần models DB của Vũ).
   - *Thư mục:* `backend/app/services/`
@@ -104,7 +104,7 @@
   - *Tiêu chí chấp nhận (Acceptance Criteria):* Kéo đủ 20 CLB và $\ge 600$ cầu thủ vào PostgreSQL, giá cầu thủ chia 10 chuẩn xác (15.2m), map vị trí chữ chuẩn (GKP/DEF/MID/FWD).
   - *Cách kiểm chứng (Verification):* `pytest backend/tests/test_fpl_sync.py` pass 100%, kiểm tra DB `SELECT count(*) FROM players;` $\ge 600$.
 
-- [ ] **`P1-NH03`** *(Level 2)*: Xây dựng REST API `GET /api/v1/players`
+- [x] **`P1-NH03`** *(Level 2)*: Xây dựng REST API `GET /api/v1/players`
   - *Mô tả:* API trả về danh sách cầu thủ có phân trang, hỗ trợ query params lọc theo vị trí, team_id, khoảng giá, tìm kiếm tên và sắp xếp theo điểm/giá.
   - *Phụ thuộc:* `P1-NH02`
   - *Thư mục:* `backend/app/api/v1/endpoints/`
@@ -113,18 +113,19 @@
   - *Tiêu chí chấp nhận (Acceptance Criteria):* API trả về JSON đúng định dạng SSOT, hỗ trợ filter vị trí, team_id, min_cost, max_cost, search tên và sắp xếp theo điểm/giá kèm phân trang.
   - *Cách kiểm chứng (Verification):* `pytest backend/tests/test_players_api.py` pass 100%.
 
-- [ ] **`P1-NH04`** *(Level 1)*: Xây dựng REST API `GET /api/v1/teams`
+- [x] **`P1-NH04`** *(Level 1)*: Xây dựng REST API `GET /api/v1/teams`
   - *Mô tả:* API trả về danh sách 20 đội bóng Premier League kèm tên viết tắt (ARS, MCI,...), chỉ số sức mạnh tổng thể và sức mạnh công/thủ.
   - *Phụ thuộc:* `P1-NH02`
   - *Thư mục:* `backend/app/api/v1/endpoints/`
   - *File tạo mới (3 files):* `backend/app/schemas/team.py`, `backend/app/api/v1/endpoints/teams.py`, `backend/tests/test_teams_api.py`.
   - *Branch:* `feature/P1-NH04-teams-api`
+  - *Kiểm thử:* 5/5 test Teams API pass; bộ kiểm thử Teams, Players, main và models: 37/37 pass trên SQLite. Chưa xác minh dữ liệu 20 CLB trên PostgreSQL thật; chưa chạy lint vì môi trường chưa có công cụ.
   - *Tiêu chí chấp nhận (Acceptance Criteria):* API trả về đúng 20 CLB Ngoại hạng Anh kèm short_name, strength chỉ số công/thủ.
   - *Cách kiểm chứng (Verification):* `pytest backend/tests/test_teams_api.py` pass 100%.
 
 ---
 
-### 🧠 Vũ (Data & Algorithm Engineer) - [1/4]
+### 🧠 Vũ (Data & Algorithm Engineer) - [4/4]
 
 - [x] **`P1-V01`** *(Level 3)*: Thiết kế Schema PostgreSQL & Alembic Migration
   - *Mô tả:* Khai báo SQLAlchemy ORM models cho bảng `teams`, `players` (kèm indexes vị trí, giá, điểm) và thiết lập file migration đầu tiên bằng Alembic.
@@ -135,7 +136,7 @@
   - *Tiêu chí chấp nhận (Acceptance Criteria):* Models ORM chuẩn SQLAlchemy 2.0 async, indexes trên các cột tìm kiếm thường xuyên, script Alembic migration chạy mượt mà.
   - *Cách kiểm chứng (Verification):* `alembic upgrade head` áp dụng thành công tạo đủ bảng trong PostgreSQL.
 
-- [ ] **`P1-V02`** *(Level 3)*: Module Thuật toán `optimizer_solver.py` bằng `PuLP`
+- [x] **`P1-V02`** *(Level 3)*: Module Thuật toán `optimizer_solver.py` bằng `PuLP`
   - *Mô tả:* Mô hình hóa và giải bài toán quy hoạch tuyến tính nguyên 0-1 (0-1 ILP) chọn 15 cầu thủ tối đa hóa điểm kỳ vọng trong ngân sách 100m, max 3/team, hỗ trợ khóa cầu thủ (locked players).
   - *Phụ thuộc:* Không (Chạy pure Python độc lập với mock data ngay Ngày 1).
   - *Thư mục:* `backend/app/services/`
@@ -144,7 +145,7 @@
   - *Tiêu chí chấp nhận (Acceptance Criteria):* Giải ra nghiệm tối ưu điểm xP trong ngân sách $\le$ 100m, không quá 3 người/CLB, đủ 2 GKP, 5 DEF, 5 MID, 3 FWD; thời gian giải < 100ms.
   - *Cách kiểm chứng (Verification):* `pytest backend/tests/test_optimizer.py` pass 100%.
 
-- [ ] **`P1-V03`** *(Level 3)*: Xây dựng REST API `POST /api/v1/optimizer/solve`
+- [x] **`P1-V03`** *(Level 3)*: Xây dựng REST API `POST /api/v1/optimizer/solve`
   - *Mô tả:* Endpoint nhận payload (ngân sách, locked_player_ids, excluded_player_ids, sơ đồ mong muốn), query danh sách cầu thủ từ DB và gọi `PuLP solver` trả về đội hình 15 người.
   - *Phụ thuộc:* `P1-V02`, `P1-NH01`
   - *Thư mục:* `backend/app/api/v1/endpoints/`
@@ -153,7 +154,7 @@
   - *Tiêu chí chấp nhận (Acceptance Criteria):* Nhận payload JSON hợp lệ, gọi solver PuLP và trả về đội hình 15 người (Starting XI + Bench) kèm captain; xử lý an toàn ca vô nghiệm (status: infeasible).
   - *Cách kiểm chứng (Verification):* `pytest backend/tests/test_optimizer_api.py` pass 100%.
 
-- [ ] **`P1-V04`** *(Level 2)*: Xây dựng REST API `POST /api/v1/lineups/compare`
+- [x] **`P1-V04`** *(Level 2)*: Xây dựng REST API `POST /api/v1/lineups/compare`
   - *Mô tả:* Endpoint nhận vào 2 danh sách ID đội hình A và B, tính toán mức chênh lệch ngân sách, chênh lệch điểm xP, chỉ số sức mạnh từng tuyến và danh sách cầu thủ khác biệt.
   - *Phụ thuộc:* `P1-NH01`
   - *Thư mục:* `backend/app/api/v1/endpoints/`
@@ -164,7 +165,7 @@
 
 ---
 
-### 🐳 Quang (DevOps & AWS Lead) - [2/4]
+### 🐳 Quang (DevOps & AWS Lead) - [3/4]
 
 - [x] **`P1-Q01`** *(Level 2)*: Viết `backend/Dockerfile` và `frontend/Dockerfile`
   - *Mô tả:* Đóng gói Docker đa tầng (multi-stage build) cho Backend (Python 3.11-slim kèm coinor-cbc solver) và Frontend (Vite build sang Nginx alpine phục vụ static file).
@@ -184,7 +185,7 @@
   - *Tiêu chí chấp nhận (Acceptance Criteria):* Chạy `docker compose up` khởi động đồng bộ 3 container postgres, backend, frontend; có healthcheck và persist data qua volume.
   - *Cách kiểm chứng (Verification):* `docker compose ps` hiển thị cả 3 service ở trạng thái `running` hoặc `healthy`.
 
-- [ ] **`P1-Q03`** *(Level 2)*: Viết kịch bản Kiểm thử Tích hợp Local (Integration Test)
+- [x] **`P1-Q03`** *(Level 2)*: Viết kịch bản Kiểm thử Tích hợp Local (Integration Test)
   - *Mô tả:* Script tự động gửi request kiểm tra tính thông suốt của toàn bộ hệ thống: Frontend gọi Backend $\rightarrow$ Backend query Postgres $\rightarrow$ PuLP solver trả kết quả.
   - *Phụ thuộc:* `P1-Q02`, `P1-NH03`, `P1-V03`
   - *Thư mục:* `scripts/`
