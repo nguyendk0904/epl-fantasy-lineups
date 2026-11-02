@@ -1,0 +1,175 @@
+{
+  "Metadata": {
+    "TaskId": "P2-Q02",
+    "Title": "RDS PostgreSQL 5432 least-privilege Security Group policy",
+    "Owner": "Quang (DevOps & AWS Lead)",
+    "RiskLevel": "LEVEL 4 (Critical)",
+    "GitBranch": "feature/P2-Q02-rds-security-group",
+    "SchemaVersion": "1.0.0",
+    "LastReviewed": "2026-11-02",
+    "AwsAccountId": "711695043505",
+    "AwsRegion": "ap-southeast-1",
+    "DbIdentifier": "fpl-fantasy-db",
+    "DbEngine": "postgres",
+    "DbPort": 5432,
+    "ThreatModel": "Bot quet Internet lien tuc do port 5432 tren IPv4 cong khai. Neu mo 0.0.0.0/0, RDS bi brute-force trong vai phut. Policy nay chi cho phep dung IP /32 co dinh cua nhom dev va Security Group cua Backend; moi nguon khac bi DROP tai lop SG (client thay 'Connection timed out').",
+    "SourceOfTruth": [
+      "docs/PROJECT_SSOT.md",
+      "docs/AI_GUIDELINES.md",
+      "docs/TODO.md",
+      "infra/aws/terraform_rds.tf",
+      "infra/aws/rds_setup.md"
+    ]
+  },
+
+  "TargetSecurityGroup": {
+    "GroupName": "fpl-fantasy-db-sg",
+    "GroupId": "RESOLVE_AT_RUNTIME",
+    "GroupIdResolutionHint": "aws rds describe-db-instances --db-instance-identifier fpl-fantasy-db --query 'DBInstances[0].VpcSecurityGroups[0].VpcSecurityGroupId' --output text",
+    "Vpc": "Default VPC of ap-southeast-1 (created by infra/aws/terraform_rds.tf - P2-Q01)",
+    "ManagedBy": "Terraform (P2-Q01) owns the SG shell; P2-Q02 owns the ingress rules only",
+    "PubliclyAccessible": false,
+    "DbPort": 5432,
+    "StatefulNote": "Security Group la stateful: goi tin phan hoi cua ket noi inbound duoc phep tu dong, nen egress deny-all KHONG lam hong ket noi psql."
+  },
+
+  "AuthorizeIngress": {
+    "CliTarget": "aws ec2 authorize-security-group-ingress --group-id <SG_ID> --ip-permissions <mang IpPermissions duoi day>",
+    "ShapeNotice": "Moi phan tu PHAI dung shape AWS IpPermission: CIDR nam trong IpRanges[].CidrIp, mo ta nam trong IpRanges[].Description. Dat 'CidrIp'/'Description' o cap ngoai se bi CLI tu choi (Unknown parameter).",
+    "LeastPrivilegeRationale": "Moi nguon la mot /32 duy nhat (khong dung CIDR rong), chi 1 port duy nhat 5432, chi giao thuc tcp. Mot rule = mot nguoi/mot SG -> revoke chinh xac khi offboarding.",
+    "IpPermissions": [
+      {
+        "IpProtocol": "tcp",
+        "FromPort": 5432,
+        "ToPort": 5432,
+        "IpRanges": [
+          {
+            "CidrIp": "14.191.166.167/32",
+            "Description": "P2-Q02 dev-01 Quang fixed IP (verified 2026-11-02 via checkip.amazonaws.com)"
+          }
+        ]
+      }
+    ],
+    "AppliedStatePolicy": "Rule dang ky la IP that cua may dev, da ap dung len SG ngay 2026-11-02 (xem security_groups.md muc 8.4). Them IP moi = them 1 phan tu vao mang nay (moi IP 1 rule /32, tran MaxIngressRules = 5) roi chay lint + muc 6.4. Khong bao gio dung 203.0.113.x (dai tai lieu RFC 5737, khong dinh tuyen duoc) trong rule that."
+  },
+
+  "AuthorizeIngressDeferred": {
+    "ApplyWhen": "P3-Q02 (Backend FastAPI len AWS App Runner) da tao Security Group cho backend",
+    "Reason": "Backend SG chua ton tai o Phase 2. Rule tham chieu SG duoc khai bao san de sau nay khong phai mo public IP cua App Runner.",
+    "CliTarget": "aws ec2 authorize-security-group-ingress --group-id <SG_ID> --ip-permissions <mang IpPermissions duoi day>",
+    "IpPermissions": [
+      {
+        "IpProtocol": "tcp",
+        "FromPort": 5432,
+        "ToPort": 5432,
+        "UserIdGroupPairs": [
+          {
+            "GroupId": "sg-BACKEND_SG_ID_PLACEHOLDER",
+            "Description": "Backend API SG (App Runner VPC connector / EC2) - P3-Q02"
+          }
+        ]
+      }
+    ],
+    "PlaceholderPolicy": "GroupId 'sg-BACKEND_SG_ID_PLACEHOLDER' khong ton tai -> CLI bao InvalidGroup.NotFound neu apply som. Do NOT apply truoc P3-Q02."
+  },
+
+  "AuthorizeEgress": {
+    "CliTarget": "aws ec2 authorize-security-group-egress --group-id <SG_ID> --ip-permissions <mang IpPermissions duoi day>",
+    "IpPermissions": [],
+    "Rationale": "RDS khong bao gio chu dong mo ket noi ra ngoai. Egress deny-all (shell trong terraform_rds.tf dung 127.0.0.1/32) chan luon duong data-exfiltration. Mang rong o day nghia la 'khong them rule egress nao'."
+  },
+
+  "ComplianceGuards": {
+    "ForbiddenCidrs": [
+      "0.0.0.0/0",
+      "::/0"
+    ],
+    "AllowedPorts": [
+      5432
+    ],
+    "AllowedProtocols": [
+      "tcp"
+    ],
+    "MaxIngressRules": 5,
+    "RequireHostPrefix": true,
+    "RequiredHostPrefix": 32,
+    "RequireDescription": true,
+    "ForbiddenSourceSecurityGroupIds": [
+      "sg-0cc107941e7bebe43"
+    ],
+    "ForbiddenSourceSecurityGroupIdsWhy": "launch-wizard-1 - SG mo SSH tu 0.0.0.0/0, khong bao gio duoc lam nguon cho RDS.",
+    "AuditSchedule": "weekly",
+    "AuditCommand": "aws ec2 describe-security-groups --group-ids <SG_ID> --region ap-southeast-1 --query 'SecurityGroups[0].IpPermissions[?IpRanges[?CidrIp==`0.0.0.0/0`]]' --output json"
+  },
+
+  "ForbiddenRuleExamples_DO_NOT_APPLY": [
+    {
+      "Why": "Mo PostgreSQL cho toan bo Internet - vi pham truc tiep Acceptance Criteria, la nguyen nhan so 1 khien RDS bi ma hoa to cong khai.",
+      "Rule": {
+        "IpProtocol": "tcp",
+        "FromPort": 5432,
+        "ToPort": 5432,
+        "IpRanges": [
+          {
+            "CidrIp": "0.0.0.0/0"
+          }
+        ]
+      }
+    },
+    {
+      "Why": "Mo ca dai IPv6 Internet, tuong duong 0.0.0.0/0 nhung de bi bo sot khi audit.",
+      "Rule": {
+        "IpProtocol": "tcp",
+        "FromPort": 5432,
+        "ToPort": 5432,
+        "Ipv6Ranges": [
+          {
+            "CidrIpv6": "::/0"
+          }
+        ]
+      }
+    },
+    {
+      "Why": "Mo 'all traffic' thay vi chi 5432 - bien DB thanh be mat tan cong toan bo port (co Description day du nen chi vi pham protocol/port).",
+      "Rule": {
+        "IpProtocol": "-1",
+        "FromPort": 0,
+        "ToPort": 0,
+        "IpRanges": [
+          {
+            "CidrIp": "203.0.113.10/32",
+            "Description": "all traffic - sai"
+          }
+        ]
+      }
+    },
+    {
+      "Why": "Nguon qua rong (ca dai /16 cua ISP) - bat ky khach hang nao cua ISP do cung vao duoc DB.",
+      "Rule": {
+        "IpProtocol": "tcp",
+        "FromPort": 5432,
+        "ToPort": 5432,
+        "IpRanges": [
+          {
+            "CidrIp": "203.0.0.0/16",
+            "Description": "ca dai ISP - sai"
+          }
+        ]
+      }
+    },
+    {
+      "Why": "Dung SG mo cua (launch-wizard-1) lam nguon - vi pham least privilege qua 2 lop.",
+      "Rule": {
+        "IpProtocol": "tcp",
+        "FromPort": 5432,
+        "ToPort": 5432,
+        "UserIdGroupPairs": [
+          {
+            "GroupId": "sg-0cc107941e7bebe43",
+            "Description": "SG mo SSH 0.0.0.0/0 - sai"
+          }
+        ]
+      }
+    }
+  ]
+}
