@@ -726,7 +726,7 @@ aws sns list-topics --region ap-southeast-1 --query 'Topics[].TopicArn' --output
 
 - [x] Bấm **Confirm subscription** trong email SNS (mục 10) → V5 hiện ARN đầy đủ — **hoàn tất `02/11/2026`**.
 - [x] Chạy **11.1** (`sns publish` test) và xác nhận nhận được email test — **hoàn tất `02/11/2026`**, minh chứng ở **V9**.
-- [ ] Chụp màn hình 4 bằng chứng ở mục 9.1 (Budgets / Alerts / SNS Subscriptions / hộp thư).
+- [x] Chụp màn hình 4 bằng chứng ở mục 9.1 (Budgets / Alerts / SNS Subscriptions / hộp thư) — **hoàn tất `02/11/2026`**, ảnh lưu cùng báo cáo đồ án (không commit binary vào repo).
 - [x] Mở `docs/TODO.md` → tích **`[x]`** vào `P2-Q03` — **đã cập nhật** (`19/59`, Phase 2 = `2/14`, Quang = `2/4`).
 - [x] `git diff` review 2 file mới trước khi cho phép commit — **đã review & commit `a22b65a`**.
 - [ ] Tạo label/filter `AWS-Budget` trong Gmail để cảnh báo không bị chôn.
