@@ -1,0 +1,69 @@
+{
+  "AccountId": "711695043505",
+  "Budget": {
+    "BudgetName": "fpl-freetier-guard-1usd",
+    "BudgetType": "COST",
+    "TimeUnit": "MONTHLY",
+    "BudgetLimit": {
+      "Amount": "1.0",
+      "Unit": "USD"
+    },
+    "CostTypes": {
+      "IncludeTax": true,
+      "IncludeSubscription": true,
+      "UseBlended": false,
+      "IncludeRefund": true,
+      "IncludeCredit": true,
+      "IncludeUpfront": true,
+      "IncludeRecurring": true,
+      "IncludeOtherSubscription": true,
+      "IncludeSupport": true,
+      "IncludeDiscount": true,
+      "UseAmortized": false
+    }
+  },
+  "NotificationsWithSubscribers": [
+    {
+      "Notification": {
+        "NotificationType": "ACTUAL",
+        "ComparisonOperator": "GREATER_THAN",
+        "Threshold": 80.0,
+        "ThresholdType": "PERCENTAGE"
+      },
+      "Subscribers": [
+        {
+          "SubscriptionType": "SNS",
+          "Address": "arn:aws:sns:ap-southeast-1:711695043505:fpl-budget-alert-topic"
+        }
+      ]
+    },
+    {
+      "Notification": {
+        "NotificationType": "ACTUAL",
+        "ComparisonOperator": "GREATER_THAN",
+        "Threshold": 100.0,
+        "ThresholdType": "PERCENTAGE"
+      },
+      "Subscribers": [
+        {
+          "SubscriptionType": "SNS",
+          "Address": "arn:aws:sns:ap-southeast-1:711695043505:fpl-budget-alert-topic"
+        }
+      ]
+    },
+    {
+      "Notification": {
+        "NotificationType": "FORECASTED",
+        "ComparisonOperator": "GREATER_THAN",
+        "Threshold": 100.0,
+        "ThresholdType": "PERCENTAGE"
+      },
+      "Subscribers": [
+        {
+          "SubscriptionType": "SNS",
+          "Address": "arn:aws:sns:ap-southeast-1:711695043505:fpl-budget-alert-topic"
+        }
+      ]
+    }
+  ]
+}
