@@ -47,3 +47,21 @@ Thumbs.db
 # Docker
 *.docker.log
 
+# Terraform local state & credentials
+**/.terraform/
+*.tfstate
+*.tfstate.*
+*.tfplan
+# Variable files can hold db_password -> never commit them (examples only)
+*.tfvars
+*.tfvars.json
+*.auto.tfvars
+*.auto.tfvars.json
+!*.tfvars.example
+crash.log
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+.terraformrc
+terraform.rc
