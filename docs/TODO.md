@@ -228,7 +228,7 @@
   - *Tiêu chí chấp nhận (Acceptance Criteria):* Truy cập route `/share/:code` render đúng 15 cầu thủ ở chế độ chỉ xem, nút sao chép nạp toàn bộ cầu thủ vào `lineupStore` cá nhân.
   - *Cách kiểm chứng (Verification):* `npm --prefix frontend test -- SharedLineupPage.test.tsx` pass 100%.
 
-- [ ] **`P2-NG03`** *(Level 1)*: Cấu hình file môi trường `.env.production` & API Client Cloud
+- [x] **`P2-NG03`** *(Level 1)*: Cấu hình file môi trường `.env.production` & API Client Cloud
   - *Mô tả:* Thiết lập file `.env.production` trỏ `VITE_API_BASE_URL` về domain AWS Backend; đóng gói Fetch/Axios client tự động switch baseURL theo `import.meta.env.MODE`.
   - *Phụ thuộc:* `P1-NG01`
   - *Thư mục:* `frontend/`, `frontend/src/services/`
