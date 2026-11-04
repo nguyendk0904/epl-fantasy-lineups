@@ -14,10 +14,10 @@
 | Giai đoạn (Phase) | Hoàn thành | Tỷ lệ | Trạng thái |
 | :--- | :---: | :---: | :---: |
 | **Phase 1: Local Full-Stack Product** | **17 / 17** | `100%` | 🟡 Đang thực hiện |
-| **Phase 2: AWS Services Integration** | **3 / 14** | `21%` | 🟡 Đang thực hiện |
+| **Phase 2: AWS Services Integration** | **4 / 14** | `29%` | 🟡 Đang thực hiện |
 | **Phase 3: Production Deploy & E2E Test** | **0 / 14** | `0%` | ⚪ Chờ Phase 2 |
 | **Phase 4: Live Gamification & League Operations** | **0 / 14** | `0%` | ⚪ Chờ Phase 3 |
-| **TỔNG CỘNG TOÀN DỰ ÁN** | **20 / 59** | `34%` | 🟡 Đang thực hiện |
+| **TỔNG CỘNG TOÀN DỰ ÁN** | **21 / 59** | `36%` | 🟡 Đang thực hiện |
 
 ---
 
@@ -179,8 +179,10 @@
 - [ ] **`P2-NG02`** *(Level 2)*: Màn hình xem đội hình qua link chia sẻ (`/share/:code`) ở chế độ Read-only. *(Branch: `feature/P2-NG02-view-shared-lineup`, Thư mục: `frontend/src/pages/`, Files: `SharedLineupPage.tsx`)*
 - [ ] **`P2-NG03`** *(Level 1)*: Cấu hình file môi trường `.env.production` trỏ API về domain Cloud. *(Branch: `feature/P2-NG03-frontend-env-prod`, Thư mục: `frontend/`, Files: `.env.production`)*
 
-### ⚙️ Nhất (Backend) - [0/3]
-- [ ] **`P2-NH01`** *(Level 3)*: Chuyển chuỗi kết nối Database sang Amazon RDS PostgreSQL qua biến môi trường. *(Branch: `feature/P2-NH01-rds-connection`, Thư mục: `backend/app/core/`, Files: `config.py`)*
+### ⚙️ Nhất (Backend) - [1/3]
+- [x] **`P2-NH01`** *(Level 3)*: Chuyển chuỗi kết nối Database sang Amazon RDS PostgreSQL qua biến môi trường. *(Branch: `feature/P2-NH01-rds-connection`, Thư mục: `backend/app/core/`, Files: `config.py`, `database.py`, `rds_config.py`, `backend/tests/test_rds_connection.py`)*
+  - *Bằng chứng NH cung cấp ngày 2026-11-04:* `29 passed, 19 warnings in 2.47s`, gồm test `SELECT 1` trên RDS thật, không skip. Hồi quy do AI chạy trước đó: 90 passed, 3 skipped (live RDS chưa bật và hai test PostgreSQL của FPL sync).
+  - *Fallback:* Dev không cấu hình RDS dùng `DATABASE_URL` local; cấu hình RDS thiếu một phần hoặc kết nối lỗi được báo lỗi, không tự chuyển database. Production yêu cầu database remote có TLS.
 - [ ] **`P2-NH02`** *(Level 2)*: REST API `POST /api/v1/lineups/share` và `GET /share/:code` đọc/ghi snapshot RDS. *(Branch: `feature/P2-NH02-shared-lineups-api`, Thư mục: `backend/app/api/v1/endpoints/`, Files: `lineup_share.py`)*
 - [ ] **`P2-NH03`** *(Level 3)*: Cron job / Background worker định kỳ chạy FPL sync trên Cloud khi có Gameweek mới. *(Branch: `feature/P2-NH03-cloud-sync-cron`, Thư mục: `backend/app/services/`, Files: `cron_scheduler.py`)*
 

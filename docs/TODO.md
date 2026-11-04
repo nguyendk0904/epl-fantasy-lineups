@@ -239,14 +239,16 @@
 
 ---
 
-### ⚙️ Nhất (Backend Core & FPL Sync Lead) - [0/3]
+### ⚙️ Nhất (Backend Core & FPL Sync Lead) - [1/3]
 
-- [ ] **`P2-NH01`** *(Level 3)*: Chuyển chuỗi kết nối Database sang Amazon RDS PostgreSQL
+- [x] **`P2-NH01`** *(Level 3)*: Chuyển chuỗi kết nối Database sang Amazon RDS PostgreSQL
   - *Mô tả:* Cập nhật cấu hình kết nối DB hỗ trợ kết nối an toàn tới AWS RDS qua biến môi trường (`RDS_HOSTNAME`, `RDS_DB_NAME`, `RDS_USERNAME`, `RDS_PASSWORD`); cơ chế fallback tự động về Postgres local khi dev offline.
   - *Phụ thuộc:* `P1-NH01`, `P2-Q01`
   - *Thư mục:* `backend/app/core/`, `backend/tests/`
   - *File tạo mới (2 files):* `backend/app/core/rds_config.py`, `backend/tests/test_rds_connection.py`.
   - *Branch:* `feature/P2-NH01-rds-connection`
+  - *Bằng chứng NH cung cấp ngày 2026-11-04:* `29 passed, 19 warnings in 2.47s`, gồm test `SELECT 1` trên RDS thật, không skip. Hồi quy do AI chạy trước đó: 90 passed, 3 skipped (live RDS chưa bật và hai test PostgreSQL của FPL sync).
+  - *Fallback:* Dev không cấu hình RDS dùng `DATABASE_URL` local; cấu hình RDS thiếu một phần hoặc kết nối lỗi được báo lỗi, không tự chuyển database. Production yêu cầu database remote có TLS.
   - *Tiêu chí chấp nhận (Acceptance Criteria):* Kết nối thành công tới RDS PostgreSQL trên AWS khi có biến môi trường, tự fallback về Postgres local khi chạy offline.
   - *Cách kiểm chứng (Verification):* `pytest backend/tests/test_rds_connection.py` pass 100%.
 
