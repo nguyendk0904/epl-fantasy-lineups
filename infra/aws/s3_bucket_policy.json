@@ -6,7 +6,8 @@
     "RiskLevel": "LEVEL 3 (High) assigned by docs/TODO.md; docs/AI_GUIDELINES.md risk matrix classifies AWS infrastructure as LEVEL 4 (Critical) - handled as LEVEL 4: Dev + Tech Lead review, Free Tier + Budget Alert check",
     "GitBranch": "feature/P2-Q04-s3-bucket-setup",
     "SchemaVersion": "1.0.0",
-    "LastReviewed": "2026-11-02",
+    "LastReviewed": "2026-11-04",
+    "Status": "COMPLETE - bucket + policy live, re-verified 2026-11-04 (BlockPublicAccess 4/4, IsPublic false, anonymous 403, SigV4 200, policy on AWS == PolicyDocument, lint 16/16 PASS). Remaining work belongs to P3-Q01: attach OAC E2IX1YDEAHD87E to the distribution and tighten AWS:SourceAccount -> AWS:SourceArn (see infra/aws/s3_setup.md section 13.1).",
     "AwsAccountId": "711695043505",
     "AwsRegion": "ap-southeast-1",
     "BucketName": "fpl-lineup-frontend-prod",
@@ -18,7 +19,7 @@
       "infra/aws/s3_setup.md",
       "infra/aws/budget_policy.json"
     ],
-    "AppliedAt": "2026-11-02 (see infra/aws/s3_setup.md section 9 - live evidence)",
+    "AppliedAt": "2026-11-02 - live evidence in infra/aws/s3_setup.md section 9; re-verified 2026-11-04 (policy on AWS == this PolicyDocument, lint 16/16 PASS)",
     "HowToApply": {
       "WhyEnvelope": "This file is an audit envelope (Metadata + PolicyDocument + guards), not a bare policy document, so that traceability and forbidden examples live next to the policy. S3 only accepts a bare policy document -> extract PolicyDocument first (section 5.3 of s3_setup.md).",
       "ExtractAndApply": "python -c \"import json;d=json.load(open('infra/aws/s3_bucket_policy.json',encoding='utf-8'));json.dump(d['PolicyDocument'],open('applied.json','w',encoding='utf-8'),indent=2)\" && aws s3api put-bucket-policy --bucket fpl-lineup-frontend-prod --policy file://applied.json",
