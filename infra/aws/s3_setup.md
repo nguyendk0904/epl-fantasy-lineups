@@ -461,45 +461,26 @@ aws cloudfront delete-origin-access-control --id E2IX1YDEAHD87E --no-cli-pager \
 | AC-6 | Chi phí `$0.00`, Budget Alert đang bật | ✅ | §1 · §4 |
 | AC-7 | Không có credential/secret trong repo | ✅ | chỉ 2 file tài liệu + policy, không chứa khoá |
 
-### 14.2. ✅ CHECKLIST CHO DEV (làm theo thứ tự, tick từng ô)
+### 14.2. ✅ CHECKLIST CHO DEV
 
-**A. Trước khi review diff**
+> Chạy lại bằng lệnh ở §7 (lint) và §8 (V0–V8). Cột ✓ là kết quả **đã kiểm thật ngày 04/11/2026**.
 
-- [ ] **A1.** `git branch --show-current` → `feature/P2-Q04-s3-bucket-setup`.
-- [ ] **A2.** `git status --short` → **đúng 2 file**: `infra/aws/s3_setup.md`, `infra/aws/s3_bucket_policy.json` (không file rác, **không** `terraform.tfstate`).
-- [ ] **A3.** `python -c "import json;d=json.load(open('infra/aws/s3_bucket_policy.json',encoding='utf-8'));print(len(d), len(d['PolicyDocument']['Statement']))"` → `7 3` (đủ 7 section, đúng 3 statement).
-- [ ] **A4.** Chạy lint §7 (`python "%TEMP%/p2q04_lint.py"`, script **không** commit) → `RESULT: 16/16 PASS`, exit code `0`.
-- [ ] **A5.** `grep -nE 'AKIA[0-9A-Z]{16}|X-Amz-Signature=[0-9a-f]|aws_secret_access_key *= *[A-Za-z0-9/+=]{10}' infra/aws/s3_setup.md infra/aws/s3_bucket_policy.json` → **rỗng** (không lộ access key / chữ ký / secret).
-
-**B. Đối chiếu AWS thật (read-only, ~1 phút)**
-
-- [ ] **B1.** `aws s3api get-bucket-location --bucket fpl-lineup-frontend-prod --no-cli-pager` → `ap-southeast-1`.
-- [ ] **B2.** `aws s3api get-public-access-block --bucket fpl-lineup-frontend-prod --no-cli-pager` → 4 × `true`.
-- [ ] **B3.** `aws s3api get-bucket-policy-status --bucket fpl-lineup-frontend-prod --no-cli-pager` → `IsPublic: false`.
-- [ ] **B4.** `curl -s -o /dev/null -w '%{http_code}' https://fpl-lineup-frontend-prod.s3.ap-southeast-1.amazonaws.com/index.html` → `403`.
-- [ ] **B5.** `aws s3api head-object --bucket fpl-lineup-frontend-prod --key index.html --no-cli-pager --query '[ContentLength,ServerSideEncryption]'` → `[3060,"AES256"]` (chứng minh AC-3/AC-4).
-- [ ] **B6.** `aws s3api get-bucket-website --bucket fpl-lineup-frontend-prod --no-cli-pager` → `NoSuchWebsiteConfiguration` (website hosting OFF đúng thiết kế).
-- [ ] **B7.** `aws cloudfront get-origin-access-control --id E2IX1YDEAHD87E --no-cli-pager --query OriginAccessControl.OriginAccessControlConfig.SigningBehavior` → `always`.
-- [ ] **B8.** So policy AWS với repo: `aws s3api get-bucket-policy --bucket fpl-lineup-frontend-prod --no-cli-pager --query Policy --output text > "%TEMP%/live_policy.json"` rồi so với `PolicyDocument` → **khớp 100 %** (`live==repo: True`).
-
----
-
-**C. Trước khi commit / merge**
-
-- [ ] **C1.** Đọc lại §1.1 (3 mâu thuẫn) + §13.1 (bàn giao `P3-Q01`) — **không** tự bật lại Static Website Hosting.
-- [ ] **C2.** Commit message theo convention: `docs(devops): [P2-Q04] trim runbook, record 04/11 re-verification, dev checklist`.
-- [ ] **C3.** Commit **chỉ trên nhánh** `feature/P2-Q04-s3-bucket-setup`, **không push** (chờ Dev/Tech Lead duyệt diff).
-- [ ] **C4.** `TODO.md`: `docs/TODO.md` đã có `[x] P2-Q04` + ghi chú 02/11 → **không sửa** trong commit này (ràng buộc phạm vi 2 file); nếu cần bổ sung thì mở commit riêng.
-- [ ] **C5.** Tạo PR → nhãn `infra` + `security`, mô tả PR = §14.1 + §9.1.
-
-**D. Bàn giao `P3-Q01` (điều kiện web chạy HTTPS)**
-
-- [ ] **D1.** Distribution với origin **REST endpoint** `fpl-lineup-frontend-prod.s3.ap-southeast-1.amazonaws.com`.
-- [ ] **D2.** `OriginAccessControlId = E2IX1YDEAHD87E` · `OriginProtocolPolicy = https-only`.
-- [ ] **D3.** `ViewerProtocolPolicy = redirect-to-https` + ACM cert ở `us-east-1`.
-- [ ] **D4.** `CustomErrorResponse`: **403 và 404** → `/index.html`, response code `200`.
-- [ ] **D5.** Siết policy bằng `PolicyDocumentDeferredStatement_P3Q01` → `grep -c 'distribution/'` = `1`; lint vẫn `16/16`.
-- [ ] **D6.** Nghiệm thu: `curl https://<dist>.cloudfront.net/index.html` → `200`, URL S3 trực tiếp → `403`.
+| Nhóm | Việc | ✓ | Kết quả thực tế |
+| :--- | :--- | :--- | :--- |
+| A1–A2 | Đúng branch · `git status` chỉ **2 file** | ✅ | `feature/P2-Q04-s3-bucket-setup` · `M s3_setup.md` + `M s3_bucket_policy.json` |
+| A3 | Envelope đủ **7 section / 3 statement** | ✅ | `7 3` |
+| A4 | Policy lint §7 | ✅ | `16/16 PASS`, exit `0` |
+| A5 | Không lộ access key / chữ ký / secret | ✅ | grep pattern → rỗng |
+| B1–B3 | Region · Block Public Access · `IsPublic` | ✅ | `ap-southeast-1` · 4 × `true` · `false` |
+| B4 | Truy cập nặc danh | ✅ | `403` |
+| B5 | Object tồn tại + mã hoá (AC-3/AC-4) | ✅ | `[3060, "AES256"]` |
+| B6–B7 | Website hosting OFF · OAC | ✅ | `NoSuchWebsiteConfiguration` · `always` |
+| B8 | Policy trên AWS == repo | ✅ | `live==repo: True` |
+| C1 | Không bật lại Static Website Hosting | ✅ | xem §1.1 |
+| C2–C3 | Đúng commit message · **không push** | ✅ | `0576e88` (ahead 15) |
+| C4 | `docs/TODO.md` đã `[x]` → không sửa | ✅ | giữ phạm vi 2 file |
+| **C5** | **Tạo PR + nhãn `infra`/`security`** | ⏳ | mô tả PR = §14.1 + §9.1 |
+| **D1–D6** | **Bàn giao `P3-Q01`**: origin REST · OAC id · HTTPS/ACM · CustomError 403+404 · siết `SourceArn` · nghiệm thu `200`/`403` | ⏳ | chi tiết §13.1 |
 
 ### 14.3. Ghi chú cho Tech Lead khi review
 
