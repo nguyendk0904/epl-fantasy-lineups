@@ -14,10 +14,10 @@
 | Giai đoạn (Phase) | Hoàn thành | Tỷ lệ | Trạng thái |
 | :--- | :---: | :---: | :---: |
 | **Phase 1: Local Full-Stack Product** | **17 / 17** | `100%` | 🟡 Đang thực hiện |
-| **Phase 2: AWS Services Integration** | **4 / 14** | `29%` | 🟡 Đang thực hiện |
+| **Phase 2: AWS Services Integration** | **6 / 14** | `43%` | 🟡 Đang thực hiện |
 | **Phase 3: Production Deploy & E2E Test** | **0 / 14** | `0%` | ⚪ Chờ Phase 2 |
 | **Phase 4: Live Gamification & League Operations** | **0 / 14** | `0%` | ⚪ Chờ Phase 3 |
-| **TỔNG CỘNG TOÀN DỰ ÁN** | **21 / 59** | `36%` | 🟡 Đang thực hiện |
+| **TỔNG CỘNG TOÀN DỰ ÁN** | **23 / 59** | `39%` | 🟡 Đang thực hiện |
 
 ---
 
@@ -272,9 +272,9 @@
 
 ---
 
-### 🧠 Vũ (Data & Algorithm Engineer) - [0/3]
+### 🧠 Vũ (Data & Algorithm Engineer) - [1/3]
 
-- [ ] **`P2-V01`** *(Level 3)*: Chạy script migration toàn bộ Schema lên Amazon RDS PostgreSQL
+- [x] **`P2-V01`** *(Level 3)*: Chạy script migration toàn bộ Schema lên Amazon RDS PostgreSQL
   - *Mô tả:* Khai báo model ORM cho bảng `shared_lineups`, tạo Alembic migration và thực thi migrate đồng bộ toàn bộ schema (`teams`, `players`, `shared_lineups`) lên Amazon RDS của Quang kèm đầy đủ indexes.
   - *Phụ thuộc:* `P1-V01`, `P2-Q01`
   - *Thư mục:* `backend/app/models/`, `backend/alembic/versions/`, `backend/tests/`
