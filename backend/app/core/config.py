@@ -1,7 +1,8 @@
 from typing import List, Union
 import json
-from pydantic import field_validator
+from pydantic import Field, SecretStr, field_validator, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
+from app.core.rds_config import resolve_database_url
 
 
 class Settings(BaseSettings):
@@ -11,7 +12,16 @@ class Settings(BaseSettings):
 
     ENVIRONMENT: str = "development"
     PORT: int = 8000
-    DATABASE_URL: str = "postgresql+asyncpg://postgres:postgres@localhost:5432/fantasy_fpl"
+    DATABASE_URL: str = Field(
+        default="postgresql+asyncpg://postgres:postgres@localhost:5432/fantasy_fpl",
+        repr=False,
+    )
+    RDS_HOSTNAME: str | None = None
+    RDS_DB_NAME: str | None = None
+    RDS_USERNAME: str | None = None
+    RDS_PASSWORD: SecretStr | None = Field(default=None, repr=False, exclude=True)
+    RDS_PORT: int = Field(default=5432, ge=1, le=65535)
+    DB_CONNECT_TIMEOUT: float = Field(default=10.0, gt=0, allow_inf_nan=False)
     CORS_ORIGINS: Union[List[str], str] = [
         "http://localhost:5173",
         "http://localhost:3000",
@@ -40,11 +50,17 @@ class Settings(BaseSettings):
             return [str(item) for item in v]
         return []
 
+    @model_validator(mode="after")
+    def select_database(self) -> "Settings":
+        self.DATABASE_URL = resolve_database_url(self)
+        return self
+
     model_config = SettingsConfigDict(
         env_file=".env",
         env_file_encoding="utf-8",
         case_sensitive=True,
         extra="allow",
+        hide_input_in_errors=True,
     )
 
 

@@ -5,18 +5,23 @@ from sqlalchemy.ext.asyncio import (
     create_async_engine,
 )
 from sqlalchemy.orm import DeclarativeBase
-from app.core.config import settings
+from sqlalchemy.engine import make_url
+from app.core.config import Settings, settings
 
 
 class Base(DeclarativeBase):
     pass
 
 
-engine = create_async_engine(
-    settings.DATABASE_URL,
-    echo=(settings.ENVIRONMENT == "development"),
-    future=True,
-)
+def create_database_engine(config: Settings):
+    """Construct lazily; failed RDS connections propagate without local fallback."""
+    options = {"echo": False, "future": True}
+    if make_url(config.DATABASE_URL).drivername == "postgresql+asyncpg":
+        options["connect_args"] = {"timeout": config.DB_CONNECT_TIMEOUT}
+    return create_async_engine(config.DATABASE_URL, **options)
+
+
+engine = create_database_engine(settings)
 
 AsyncSessionLocal = async_sessionmaker(
     bind=engine,
