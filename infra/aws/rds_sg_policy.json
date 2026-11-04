@@ -5,8 +5,9 @@
     "Owner": "Quang (DevOps & AWS Lead)",
     "RiskLevel": "LEVEL 4 (Critical)",
     "GitBranch": "feature/P2-Q02-rds-security-group",
-    "SchemaVersion": "1.0.0",
-    "LastReviewed": "2026-11-02",
+    "SchemaVersion": "1.1.0",
+    "LastReviewed": "2026-11-04",
+    "LastReviewNote": "04/11/2026: dong bo voi runbook P2-Q01 da chot (TLS da kiem chung, P2-NH01 pass 100%, cua so public da dong luc 10:14, bai hoc ISP loc port 5432) + them 3 khoi VerifiedRuntimeState / DriftControl / VerificationPlaybook va 4 guard moi trong lint (18 test cases).",
     "AwsAccountId": "711695043505",
     "AwsRegion": "ap-southeast-1",
     "DbIdentifier": "fpl-fantasy-db",
@@ -33,6 +34,73 @@
     "StatefulNote": "Security Group la stateful: goi tin phan hoi cua ket noi inbound duoc phep tu dong, nen egress deny-all KHONG lam hong ket noi psql."
   },
 
+  "VerifiedRuntimeState": {
+    "AsOf": "2026-11-04",
+    "EvidenceSource": "infra/aws/rds_setup.md (P2-Q01, ban chot 04/11/2026 - muc 3.1..3.5 va 10.1) + describe read-only ngay 04/11/2026",
+    "DbIdentifier": "fpl-fantasy-db",
+    "DbInstanceStatus": "available",
+    "DbEngineVersion": "15.17",
+    "Endpoint": "fpl-fantasy-db.cr0maoomq80d.ap-southeast-1.rds.amazonaws.com",
+    "DbPort": 5432,
+    "PubliclyAccessible": false,
+    "PrivateIpObserved": "172.31.18.192",
+    "TlsEnforced": true,
+    "TlsEvidence": "rds.force_ssl=1 (parameter group fpl-fantasy-db-postgres15) + CA rds-ca-rsa2048-g1; psql sslmode=require + conninfo OK (rds_setup muc 3.1); client khong TLS bi tu choi 'no encryption' (muc 3.2).",
+    "BackendIntegrationEvidence": "P2-NH01 (Nhat) PASS 100% tren RDS that trong cua so public 08:51-10:14 ngay 04/11/2026 (rds_setup muc 3.3) -> bang chung allow-path doc lap thu 2, khong phu thuoc psql tren may Quang.",
+    "SecurityGroupId": "sg-0f5970a2c3b47878a",
+    "SecurityGroupName": "fpl-fantasy-db-sg",
+    "VpcId": "vpc-0019d7f1ffff26509",
+    "LiveIngressRuleIds": [
+      "sgr-0c31c847d0cf552c5"
+    ],
+    "DevCidrs": [
+      "14.191.166.167/32"
+    ],
+    "DevCidrRecheck": "curl -s https://checkip.amazonaws.com ngay 04/11/2026 = 14.191.166.167 -> khop rule R1. Bang chung TLS 04/11 (rds_setup muc 3.2) ghi client host '123.31.x.x' la phien tu mang khac (hotspot), KHONG phai IP nha. Truoc moi phien psql truc tiep: chay lai checkip; neu khac thi lam moi theo muc 6.2 (sua JSON -> lint -> 6.4 -> revoke IP cu o muc 11.1).",
+    "EgressMode": "deny-all (placeholder 127.0.0.1/32, ke thua P2-Q01)",
+    "PublicWindow": "Mo 08:39 -> dong 10:14 ngay 04/11/2026 (~95 phut, dai hon moc 30 phut); sau do PubliclyAccessible=false va TCP 5432 tu Internet -> timeout (rds_setup muc 3.4)."
+  },
+
+  "DriftControl": {
+    "Issue": "Rule R1 dang ton tai tren AWS nhung terraform_rds.tf va state deu ghi ingress = [] (rds_setup muc 10.1) -> cau hinh that va cau hinh trong IaC dang lech nhau.",
+    "MeasuredBehavior": "02/11/2026: sau khi them rule bang CLI, 'terraform plan -detailed-exitcode' tra 0 -> Terraform KHONG xoa rule them ngoai (do thuc te, khong suy doan).",
+    "RealRisks": [
+      "terraform destroy + apply lai -> SG rong ingress, DB fail-closed cho toi khi chay lai muc 6.4",
+      "May khac clone repo roi apply -> khong co rule nao (dung thiet ke P2-Q01, nhung phai biet)",
+      "Ai do them khoi ingress inline voi dev_cidr_blocks = [] -> TF quan ly tap rule (authoritative) va revoke het"
+    ],
+    "TerraformVariable": "dev_cidr_blocks",
+    "TerraformVariableDefault": [],
+    "CodifyStatus": "iac-ready-pending-cutover",
+    "CodifyOwner": "Quang - PR Level 4 rieng. Theo chi dao 04/11/2026, P2-Q02 chi dong 2 file (security_groups.md + rds_sg_policy.json) nen KHONG sua terraform_rds.tf trong task nay; HCL mau nam o muc 6.7 cua security_groups.md.",
+    "CutoverSteps": [
+      "1. Review + merge PR them khoi ingress (dynamic theo var.dev_cidr_blocks) vao terraform_rds.tf",
+      "2. Revoke rule CLI: aws ec2 revoke-security-group-ingress --group-id sg-0f5970a2c3b47878a --region ap-southeast-1 --protocol tcp --port 5432 --cidr 14.191.166.167/32 (DB dang private nen khong anh huong ai)",
+      "3. terraform apply -var='dev_cidr_blocks=[\"14.191.166.167/32\"]' -> TF tao lai dung rule do no quan ly",
+      "4. Verify: describe-security-groups tra dung 1 rule /32 va terraform plan -detailed-exitcode = 0"
+    ],
+    "DestructiveApplyGuard": "Sau cutover, TUYET DOI khong apply khi dev_cidr_blocks = [] (se revoke het va quay ve deny-all). Bat buoc truyen -var/-var-file khi apply va bat buoc co dong 'Plan: 0 to add, 1 to change, 0 to destroy' duoc review truoc khi apply."
+  },
+
+  "VerificationPlaybook": {
+    "Requirement": "Tu IP la (ngoai whitelist): port 5432 phai 'Connection timed out' / 'filtered' (AC-5).",
+    "MethodologyCaveat": "Timeout MOT MINH khong du ket luan SG da chan, vi co 2 nguyen nhan khac cung cho ra timeout: (a) DB private (publicly_accessible=false) -> khong co route tu Internet (lop L1); (b) ISP cua nhom dev da tung loc port 5432 (rds_setup muc 3.4 va muc 9) -> quet 5432 tu mang do luon timeout du SG mo hay dong.",
+    "BaselineControlTest": "Bat buoc chay 2 phep doi chung truoc khi ket luan: (1) tu cung may/lenh do, kiem tra 1 dich khac chac chan mo port 5432 tren Internet (vd portquiz.net:5432) -> neu cung timeout thi ISP dang loc, khong phai SG; (2) mo cua so public tam (rds_setup muc 3.5) de loai nguyen nhan L1 -> luc do timeout moi quy duoc cho lop L2 (SG).",
+    "IspPort5432FilterLesson": "04/11/2026: RDS public IP 52.221.3.116 bi loc port 5432 tren duong mang cua nhom (portquiz.net:5432 van OK => khong phai firewall cuc bo); tat/bat public access de xin IP moi 54.151.153.247 thi ket noi duoc ngay.",
+    "ExternalNetworkOptions": [
+      "Hotspot 4G/5G khac ISP (nhanh, mien phi)",
+      "VPS/cloud khac (khong thuoc VPC nay) - co IP cong khai co dinh, de chup anh nhat",
+      "GitHub Actions runner - co the tu dong hoa kiem tra dinh ky"
+    ],
+    "ControlCommands": [
+      "curl -s https://checkip.amazonaws.com",
+      "timeout 15 bash -c 'cat < /dev/null > /dev/tcp/portquiz.net/5432'; echo EXIT=$?   # EXIT=0 => ISP khong chan 5432, timeout toi RDS la do SG/L1",
+      "nmap -Pn -p 5432 fpl-fantasy-db.cr0maoomq80d.ap-southeast-1.rds.amazonaws.com   # ky vong: filtered",
+      "aws ec2 describe-security-groups --group-ids sg-0f5970a2c3b47878a --region ap-southeast-1 --query 'SecurityGroups[0].IpPermissions[?IpRanges[?CidrIp==`0.0.0.0/0`] || Ipv6Ranges[?CidrIpv6==`::/0`]]' --output json"
+    ],
+    "CurrentEvidence": "02/11/2026: allow-path tu IP dev OK (SSLRequest -> 'S'), port 5433 timeout (V5), cua so public 236s (V6). 04/11/2026: TLS + P2-NH01 PASS tren RDS that; sau khi dong cua so (10:14) TCP 5432 tu Internet -> timeout (rds_setup muc 3.4) - nhung do la timeout khi DB private nen CHI chung minh L1. AC-5 van can 1 phep quet tu mang khac CO BASELINE (muc 9.0 cua security_groups.md)."
+  },
+
   "AuthorizeIngress": {
     "CliTarget": "aws ec2 authorize-security-group-ingress --group-id <SG_ID> --ip-permissions <mang IpPermissions duoi day>",
     "ShapeNotice": "Moi phan tu PHAI dung shape AWS IpPermission: CIDR nam trong IpRanges[].CidrIp, mo ta nam trong IpRanges[].Description. Dat 'CidrIp'/'Description' o cap ngoai se bi CLI tu choi (Unknown parameter).",
@@ -50,7 +118,8 @@
         ]
       }
     ],
-    "AppliedStatePolicy": "Rule dang ky la IP that cua may dev, da ap dung len SG ngay 2026-11-02 (xem security_groups.md muc 8.4). Them IP moi = them 1 phan tu vao mang nay (moi IP 1 rule /32, tran MaxIngressRules = 5) roi chay lint + muc 6.4. Khong bao gio dung 203.0.113.x (dai tai lieu RFC 5737, khong dinh tuyen duoc) trong rule that."
+    "AppliedStatePolicy": "Rule dang ky la IP that cua may dev, da ap dung len SG ngay 2026-11-02 (xem security_groups.md muc 8.4) va van dung khi kiem tra lai ngay 2026-11-04 (checkip = 14.191.166.167, describe-security-groups tra dung 1 rule /32). Them IP moi = them 1 phan tu vao mang nay (moi IP 1 rule /32, tran MaxIngressRules = 5) roi chay lint + muc 6.4. Khong bao gio dung 203.0.113.x (dai tai lieu RFC 5737, khong dinh tuyen duoc) trong rule that.",
+    "RuntimeConsistencyGuard": "Lint TC-14 doi chieu CIDR active trong file nay voi VerifiedRuntimeState.DevCidrs -> doi IP o mot noi ma quen noi kia se FAIL ngay (chan tai lieu va cau hinh lech nhau)."
   },
 
   "AuthorizeIngressDeferred": {
