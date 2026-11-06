@@ -7,6 +7,7 @@ from sqlalchemy.ext.asyncio import (
 from sqlalchemy.orm import DeclarativeBase
 from sqlalchemy.engine import make_url
 from app.core.config import Settings, settings
+from app.core.pool_manager import get_pool_options
 
 
 class Base(DeclarativeBase):
@@ -16,7 +17,9 @@ class Base(DeclarativeBase):
 def create_database_engine(config: Settings):
     """Construct lazily; failed RDS connections propagate without local fallback."""
     options = {"echo": False, "future": True}
-    if make_url(config.DATABASE_URL).drivername == "postgresql+asyncpg":
+    drivername = make_url(config.DATABASE_URL).drivername
+    options.update(get_pool_options(config.DATABASE_URL))
+    if drivername == "postgresql+asyncpg":
         options["connect_args"] = {"timeout": config.DB_CONNECT_TIMEOUT}
     return create_async_engine(config.DATABASE_URL, **options)
 

@@ -14,10 +14,10 @@
 | Giai đoạn (Phase) | Hoàn thành | Tỷ lệ | Trạng thái |
 | :--- | :---: | :---: | :---: |
 | **Phase 1: Local Full-Stack Product** | **17 / 17** | `100%` | 🟡 Đang thực hiện |
-| **Phase 2: AWS Services Integration** | **6 / 14** | `43%` | 🟡 Đang thực hiện |
+| **Phase 2: AWS Services Integration** | **8 / 14** | `57%` | 🟡 Đang thực hiện |
 | **Phase 3: Production Deploy & E2E Test** | **0 / 14** | `0%` | ⚪ Chờ Phase 2 |
 | **Phase 4: Live Gamification & League Operations** | **0 / 14** | `0%` | ⚪ Chờ Phase 3 |
-| **TỔNG CỘNG TOÀN DỰ ÁN** | **23 / 59** | `39%` | 🟡 Đang thực hiện |
+| **TỔNG CỘNG TOÀN DỰ ÁN** | **25 / 59** | `42%` | 🟡 Đang thực hiện |
 
 ---
 
@@ -205,7 +205,7 @@
 
 ---
 
-## ☁️ PHASE 2: TÍCH HỢP SỬ DỤNG CÁC DỊCH VỤ CỦA AWS (4/14)
+## ☁️ PHASE 2: TÍCH HỢP SỬ DỤNG CÁC DỊCH VỤ CỦA AWS (8/14)
 *Mục tiêu: Đưa CSDL lên Amazon RDS, lưu trữ static web trên S3, tối ưu Connection Pool cho db.t4g.micro, bổ sung độ khó trận đấu FDR và kích hoạt AWS Budgets Alert ($1.00) bảo vệ tài khoản của Quang.*
 
 ### 🎨 Nguyên (Frontend & UI Lead) - [0/3]
@@ -272,7 +272,7 @@
 
 ---
 
-### 🧠 Vũ (Data & Algorithm Engineer) - [1/3]
+### 🧠 Vũ (Data & Algorithm Engineer) - [2/3]
 
 - [x] **`P2-V01`** *(Level 3)*: Chạy script migration toàn bộ Schema lên Amazon RDS PostgreSQL
   - *Mô tả:* Khai báo model ORM cho bảng `shared_lineups`, tạo Alembic migration và thực thi migrate đồng bộ toàn bộ schema (`teams`, `players`, `shared_lineups`) lên Amazon RDS của Quang kèm đầy đủ indexes.
@@ -283,7 +283,7 @@
   - *Tiêu chí chấp nhận (Acceptance Criteria):* Toàn bộ các bảng và index được tạo đầy đủ trên RDS PostgreSQL của Quang, dữ liệu khóa ngoại và indexes hoạt động chuẩn xác.
   - *Cách kiểm chứng (Verification):* Chạy `alembic upgrade head` trỏ vào RDS thành công; `pytest backend/tests/test_shared_lineup_model.py` pass 100%.
 
-- [ ] **`P2-V02`** *(Level 3)*: Tinh chỉnh Connection Pool tối ưu riêng cho instance `db.t4g.micro`
+- [x] **`P2-V02`** *(Level 3)*: Tinh chỉnh Connection Pool tối ưu riêng cho instance `db.t4g.micro`
   - *Mô tả:* Cấu hình SQLAlchemy pool settings (`pool_size=5`, `max_overflow=10`, `pool_timeout=30`, `pool_recycle=1800`) phù hợp với giới hạn 1GB RAM của `db.t4g.micro` để không bị cạn kiệt RAM/connection.
   - *Phụ thuộc:* `P2-NH01`, `P2-V01`
   - *Thư mục:* `backend/app/core/`, `backend/tests/`
