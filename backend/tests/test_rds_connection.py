@@ -146,7 +146,16 @@ def test_engine_receives_selected_url_and_bounded_timeout(monkeypatch):
     monkeypatch.setattr(database, "create_async_engine", factory)
     config = cloud_settings(DB_CONNECT_TIMEOUT=7)
     assert database.create_database_engine(config) is factory.return_value
-    factory.assert_called_once_with(config.DATABASE_URL, echo=False, future=True, connect_args={"timeout": 7.0})
+    factory.assert_called_once_with(
+        config.DATABASE_URL,
+        echo=False,
+        future=True,
+        pool_size=5,
+        max_overflow=10,
+        pool_timeout=30,
+        pool_recycle=1800,
+        connect_args={"timeout": 7.0},
+    )
 
 
 @pytest.mark.asyncio

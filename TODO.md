@@ -14,10 +14,10 @@
 | Giai đoạn (Phase) | Hoàn thành | Tỷ lệ | Trạng thái |
 | :--- | :---: | :---: | :---: |
 | **Phase 1: Local Full-Stack Product** | **17 / 17** | `100%` | 🟡 Đang thực hiện |
-| **Phase 2: AWS Services Integration** | **4 / 14** | `29%` | 🟡 Đang thực hiện |
+| **Phase 2: AWS Services Integration** | **8 / 14** | `57%` | 🟡 Đang thực hiện |
 | **Phase 3: Production Deploy & E2E Test** | **0 / 14** | `0%` | ⚪ Chờ Phase 2 |
 | **Phase 4: Live Gamification & League Operations** | **0 / 14** | `0%` | ⚪ Chờ Phase 3 |
-| **TỔNG CỘNG TOÀN DỰ ÁN** | **21 / 59** | `36%` | 🟡 Đang thực hiện |
+| **TỔNG CỘNG TOÀN DỰ ÁN** | **25 / 59** | `42%` | 🟡 Đang thực hiện |
 
 ---
 
@@ -171,13 +171,13 @@
 
 ---
 
-## ☁️ PHASE 2: TÍCH HỢP SỬ DỤNG CÁC DỊCH VỤ CỦA AWS (4/14)
+## ☁️ PHASE 2: TÍCH HỢP SỬ DỤNG CÁC DỊCH VỤ CỦA AWS (8/14)
 *Mục tiêu: Đưa CSDL lên Amazon RDS, lưu trữ static web trên S3, kích hoạt AWS Budgets Alert ($\rightarrow$1.00) bảo vệ tài khoản của Quang.*
 
-### 🎨 Nguyên (Frontend) - [0/3]
+### 🎨 Nguyên (Frontend) - [1/3]
 - [ ] **`P2-NG01`** *(Level 2)*: Tích hợp tính năng tạo Share Link đội hình qua Cloud API. *(Branch: `feature/P2-NG01-share-lineup`, Thư mục: `frontend/src/components/`, Files: `ShareModal.tsx`, `useShareLineup.ts`)*
 - [ ] **`P2-NG02`** *(Level 2)*: Màn hình xem đội hình qua link chia sẻ (`/share/:code`) ở chế độ Read-only. *(Branch: `feature/P2-NG02-view-shared-lineup`, Thư mục: `frontend/src/pages/`, Files: `SharedLineupPage.tsx`)*
-- [ ] **`P2-NG03`** *(Level 1)*: Cấu hình file môi trường `.env.production` trỏ API về domain Cloud. *(Branch: `feature/P2-NG03-frontend-env-prod`, Thư mục: `frontend/`, Files: `.env.production`)*
+- [x] **`P2-NG03`** *(Level 1)*: Cấu hình file môi trường `.env.production` trỏ API về domain Cloud. *(Branch: `feature/P2-NG03-frontend-env-prod`, Thư mục: `frontend/`, Files: `.env.production`)*
 
 ### ⚙️ Nhất (Backend) - [1/3]
 - [x] **`P2-NH01`** *(Level 3)*: Chuyển chuỗi kết nối Database sang Amazon RDS PostgreSQL qua biến môi trường. *(Branch: `feature/P2-NH01-rds-connection`, Thư mục: `backend/app/core/`, Files: `config.py`, `database.py`, `rds_config.py`, `backend/tests/test_rds_connection.py`)*
@@ -186,9 +186,9 @@
 - [ ] **`P2-NH02`** *(Level 2)*: REST API `POST /api/v1/lineups/share` và `GET /share/:code` đọc/ghi snapshot RDS. *(Branch: `feature/P2-NH02-shared-lineups-api`, Thư mục: `backend/app/api/v1/endpoints/`, Files: `lineup_share.py`)*
 - [ ] **`P2-NH03`** *(Level 3)*: Cron job / Background worker định kỳ chạy FPL sync trên Cloud khi có Gameweek mới. *(Branch: `feature/P2-NH03-cloud-sync-cron`, Thư mục: `backend/app/services/`, Files: `cron_scheduler.py`)*
 
-### 🧠 Vũ (Data & Algorithm) - [0/3]
-- [ ] **`P2-V01`** *(Level 3)*: Chạy script migration toàn bộ Schema lên Amazon RDS PostgreSQL (kèm bảng `shared_lineups`). *(Branch: `feature/P2-V01-rds-migration`, Thư mục: `backend/alembic/`, Files: `002_add_shared_lineups.py`)*
-- [ ] **`P2-V02`** *(Level 3)*: Tinh chỉnh Connection Pool (pool_size, max_overflow) tối ưu riêng cho instance `db.t4g.micro`. *(Branch: `feature/P2-V02-db-pool-tuning`, Thư mục: `backend/app/core/`, Files: `database.py`)*
+### 🧠 Vũ (Data & Algorithm) - [2/3]
+- [x] **`P2-V01`** *(Level 3)*: Chạy script migration toàn bộ Schema lên Amazon RDS PostgreSQL (kèm bảng `shared_lineups`). *(Branch: `feature/P2-V01-rds-migration`, Thư mục: `backend/alembic/`, Files: `002_add_shared_lineups.py`)*
+- [x] **`P2-V02`** *(Level 3)*: Tinh chỉnh Connection Pool (pool_size, max_overflow) tối ưu riêng cho instance `db.t4g.micro`. *(Branch: `feature/P2-V02-db-pool-tuning`, Thư mục: `backend/app/core/`, Files: `database.py`)*
 - [ ] **`P2-V03`** *(Level 2)*: Bổ sung trọng số độ khó trận đấu (FDR) vào công thức tính điểm dự kiến (xP) của Optimizer. *(Branch: `feature/P2-V03-fdr-weighting`, Thư mục: `backend/app/services/`, Files: `optimizer_solver.py`)*
 
 ### 🐳 Quang (DevOps & AWS) - [4/4]
