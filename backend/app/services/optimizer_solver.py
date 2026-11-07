@@ -1,12 +1,13 @@
 """PuLP model and solver for selecting an FPL squad."""
 
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 import json
 import math
 from pathlib import Path
 from typing import Sequence
 
 import pulp
+from app.services.fdr_service import get_next_gameweek_fdr_multipliers
 
 POSITION_MAP = {
     1: "GKP",
@@ -195,8 +196,20 @@ def optimize_squad(
     if unknown_positions:
         raise ValueError(f"Unknown player positions: {sorted(unknown_positions)}")
 
+    # Fetch the next gameweek's team-specific xP multipliers from the service.
+    team_multipliers = get_next_gameweek_fdr_multipliers()
+
+    adjusted_players = [
+        replace(
+            player,
+            expected_points_next=player.expected_points_next
+            * team_multipliers.get(player.team_id, 1.0),
+        )
+        for player in players
+    ]
+
     model, selected = _build_optimizer_model(
-        players,
+        adjusted_players,
         budget,
         locked_player_ids,
         excluded_player_ids,
@@ -223,7 +236,9 @@ def optimize_squad(
         and selected[player.id].value() > 0.5
     )
     chosen_id_set = set(chosen_ids)
-    chosen_players = [player for player in players if player.id in chosen_id_set]
+    chosen_players = [
+        player for player in adjusted_players if player.id in chosen_id_set
+    ]
 
     return OptimizationResult(
         selected_player_ids=chosen_ids,

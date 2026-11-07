@@ -19,6 +19,33 @@ from app.services.optimizer_solver import (
 DATA_PATH = Path(__file__).with_name("mock_data.json")
 
 
+@pytest.fixture(autouse=True)
+def mock_fpl_fixtures(monkeypatch):
+    import httpx
+
+    fixtures = [
+        {
+            "event": 9,
+            "finished": False,
+            "team_h": team_id,
+            "team_a": team_id + 1,
+            "team_h_difficulty": 3,
+            "team_a_difficulty": 3,
+        }
+        for team_id in range(1, 20, 2)
+    ]
+
+    class FixtureResponse:
+        def raise_for_status(self):
+            pass
+
+        def json(self):
+            return fixtures
+
+    monkeypatch.setattr(httpx, "get", lambda *args, **kwargs: FixtureResponse())
+    return fixtures
+
+
 def _small_optimizer_pool():
     return [
         PlayerCandidate(1, 1, "GKP", 1.0, 1.0),
@@ -154,6 +181,40 @@ def test_solver_selects_highest_scoring_feasible_squad():
     assert len(result.selected_player_ids) == 15
     assert 3 in result.selected_player_ids
     assert result.total_expected_points == 25.0
+
+
+@pytest.mark.parametrize(
+    ("difficulty", "expected_total"),
+    [(1, 16.6), (2, 16.4), (3, 16.0), (4, 15.7), (5, 15.4)],
+)
+def test_solver_weights_xp_by_next_fixture_difficulty(
+    monkeypatch, mock_fpl_fixtures, difficulty, expected_total
+):
+    import httpx
+
+    players = _small_optimizer_pool()
+    locked_ids = [player.id for player in players if player.id != 3]
+    fixture = {
+        "event": 9,
+        "finished": False,
+        "team_h": 1,
+        "team_a": 2,
+        "team_h_difficulty": difficulty,
+        "team_a_difficulty": 3,
+    }
+
+    class FixtureResponse:
+        def raise_for_status(self):
+            pass
+
+        def json(self):
+            return [fixture]
+
+    monkeypatch.setattr(httpx, "get", lambda *args, **kwargs: FixtureResponse())
+
+    result = optimize_squad(players, budget=15.0, locked_player_ids=locked_ids)
+
+    assert result.total_expected_points == expected_total
 
 
 def test_solver_includes_locked_player_even_if_not_highest_scoring():

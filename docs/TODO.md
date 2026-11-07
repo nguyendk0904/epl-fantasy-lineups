@@ -14,10 +14,10 @@
 | Giai đoạn (Phase) | Hoàn thành | Tỷ lệ | Trạng thái |
 | :--- | :---: | :---: | :---: |
 | **Phase 1: Local Full-Stack Product** | **17 / 17** | `100%` | 🟡 Đang thực hiện |
-| **Phase 2: AWS Services Integration** | **8 / 14** | `57%` | 🟡 Đang thực hiện |
+| **Phase 2: AWS Services Integration** | **9 / 14** | `64%` | 🟡 Đang thực hiện |
 | **Phase 3: Production Deploy & E2E Test** | **0 / 14** | `0%` | ⚪ Chờ Phase 2 |
 | **Phase 4: Live Gamification & League Operations** | **0 / 14** | `0%` | ⚪ Chờ Phase 3 |
-| **TỔNG CỘNG TOÀN DỰ ÁN** | **25 / 59** | `42%` | 🟡 Đang thực hiện |
+| **TỔNG CỘNG TOÀN DỰ ÁN** | **26 / 59** | `44%` | 🟡 Đang thực hiện |
 
 ---
 
@@ -272,7 +272,7 @@
 
 ---
 
-### 🧠 Vũ (Data & Algorithm Engineer) - [2/3]
+### 🧠 Vũ (Data & Algorithm Engineer) - [3/3]
 
 - [x] **`P2-V01`** *(Level 3)*: Chạy script migration toàn bộ Schema lên Amazon RDS PostgreSQL
   - *Mô tả:* Khai báo model ORM cho bảng `shared_lineups`, tạo Alembic migration và thực thi migrate đồng bộ toàn bộ schema (`teams`, `players`, `shared_lineups`) lên Amazon RDS của Quang kèm đầy đủ indexes.
@@ -292,7 +292,7 @@
   - *Tiêu chí chấp nhận (Acceptance Criteria):* Không bị tràn RAM hoặc lỗi Connection Exhaustion khi có 20 kết nối đồng thời trên instance `db.t4g.micro`.
   - *Cách kiểm chứng (Verification):* `pytest backend/tests/test_pool_limits.py` pass 100%.
 
-- [ ] **`P2-V03`** *(Level 2)*: Bổ sung trọng số độ khó trận đấu (FDR) vào công thức tính điểm (xP)
+- [x] **`P2-V03`** *(Level 2)*: Bổ sung trọng số độ khó trận đấu (FDR) vào công thức tính điểm (xP)
   - *Mô tả:* Thu thập chỉ số Fixture Difficulty Rating (FDR 1-5); cập nhật hàm tính điểm dự kiến trong `optimizer_solver.py`: ưu tiên chọn cầu thủ gặp đối thủ dễ (FDR 2) và giảm xP khi gặp đối thủ khó (FDR 4-5).
   - *Phụ thuộc:* `P1-V02`
   - *Thư mục:* `backend/app/services/`, `backend/tests/`
