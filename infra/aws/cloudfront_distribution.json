@@ -1,0 +1,246 @@
+{
+  "Metadata": {
+    "TaskId": "P3-Q01",
+    "Title": "AWS CloudFront distribution for the FPL frontend - S3 REST origin via OAC, HTTPS-only, SPA fallback",
+    "Owner": "Quang (DevOps & AWS Lead)",
+    "RiskLevel": "LEVEL 4 (Critical) assigned by docs/TODO.md and docs/AI_GUIDELINES.md risk matrix (AWS infrastructure): Dev + Tech Lead review, Free Tier + Budget Alert ($1.00) check",
+    "GitBranch": "feature/P3-Q01-s3-cloudfront-deploy",
+    "SchemaVersion": "1.0.0",
+    "LastReviewed": "2026-11-07",
+    "Status": "APPLIED - live distribution created and verified 2026-11-07 (see infra/aws/cloudfront_setup.md section 9 for live IDs, HTTP/TLS evidence)",
+    "AwsAccountId": "711695043505",
+    "AwsRegion": "ap-southeast-1",
+    "DistributionScope": "CloudFront is a global service - create/query the distribution WITHOUT --region; only the ACM certificate (custom domain only) must live in us-east-1",
+    "TlsRealityCheck": "MEASURED ON THE LIVE DISTRIBUTION 2026-11-07: ViewerCertificate.MinimumProtocolVersion is sent as TLSv1.2_2021 here, but CloudFront NORMALISES it to TLSv1 for every distribution that uses the default *.cloudfront.net certificate. AWS CloudFront API Reference (ViewerCertificate.MinimumProtocolVersion): 'If the distribution uses the CloudFront domain name such as d111111abcdef8.cloudfront.net (you set CloudFrontDefaultCertificate to true), CloudFront automatically sets the security policy to TLSv1 regardless of the value that you set here.' Live proof: get-distribution-config returns MinimumProtocolVersion=TLSv1 and curl --tls-max 1.0 returns 200. Modern clients still negotiate TLSv1.3 (openssl s_client: TLSv1.3 / TLS_AES_128_GCM_SHA256), so the browser shows a valid padlock - the Acceptance Criteria are met. ENFORCING TLS1.2+ REQUIRES a custom domain + ACM certificate (SNI) - open item D-2 in infra/aws/cloudfront_setup.md section 13. The value is kept in this file so that attaching an ACM certificate later needs no other change.",
+    "Origin": {
+      "BucketName": "fpl-lineup-frontend-prod",
+      "OriginType": "S3 REST endpoint (NOT the website endpoint - OAC cannot sign requests to a website endpoint)",
+      "DomainName": "fpl-lineup-frontend-prod.s3.ap-southeast-1.amazonaws.com",
+      "OriginAccessControlId": "E2IX1YDEAHD87E",
+      "InheritedFrom": "P2-Q04 (infra/aws/s3_setup.md section 13.1 steps 1-2)"
+    },
+    "ThreatModel": "Static SPA served to the whole Internet: the dangerous mistakes are (1) making the bucket public to 'fix' a 403 - closed by keeping OAC + BlockPublicAccess, (2) serving index.html with a wrong content-type, (3) leaking deep links into a permanent 404 - closed by CustomErrorResponses 403+404 -> /index.html 200, (4) paying for unrequested extras (WAF $5/mo, Origin Shield, CloudFront logging to S3, custom domain + hosted zone). This config enables only what the Acceptance Criteria need and is $0.00 inside the AWS Free Tier.",
+    "SourceOfTruth": [
+      "docs/PROJECT_SSOT.md",
+      "docs/AI_GUIDELINES.md",
+      "TODO.md",
+      "docs/PROJECT_ROADMAP.md",
+      "infra/aws/s3_setup.md",
+      "infra/aws/s3_bucket_policy.json",
+      "infra/aws/budget_policy.json"
+    ],
+    "HowToApply": {
+      "WhyEnvelope": "This file is an audit envelope (Metadata + DistributionConfig + guards), not a bare CloudFront config, so traceability and forbidden settings live next to the config. aws cloudfront create-distribution only accepts a bare DistributionConfig -> extract it first (section 6.2 of cloudfront_setup.md).",
+      "ExtractAndApply": "python -c \"import json;d=json.load(open('infra/aws/cloudfront_distribution.json',encoding='utf-8'));json.dump(d['DistributionConfig'],open('cf_config.json','w',encoding='utf-8'),indent=2)\" && aws cloudfront create-distribution --distribution-config file://cf_config.json",
+      "Verify": "aws cloudfront get-distribution-config --id <DISTRIBUTION_ID> --query DistributionConfig",
+      "Idempotency": "CallerReference is fixed ('fpl-p3q01-frontend-20261107'). Re-running create-distribution with the SAME CallerReference and SAME config returns the existing distribution instead of creating a duplicate."
+    }
+  },
+
+  "DistributionConfig": {
+    "CallerReference": "fpl-p3q01-frontend-20261107",
+    "Comment": "P3-Q01 FPL lineup frontend - S3 REST origin via OAC E2IX1YDEAHD87E - SPA fallback 403/404 to /index.html - HTTPS only",
+    "Enabled": true,
+    "Staging": false,
+    "HttpVersion": "http2and3",
+    "IsIPV6Enabled": true,
+    "PriceClass": "PriceClass_All",
+    "Aliases": {
+      "Quantity": 0
+    },
+    "DefaultRootObject": "index.html",
+    "WebACLId": "",
+    "Origins": {
+      "Quantity": 1,
+      "Items": [
+        {
+          "Id": "s3-fpl-lineup-frontend-prod",
+          "DomainName": "fpl-lineup-frontend-prod.s3.ap-southeast-1.amazonaws.com",
+          "OriginPath": "",
+          "CustomHeaders": {
+            "Quantity": 0
+          },
+          "S3OriginConfig": {
+            "OriginAccessIdentity": ""
+          },
+          "OriginAccessControlId": "E2IX1YDEAHD87E",
+          "ConnectionAttempts": 3,
+          "ConnectionTimeout": 10,
+          "OriginShield": {
+            "Enabled": false
+          }
+        }
+      ]
+    },
+    "OriginGroups": {
+      "Quantity": 0
+    },
+    "DefaultCacheBehavior": {
+      "TargetOriginId": "s3-fpl-lineup-frontend-prod",
+      "ViewerProtocolPolicy": "redirect-to-https",
+      "AllowedMethods": {
+        "Quantity": 2,
+        "Items": [
+          "GET",
+          "HEAD"
+        ],
+        "CachedMethods": {
+          "Quantity": 2,
+          "Items": [
+            "GET",
+            "HEAD"
+          ]
+        }
+      },
+      "Compress": true,
+      "SmoothStreaming": false,
+      "FieldLevelEncryptionId": "",
+      "CachePolicyId": "658327ea-f89d-4fab-a63d-7e88639e58f6",
+      "ResponseHeadersPolicyId": "67f7725c-6f97-4210-82d7-5512b31e9d03",
+      "TrustedSigners": {
+        "Enabled": false,
+        "Quantity": 0
+      },
+      "TrustedKeyGroups": {
+        "Enabled": false,
+        "Quantity": 0
+      },
+      "LambdaFunctionAssociations": {
+        "Quantity": 0
+      },
+      "FunctionAssociations": {
+        "Quantity": 0
+      }
+    },
+    "CacheBehaviors": {
+      "Quantity": 0
+    },
+    "CustomErrorResponses": {
+      "Quantity": 2,
+      "Items": [
+        {
+          "ErrorCode": 403,
+          "ResponsePagePath": "/index.html",
+          "ResponseCode": "200",
+          "ErrorCachingMinTTL": 10
+        },
+        {
+          "ErrorCode": 404,
+          "ResponsePagePath": "/index.html",
+          "ResponseCode": "200",
+          "ErrorCachingMinTTL": 10
+        }
+      ]
+    },
+    "Logging": {
+      "Enabled": false,
+      "IncludeCookies": false,
+      "Bucket": "",
+      "Prefix": ""
+    },
+    "Restrictions": {
+      "GeoRestriction": {
+        "RestrictionType": "none",
+        "Quantity": 0
+      }
+    },
+    "ViewerCertificate": {
+      "CloudFrontDefaultCertificate": true,
+      "MinimumProtocolVersion": "TLSv1.2_2021",
+      "CertificateSource": "cloudfront"
+    }
+  },
+
+  "ManagedPoliciesUsed": {
+    "CachePolicyId": {
+      "Id": "658327ea-f89d-4fab-a63d-7e88639e58f6",
+      "Name": "Managed-CachingOptimized",
+      "Why": "Honours the Cache-Control headers set at upload time (index.html = no-cache/must-revalidate, /assets/* = 1 year immutable), compresses with gzip/brotli, forwards nothing that would fragment the cache."
+    },
+    "ResponseHeadersPolicyId": {
+      "Id": "67f7725c-6f97-4210-82d7-5512b31e9d03",
+      "Name": "Managed-SecurityHeadersPolicy",
+      "Why": "Free AWS-managed security headers: Strict-Transport-Security (max-age=31536000), X-Content-Type-Options: nosniff, X-Frame-Options: SAMEORIGIN, Referrer-Policy: strict-origin-when-cross-origin. Security review points at $0."
+    }
+  },
+
+  "ForbiddenSettings_DO_NOT_APPLY": [
+    {
+      "Why": "Origin = S3 WEBSITE endpoint (fpl-lineup-frontend-prod.s3-website-ap-southeast-1.amazonaws.com) requires a public bucket and OAC cannot sign such requests. P2-Q04 deliberately left Static Website Hosting OFF - never 'fix' a 403 by switching the origin.",
+      "ForbiddenValue": "DomainName ending in .s3-website-<region>.amazonaws.com"
+    },
+    {
+      "Why": "allow-all serves the site over plain HTTP; the Acceptance Criteria require HTTPS and a valid certificate in the browser bar.",
+      "ForbiddenValue": "ViewerProtocolPolicy: allow-all"
+    },
+    {
+      "Why": "AWS WAF on CloudFront costs $5.00/WebACL/month + $1.00/rule - 5x the whole project budget guard ($1.00). This is a static site with no login, no POST and no cookies: private bucket + OAC is the real control.",
+      "ForbiddenValue": "WebACLId set to a WAF WebACL"
+    },
+    {
+      "Why": "Standard logging to S3 costs storage + PUT requests and is not required by the assignment; CloudWatch metrics (free) + the curl matrix in cloudfront_setup.md section 8 are enough.",
+      "ForbiddenValue": "Logging.Enabled: true"
+    },
+    {
+      "Why": "Origin Shield adds an extra hop and per-request charges; unnecessary for a single-region S3 origin with a few thousand requests per month.",
+      "ForbiddenValue": "OriginShield.Enabled: true"
+    },
+    {
+      "Why": "Methods other than GET/HEAD against a read-only static origin only create cache-poisoning surface and pointless origin calls.",
+      "ForbiddenValue": "AllowedMethods containing PUT/POST/DELETE/PATCH"
+    },
+    {
+      "Why": "A custom domain needs a domain the team owns + an ISSUED ACM certificate in us-east-1 + validation records + (optional) Route 53 hosted zone at $0.50/month. The Acceptance Criteria accept https://xxxx.cloudfront.net - see cloudfront_setup.md section 6.6 for the ready-to-run custom-domain path.",
+      "ForbiddenValue": "Aliases.Quantity > 0 without an ISSUED ACM certificate in us-east-1"
+    }
+  ],
+
+  "ComplianceGuards": {
+    "RequiredViewerProtocolPolicy": "redirect-to-https",
+    "RequiredOriginAccessControlId": "E2IX1YDEAHD87E",
+    "RequiredDefaultRootObject": "index.html",
+    "RequiredCustomErrorCodes": [
+      403,
+      404
+    ],
+    "RequiredCustomErrorResponseCode": "200",
+    "MinimumProtocolVersion": {
+      "SentInConfig": "TLSv1.2_2021",
+      "NormalisedByAws": "TLSv1 - forced whenever CloudFrontDefaultCertificate=true (AWS CloudFront API Reference, ViewerCertificate.MinimumProtocolVersion)",
+      "Consequence": "TLS 1.0/1.1 remain reachable on the *.cloudfront.net domain; modern browsers/curl negotiate TLS 1.3 anyway. Certification AC (valid SSL certificate) is satisfied.",
+      "Remediation": "Custom domain + ACM certificate in us-east-1 with SSLSupportMethod=sni-only - see cloudfront_setup.md section 6.6 and open item D-2"
+    },
+    "RequiredS3BucketStateOwnedByP2Q04": {
+      "BlockPublicAccess": "4/4 true",
+      "BucketPolicyStatus": "IsPublic=false",
+      "StaticWebsiteHosting": "OFF"
+    },
+    "MaxMonthlyCostUsd": 0.0,
+    "BudgetGuard": "AWS Budgets 'fpl-freetier-guard-1usd' (P2-Q03) - alerts at 80% / 100% of $1.00",
+    "AuditSchedule": "weekly",
+    "AuditCommands": [
+      "aws cloudfront get-distribution-config --id <DISTRIBUTION_ID> --query 'DistributionConfig.DefaultCacheBehavior.ViewerProtocolPolicy'   # redirect-to-https",
+      "aws cloudfront get-distribution-config --id <DISTRIBUTION_ID> --query 'DistributionConfig.ViewerCertificate'                             # CloudFrontDefaultCertificate true, TLSv1.2_2021",
+      "aws cloudfront get-distribution-config --id <DISTRIBUTION_ID> --query 'DistributionConfig.CustomErrorResponses'                           # 403 + 404 -> /index.html 200",
+      "aws cloudfront get-distribution-config --id <DISTRIBUTION_ID> --query 'DistributionConfig.Origins.Items[0].OriginAccessControlId'         # E2IX1YDEAHD87E",
+      "curl -sI https://<DISTRIBUTION_DOMAIN>/index.html | head -1                                  # HTTP/2 200",
+      "curl -s -o /dev/null -w '%{http_code}' http://<DISTRIBUTION_DOMAIN>/index.html                # 301",
+      "curl -s -o /dev/null -w '%{http_code}' https://<DISTRIBUTION_DOMAIN>/any/spa/route           # 200 (SPA fallback)",
+      "curl -s -o /dev/null -w '%{http_code}' https://fpl-lineup-frontend-prod.s3.ap-southeast-1.amazonaws.com/index.html   # 403 (bucket still private)"
+    ]
+  },
+
+  "VerificationMatrix": {
+    "V0_DistributionDeployed": "get-distribution --id <ID>  ->  Status=Deployed, Enabled=true",
+    "V1_OriginIsRestWithOac": "get-distribution-config  ->  DomainName=fpl-lineup-frontend-prod.s3.ap-southeast-1.amazonaws.com + OriginAccessControlId=E2IX1YDEAHD87E + S3OriginConfig.OriginAccessIdentity=''",
+    "V2_HttpsOk": "curl -sI https://<domain>/index.html  ->  HTTP/2 200 + content-type text/html",
+    "V3_HttpRedirects": "curl -sI http://<domain>/index.html  ->  301 + location: https://...",
+    "V4_SpaFallback403": "curl -s -o /dev/null -w '%{http_code}' https://<domain>/no-such-file.html  ->  200 (served /index.html)",
+    "V5_SpaFallback404": "curl -s -o /dev/null -w '%{http_code}' https://<domain>/deep/link/route  ->  200 (served /index.html)",
+    "V6_TlsValid": "openssl s_client -connect <domain>:443 -servername <domain>  ->  subject=CN=*.cloudfront.net, issuer=Amazon RSA 2048 M04, Protocol=TLSv1.3, verify_result=0. NOTE: security policy is forced to TLSv1 by the default certificate (see Metadata.TlsRealityCheck); enforcing TLS1.2+ needs ACM + custom domain (documented limitation, not a defect of this config)",
+    "V7_SecurityHeaders": "curl -sI https://<domain>/index.html  ->  strict-transport-security: max-age=31536000, x-content-type-options: nosniff, x-frame-options: SAMEORIGIN, referrer-policy: strict-origin-when-cross-origin",
+    "V8_BucketStillPrivate": "curl https://fpl-lineup-frontend-prod.s3.ap-southeast-1.amazonaws.com/index.html  ->  403",
+    "V9_SecurityGroupNotApplicable": "CloudFront is not VPC-scoped; a Security Group cannot protect it - do not 'harden' this task with SG rules (that is P2-Q02 for RDS only)"
+  }
+}
+
