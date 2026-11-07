@@ -14,10 +14,10 @@
 | Giai đoạn (Phase) | Hoàn thành | Tỷ lệ | Trạng thái |
 | :--- | :---: | :---: | :---: |
 | **Phase 1: Local Full-Stack Product** | **17 / 17** | `100%` | 🟡 Đang thực hiện |
-| **Phase 2: AWS Services Integration** | **8 / 14** | `57%` | 🟡 Đang thực hiện |
+| **Phase 2: AWS Services Integration** | **9 / 14** | `64%` | 🟡 Đang thực hiện |
 | **Phase 3: Production Deploy & E2E Test** | **0 / 14** | `0%` | ⚪ Chờ Phase 2 |
 | **Phase 4: Live Gamification & League Operations** | **0 / 14** | `0%` | ⚪ Chờ Phase 3 |
-| **TỔNG CỘNG TOÀN DỰ ÁN** | **25 / 59** | `42%` | 🟡 Đang thực hiện |
+| **TỔNG CỘNG TOÀN DỰ ÁN** | **26 / 59** | `44%` | 🟡 Đang thực hiện |
 
 ---
 
@@ -186,10 +186,10 @@
 - [ ] **`P2-NH02`** *(Level 2)*: REST API `POST /api/v1/lineups/share` và `GET /share/:code` đọc/ghi snapshot RDS. *(Branch: `feature/P2-NH02-shared-lineups-api`, Thư mục: `backend/app/api/v1/endpoints/`, Files: `lineup_share.py`)*
 - [ ] **`P2-NH03`** *(Level 3)*: Cron job / Background worker định kỳ chạy FPL sync trên Cloud khi có Gameweek mới. *(Branch: `feature/P2-NH03-cloud-sync-cron`, Thư mục: `backend/app/services/`, Files: `cron_scheduler.py`)*
 
-### 🧠 Vũ (Data & Algorithm) - [2/3]
+### 🧠 Vũ (Data & Algorithm) - [3/3]
 - [x] **`P2-V01`** *(Level 3)*: Chạy script migration toàn bộ Schema lên Amazon RDS PostgreSQL (kèm bảng `shared_lineups`). *(Branch: `feature/P2-V01-rds-migration`, Thư mục: `backend/alembic/`, Files: `002_add_shared_lineups.py`)*
 - [x] **`P2-V02`** *(Level 3)*: Tinh chỉnh Connection Pool (pool_size, max_overflow) tối ưu riêng cho instance `db.t4g.micro`. *(Branch: `feature/P2-V02-db-pool-tuning`, Thư mục: `backend/app/core/`, Files: `database.py`)*
-- [ ] **`P2-V03`** *(Level 2)*: Bổ sung trọng số độ khó trận đấu (FDR) vào công thức tính điểm dự kiến (xP) của Optimizer. *(Branch: `feature/P2-V03-fdr-weighting`, Thư mục: `backend/app/services/`, Files: `optimizer_solver.py`)*
+- [x] **`P2-V03`** *(Level 2)*: Bổ sung trọng số độ khó trận đấu (FDR) vào công thức tính điểm dự kiến (xP) của Optimizer. *(Branch: `feature/P2-V03-fdr-weighting`, Thư mục: `backend/app/services/`, Files: `optimizer_solver.py`)*
 
 ### 🐳 Quang (DevOps & AWS) - [4/4]
 - [x] **`P2-Q01`** *(Level 4)*: Khởi tạo instance Amazon RDS PostgreSQL (`db.t4g.micro`, Single-AZ, 20GB gp3) trên tài khoản AWS của Quang. *(Branch: `feature/P2-Q01-aws-rds-init`, Thư mục: `infra/aws/`, Files: `rds_setup.md`)*
