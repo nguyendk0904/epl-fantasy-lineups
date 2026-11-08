@@ -179,14 +179,17 @@
 - [ ] **`P2-NG02`** *(Level 2)*: Màn hình xem đội hình qua link chia sẻ (`/share/:code`) ở chế độ Read-only. *(Branch: `feature/P2-NG02-view-shared-lineup`, Thư mục: `frontend/src/pages/`, Files: `SharedLineupPage.tsx`)*
 - [x] **`P2-NG03`** *(Level 1)*: Cấu hình file môi trường `.env.production` trỏ API về domain Cloud. *(Branch: `feature/P2-NG03-frontend-env-prod`, Thư mục: `frontend/`, Files: `.env.production`)*
 
-### ⚙️ Nhất (Backend) - [2/3] (NH02 xong triển khai, chờ nghiệm thu RDS)
+### ⚙️ Nhất (Backend) - [3/3] (NH02/NH03 xong triển khai, chờ nghiệm thu RDS/cloud)
 - [x] **`P2-NH01`** *(Level 3)*: Chuyển chuỗi kết nối Database sang Amazon RDS PostgreSQL qua biến môi trường. *(Branch: `feature/P2-NH01-rds-connection`, Thư mục: `backend/app/core/`, Files: `config.py`, `database.py`, `rds_config.py`, `backend/tests/test_rds_connection.py`)*
   - *Bằng chứng NH cung cấp ngày 2026-11-04:* `29 passed, 19 warnings in 2.47s`, gồm test `SELECT 1` trên RDS thật, không skip. Hồi quy do AI chạy trước đó: 90 passed, 3 skipped (live RDS chưa bật và hai test PostgreSQL của FPL sync).
   - *Fallback:* Dev không cấu hình RDS dùng `DATABASE_URL` local; cấu hình RDS thiếu một phần hoặc kết nối lỗi được báo lỗi, không tự chuyển database. Production yêu cầu database remote có TLS.
 - [x] **`P2-NH02`** *(Level 2)*: REST API `POST /api/v1/lineups/share` và `GET /share/:code` đọc/ghi snapshot RDS. *(Branch: `feature/P2-NH02-shared-lineups-api`, Thư mục: `backend/app/api/v1/endpoints/`, Files: `lineup_share.py`)*
   - *Trạng thái theo xác nhận của NH:* Hoàn thành phần code và test local; **CHỜ NGHIỆM THU lưu/đọc trên PostgreSQL/RDS thật**, chưa xác nhận hoàn thành nghiệm thu cloud.
   - *Bằng chứng:* NH02: 26 passed, 1 skipped; bộ hồi quy đã chạy: 125 passed, 4 skipped. Test PostgreSQL riêng của NH02 skip do chưa cấu hình `SHARE_TEST_DATABASE_URL`.
-- [ ] **`P2-NH03`** *(Level 3)*: Cron job / Background worker định kỳ chạy FPL sync trên Cloud khi có Gameweek mới. *(Branch: `feature/P2-NH03-cloud-sync-cron`, Thư mục: `backend/app/services/`, Files: `cron_scheduler.py`)*
+- [x] **`P2-NH03`** *(Level 3)*: Cron job / Background worker định kỳ chạy FPL sync trên Cloud khi có Gameweek mới. *(Branch: `feature/P2-NH03-cloud-sync-cron`, Thư mục: `backend/app/services/`, Files: `cron_scheduler.py`)*
+  - *Trạng thái theo xác nhận của NH:* Xong code/test local; **CHỜ NGHIỆM THU sync trên RDS thật và vận hành worker trên cloud**.
+  - *Bằng chứng:* NH03: 30/30 pass; bộ hồi quy đã chạy: 155 passed, 4 skipped (các test PostgreSQL/RDS chưa cấu hình).
+  - *Vận hành:* API mặc định `FPL_SYNC_ENABLED=false`; chỉ bật một worker duy nhất (chạy riêng hoặc nhúng API). Kiểm tra ngay khi chạy rồi mỗi 21600 giây; trạng thái Gameweek trong bộ nhớ, khởi động lại sẽ sync một lần.
 
 ### 🧠 Vũ (Data & Algorithm) - [3/3]
 - [x] **`P2-V01`** *(Level 3)*: Chạy script migration toàn bộ Schema lên Amazon RDS PostgreSQL (kèm bảng `shared_lineups`). *(Branch: `feature/P2-V01-rds-migration`, Thư mục: `backend/alembic/`, Files: `002_add_shared_lineups.py`)*

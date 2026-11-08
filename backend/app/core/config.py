@@ -27,6 +27,8 @@ class Settings(BaseSettings):
         "http://localhost:3000",
     ]
     FPL_BOOTSTRAP_URL: str = "https://fantasy.premierleague.com/api/bootstrap-static/"
+    FPL_SYNC_ENABLED: bool = False
+    FPL_SYNC_INTERVAL_SECONDS: float = Field(default=21600, gt=0, allow_inf_nan=False)
 
     # AWS Deployment Settings
     AWS_REGION: str = "ap-southeast-1"

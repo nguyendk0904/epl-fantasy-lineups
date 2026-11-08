@@ -239,7 +239,7 @@
 
 ---
 
-### ⚙️ Nhất (Backend Core & FPL Sync Lead) - [2/3] (NH02 xong triển khai, chờ nghiệm thu RDS)
+### ⚙️ Nhất (Backend Core & FPL Sync Lead) - [3/3] (NH02/NH03 xong triển khai, chờ nghiệm thu RDS/cloud)
 
 - [x] **`P2-NH01`** *(Level 3)*: Chuyển chuỗi kết nối Database sang Amazon RDS PostgreSQL
   - *Mô tả:* Cập nhật cấu hình kết nối DB hỗ trợ kết nối an toàn tới AWS RDS qua biến môi trường (`RDS_HOSTNAME`, `RDS_DB_NAME`, `RDS_USERNAME`, `RDS_PASSWORD`); cơ chế fallback tự động về Postgres local khi dev offline.
@@ -263,7 +263,10 @@
   - *Tiêu chí chấp nhận (Acceptance Criteria):* `POST /share` sinh mã short-code 6 ký tự duy nhất; `GET /share/:code` trả về đúng snapshot đội hình; trả về 404 nếu mã không tồn tại.
   - *Cách kiểm chứng (Verification):* `pytest backend/tests/test_share_api.py` pass 100%.
 
-- [ ] **`P2-NH03`** *(Level 3)*: Cron job / Background worker định kỳ chạy FPL sync trên Cloud
+- [x] **`P2-NH03`** *(Level 3)*: Cron job / Background worker định kỳ chạy FPL sync trên Cloud
+  - *Trạng thái theo xác nhận của NH:* Xong code/test local; **CHỜ NGHIỆM THU sync trên RDS thật và vận hành worker trên cloud**.
+  - *Bằng chứng:* NH03: 30/30 pass; bộ hồi quy đã chạy: 155 passed, 4 skipped (các test PostgreSQL/RDS chưa cấu hình).
+  - *Vận hành:* API mặc định `FPL_SYNC_ENABLED=false`; chỉ bật một worker duy nhất (chạy riêng hoặc nhúng API). Kiểm tra ngay khi chạy rồi mỗi 21600 giây; trạng thái Gameweek trong bộ nhớ, khởi động lại sẽ sync một lần.
   - *Mô tả:* Service scheduler (APScheduler / asyncio task) định kỳ kích hoạt `fpl_sync.py` kiểm tra và kéo dữ liệu mới từ FPL API mỗi khi có Gameweek mới mà không cần trigger thủ công.
   - *Phụ thuộc:* `P1-NH02`, `P2-NH01`
   - *Thư mục:* `backend/app/services/`, `backend/tests/`
