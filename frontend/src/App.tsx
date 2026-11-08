@@ -20,6 +20,7 @@ import { OptimizerControl, OptimizerConfig, OptimizerResult } from './components
 import { LineupComparisonView } from './components/comparison/LineupComparisonView';
 import { FixturesPanel } from './components/fixtures/FixturesPanel';
 import { ShareModal } from './components/share/ShareModal';
+import { SharedLineupPage } from './pages/SharedLineupPage';
 import { useShareLineup } from './hooks/useShareLineup';
 import { PositionType, Player, LineupPlayer, FormationType } from './types';
 import { useLineupStore, TOTAL_BUDGET } from './stores/lineupStore';
@@ -82,6 +83,21 @@ export function App() {
   const [isOptimizing, setIsOptimizing] = useState<boolean>(false);
   const [optimizedResult, setOptimizedResult] = useState<OptimizerResult | null>(null);
   const [isShareModalOpen, setIsShareModalOpen] = useState<boolean>(false);
+  const [currentHash, setCurrentHash] = useState<string>(
+    typeof window !== 'undefined' ? window.location.hash : ''
+  );
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const handleHashChange = () => {
+      setCurrentHash(window.location.hash);
+    };
+    window.addEventListener('hashchange', handleHashChange);
+    return () => window.removeEventListener('hashchange', handleHashChange);
+  }, []);
+
+  const sharedCodeMatch = currentHash.match(/#\/share\/([A-Za-z0-9]{6})/);
+  const activeSharedCode = sharedCodeMatch ? sharedCodeMatch[1] : null;
 
   const {
     isSharing,
@@ -399,6 +415,19 @@ export function App() {
   };
   const currentFullSquad = [...startingXI, ...bench];
   const optimizedFullSquad = optimizedResult ? [...optimizedResult.starting_xi, ...optimizedResult.bench] : [];
+
+  if (activeSharedCode) {
+    return (
+      <SharedLineupPage
+        code={activeSharedCode}
+        onNavigateHome={() => {
+          if (typeof window !== 'undefined') {
+            window.location.hash = '';
+          }
+        }}
+      />
+    );
+  }
 
   return (
     <div className="min-h-screen bg-brand-dark text-brand-white flex flex-col font-sans selection:bg-brand-hotpink-dark selection:text-brand-white">
