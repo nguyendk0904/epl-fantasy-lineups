@@ -1,3 +1,5 @@
+from contextlib import asynccontextmanager
+
 from fastapi import FastAPI, APIRouter
 from fastapi.middleware.cors import CORSMiddleware
 from app.core.config import settings
@@ -6,8 +8,24 @@ from app.api.v1.endpoints.teams import router as teams_router
 from app.api.v1.endpoints.optimizer import router as optimizer_router
 from app.api.v1.endpoints.lineups import router as lineups_router
 from app.api.v1.endpoints.lineup_share import router as lineup_share_router
+from app.services.cron_scheduler import FPLSyncScheduler
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    worker = None
+    if settings.FPL_SYNC_ENABLED:
+        worker = FPLSyncScheduler(interval_seconds=settings.FPL_SYNC_INTERVAL_SECONDS)
+        worker.start()
+    app.state.fpl_sync_scheduler = worker
+    try:
+        yield
+    finally:
+        if worker is not None:
+            await worker.stop()
 
 app = FastAPI(
+    lifespan=lifespan,
     title=settings.PROJECT_NAME,
     version=settings.VERSION,
     description="FPL Lineup Builder & Optimizer Backend Core API",
