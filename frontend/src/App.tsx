@@ -11,13 +11,16 @@ import {
   ArrowRight,
   RotateCcw,
   AlertTriangle,
-  Zap
+  Zap,
+  Share2
 } from 'lucide-react';
 import { VirtualPitch } from './components/pitch/VirtualPitch';
 import { PlayerTable } from './components/player-list/PlayerTable';
 import { OptimizerControl, OptimizerConfig, OptimizerResult } from './components/optimizer/OptimizerControl';
 import { LineupComparisonView } from './components/comparison/LineupComparisonView';
 import { FixturesPanel } from './components/fixtures/FixturesPanel';
+import { ShareModal } from './components/share/ShareModal';
+import { useShareLineup } from './hooks/useShareLineup';
 import { PositionType, Player, LineupPlayer, FormationType } from './types';
 import { useLineupStore, TOTAL_BUDGET } from './stores/lineupStore';
 import { useMediaQuery } from './hooks/useMediaQuery';
@@ -78,6 +81,15 @@ export function App() {
   const [activeTab, setActiveTab] = useState<TabType>('pitch');
   const [isOptimizing, setIsOptimizing] = useState<boolean>(false);
   const [optimizedResult, setOptimizedResult] = useState<OptimizerResult | null>(null);
+  const [isShareModalOpen, setIsShareModalOpen] = useState<boolean>(false);
+
+  const {
+    isSharing,
+    shareCode,
+    shareUrl,
+    error: shareError,
+    shareLineup,
+  } = useShareLineup();
 
   // Zustand Store Hooks
   const {
@@ -454,6 +466,16 @@ export function App() {
             >
               <RotateCcw className="w-4 h-4" />
             </button>
+
+            {/* Share Lineup Button */}
+            <button
+              onClick={() => setIsShareModalOpen(true)}
+              className="px-3 py-1.5 rounded-full bg-gradient-to-r from-brand-skyblue to-brand-skyblue-light text-brand-darker font-bold text-xs flex items-center gap-1.5 shadow-md hover:brightness-110 active:scale-95 transition-all"
+              title="Chia sẻ đội hình"
+            >
+              <Share2 className="w-3.5 h-3.5" />
+              <span className="hidden sm:inline">Share</span>
+            </button>
           </div>
         </div>
 
@@ -555,6 +577,14 @@ export function App() {
                   >
                     <Zap className="w-3.5 h-3.5 fill-brand-white" />
                     <span>Auto-Optimize</span>
+                  </button>
+                  <button
+                    onClick={() => setIsShareModalOpen(true)}
+                    className="px-3.5 py-2 rounded-xl bg-gradient-to-r from-brand-skyblue to-brand-skyblue-light text-brand-darker font-bold text-xs flex items-center gap-1.5 shadow-lg shadow-brand-skyblue/20 hover:brightness-110 transition-all active:scale-95"
+                    title="Chia sẻ đội hình này"
+                  >
+                    <Share2 className="w-3.5 h-3.5" />
+                    <span>Chia sẻ</span>
                   </button>
                   {!isSplit && (
                   <button
@@ -678,6 +708,17 @@ export function App() {
           </section>
         )}
       </main>
+
+      {/* Share Lineup Modal */}
+      <ShareModal
+        isOpen={isShareModalOpen}
+        onClose={() => setIsShareModalOpen(false)}
+        shareUrl={shareUrl}
+        shareCode={shareCode}
+        isLoading={isSharing}
+        errorMessage={shareError}
+        onShare={shareLineup}
+      />
 
       {/* Footer */}
       <footer className="border-t border-brand-border bg-brand-darker/80 py-4 mt-auto text-center text-xs text-brand-muted">
