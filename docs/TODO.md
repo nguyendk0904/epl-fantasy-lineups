@@ -239,7 +239,7 @@
 
 ---
 
-### ⚙️ Nhất (Backend Core & FPL Sync Lead) - [1/3]
+### ⚙️ Nhất (Backend Core & FPL Sync Lead) - [2/3] (NH02 xong triển khai, chờ nghiệm thu RDS)
 
 - [x] **`P2-NH01`** *(Level 3)*: Chuyển chuỗi kết nối Database sang Amazon RDS PostgreSQL
   - *Mô tả:* Cập nhật cấu hình kết nối DB hỗ trợ kết nối an toàn tới AWS RDS qua biến môi trường (`RDS_HOSTNAME`, `RDS_DB_NAME`, `RDS_USERNAME`, `RDS_PASSWORD`); cơ chế fallback tự động về Postgres local khi dev offline.
@@ -252,7 +252,9 @@
   - *Tiêu chí chấp nhận (Acceptance Criteria):* Kết nối thành công tới RDS PostgreSQL trên AWS khi có biến môi trường, tự fallback về Postgres local khi chạy offline.
   - *Cách kiểm chứng (Verification):* `pytest backend/tests/test_rds_connection.py` pass 100%.
 
-- [ ] **`P2-NH02`** *(Level 2)*: REST API `POST /api/v1/lineups/share` & `GET /api/v1/lineups/share/:code`
+- [x] **`P2-NH02`** *(Level 2)*: REST API `POST /api/v1/lineups/share` & `GET /api/v1/lineups/share/:code`
+  - *Trạng thái theo xác nhận của NH:* Hoàn thành phần code và test local; **CHỜ NGHIỆM THU lưu/đọc trên PostgreSQL/RDS thật**, chưa xác nhận hoàn thành nghiệm thu cloud.
+  - *Bằng chứng:* NH02: 26 passed, 1 skipped; bộ hồi quy đã chạy: 125 passed, 4 skipped. Test PostgreSQL riêng của NH02 skip do chưa cấu hình `SHARE_TEST_DATABASE_URL`.
   - *Mô tả:* Endpoint lưu snapshot đội hình (15 cầu thủ, formation, captain) sinh mã short-code ngẫu nhiên (6 ký tự base62) lưu vào bảng `shared_lineups` trên RDS, và endpoint truy vấn snapshot theo mã code.
   - *Phụ thuộc:* `P2-NH01`, `P2-V01`
   - *Thư mục:* `backend/app/schemas/`, `backend/app/api/v1/endpoints/`, `backend/tests/`

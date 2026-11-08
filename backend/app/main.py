@@ -5,6 +5,7 @@ from app.api.v1.endpoints.players import router as players_router
 from app.api.v1.endpoints.teams import router as teams_router
 from app.api.v1.endpoints.optimizer import router as optimizer_router
 from app.api.v1.endpoints.lineups import router as lineups_router
+from app.api.v1.endpoints.lineup_share import router as lineup_share_router
 
 app = FastAPI(
     title=settings.PROJECT_NAME,
@@ -43,6 +44,7 @@ api_v1_router.include_router(players_router, prefix="/players")
 api_v1_router.include_router(teams_router, prefix="/teams")
 api_v1_router.include_router(optimizer_router)
 api_v1_router.include_router(lineups_router)
+api_v1_router.include_router(lineup_share_router)
 
 # Include API v1 Router into App
 app.include_router(api_v1_router)
