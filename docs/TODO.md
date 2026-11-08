@@ -210,7 +210,7 @@
 
 ### 🎨 Nguyên (Frontend & UI Lead) - [1/3]
 
-- [ ] **`P2-NG01`** *(Level 2)*: Tích hợp tính năng tạo Share Link đội hình qua Cloud API
+- [x] **`P2-NG01`** *(Level 2)*: Tích hợp tính năng tạo Share Link đội hình qua Cloud API
   - *Mô tả:* Bổ sung nút "Chia sẻ đội hình" trên Navbar/Pitch; khi bấm gọi API `POST /api/v1/lineups/share` lưu snapshot 15 cầu thủ lên Cloud DB và nhận lại short-code; hiển thị modal copy link và QR code.
   - *Phụ thuộc:* `P1-NG04`, `P2-NH02`
   - *Thư mục:* `frontend/src/components/share/`, `frontend/src/hooks/`
