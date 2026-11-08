@@ -13,8 +13,8 @@
 
 | Giai đoạn (Phase) | Hoàn thành | Tỷ lệ | Trạng thái |
 | :--- | :---: | :---: | :---: |
-| **Phase 1: Local Full-Stack Product** | **17 / 17** | `100%` | 🟡 Đang thực hiện |
-| **Phase 2: AWS Services Integration** | **10 / 14** | `71%` | 🟡 Đang thực hiện |
+| **Phase 1: Local Full-Stack Product** | **17 / 17** | `100%` |  Hoàn thành |
+| **Phase 2: AWS Services Integration** | **13 / 13** | `100%` |  Hoàn thành |
 | **Phase 3: Production Deploy & E2E Test** | **0 / 14** | `0%` | ⚪ Chờ Phase 2 |
 | **Phase 4: Live Gamification & League Operations** | **0 / 14** | `0%` | ⚪ Chờ Phase 3 |
 | **TỔNG CỘNG TOÀN DỰ ÁN** | **27 / 59** | `46%` | 🟡 Đang thực hiện |
@@ -208,7 +208,7 @@
 ## ☁️ PHASE 2: TÍCH HỢP SỬ DỤNG CÁC DỊCH VỤ CỦA AWS (9/14)
 *Mục tiêu: Đưa CSDL lên Amazon RDS, lưu trữ static web trên S3, tối ưu Connection Pool cho db.t4g.micro, bổ sung độ khó trận đấu FDR và kích hoạt AWS Budgets Alert ($1.00) bảo vệ tài khoản của Quang.*
 
-### 🎨 Nguyên (Frontend & UI Lead) - [1/3]
+### 🎨 Nguyên (Frontend & UI Lead) - [3/3]
 
 - [x] **`P2-NG01`** *(Level 2)*: Tích hợp tính năng tạo Share Link đội hình qua Cloud API
   - *Mô tả:* Bổ sung nút "Chia sẻ đội hình" trên Navbar/Pitch; khi bấm gọi API `POST /api/v1/lineups/share` lưu snapshot 15 cầu thủ lên Cloud DB và nhận lại short-code; hiển thị modal copy link và QR code.
