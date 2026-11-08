@@ -219,7 +219,7 @@
   - *Tiêu chí chấp nhận (Acceptance Criteria):* Nút Share gọi API lưu snapshot thành công, modal hiển thị link rút gọn `domain/share/{code}`, nút copy link hoạt động với tooltip phản hồi.
   - *Cách kiểm chứng (Verification):* `npm --prefix frontend test -- ShareModal.test.tsx` pass 100%.
 
-- [ ] **`P2-NG02`** *(Level 2)*: Màn hình xem đội hình qua link chia sẻ (`/share/:code`) - Chế độ Read-only
+- [x] **`P2-NG02`** *(Level 2)*: Màn hình xem đội hình qua link chia sẻ (`/share/:code`) - Chế độ Read-only
   - *Mô tả:* Trang công khai cho người khác xem đội hình qua link (chế độ Read-only); gọi API `GET /api/v1/lineups/share/:code`, hiển thị VirtualPitch với badge C/V và tổng điểm/giá, nút "Sao chép đội hình này vào máy tôi".
   - *Phụ thuộc:* `P2-NG01`, `P2-NH02`
   - *Thư mục:* `frontend/src/pages/`, `frontend/src/components/share/`
