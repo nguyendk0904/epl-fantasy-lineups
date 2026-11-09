@@ -185,7 +185,10 @@ def test_solver_selects_highest_scoring_feasible_squad():
 
 @pytest.mark.parametrize(
     ("difficulty", "expected_total"),
-    [(1, 16.6), (2, 16.4), (3, 16.0), (4, 15.7), (5, 15.4)],
+    # Exact expectation = 13.0 (locked squad without team 1) + 3 x 1.0 x
+    # FDR_MULTIPLIERS[difficulty]. Difficulty 2 gives 13.0 + 3 x 1.15 = 16.45;
+    # the previous value (16.4) rounded that half step down by hand.
+    [(1, 16.6), (2, 16.45), (3, 16.0), (4, 15.7), (5, 15.4)],
 )
 def test_solver_weights_xp_by_next_fixture_difficulty(
     monkeypatch, mock_fpl_fixtures, difficulty, expected_total
@@ -214,7 +217,11 @@ def test_solver_weights_xp_by_next_fixture_difficulty(
 
     result = optimize_squad(players, budget=15.0, locked_player_ids=locked_ids)
 
-    assert result.total_expected_points == expected_total
+    # `total_expected_points` is rounded to 1 decimal by the solver, and 16.45
+    # sits exactly on a .05 rounding boundary, so CBC's binary float sum may
+    # legitimately report 16.4 or 16.5. Compare within one rounding step
+    # (0.06 > 0.05) instead of using fragile exact equality.
+    assert result.total_expected_points == pytest.approx(expected_total, abs=0.06)
 
 
 def test_solver_includes_locked_player_even_if_not_highest_scoring():

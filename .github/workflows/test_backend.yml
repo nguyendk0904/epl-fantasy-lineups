@@ -27,11 +27,6 @@
 #   * Tests    : `pytest tests -q` (offline: aiosqlite in-memory +
 #                httpx.MockTransport; the live RDS test is opt-in through
 #                RUN_RDS_CONNECTION_TEST=1 and stays skipped here)
-#   * One (1) parametrised case is currently DESELECTED because it already
-#     fails on `main` in code owned by the Algo engineer - see the
-#     "TEMPORARY QUARANTINE" block below (owner + removal instructions).
-#     Everything else must be 100% green; the quarantine is printed as a
-#     GitHub annotation and re-run in a dedicated informational step.
 #
 # INVARIANTS
 #   * No AWS credentials, no secrets, no network dependency: this workflow
@@ -61,25 +56,6 @@ concurrency:
 env:
   PYTHON_VERSION: '3.11'
   PIP_DISABLE_PIP_VERSION_CHECK: '1'
-  # -------------------------------------------------------------------
-  # TEMPORARY QUARANTINE (remove as soon as the owner fixes the test)
-  #   Test : tests/test_optimizer.py::test_solver_weights_xp_by_next_fixture_difficulty[2-16.4]
-  #   Owner: Vũ (P2-V03 FDR weighting) - file lives in backend/tests/, which
-  #          is OUTSIDE the P3-Q03 scope, so it must not be edited here.
-  #   Fact : fails deterministically on `main` right now in every
-  #          environment tested (repo Dockerfile image + fpl-local-backend
-  #          image): expects 16.4, solver returns 16.5 (float rounding of
-  #          16.45 -> 16.5; the 4 sibling parameters pass).
-  #   Why  : a permanently red gate would block every AWS release, so this
-  #          ONE parametrised case is deselected - loudly (see the
-  #          `::warning::` line) and visibly (pytest prints "1 deselected",
-  #          plus a dedicated informational step that runs it).
-  #   Fix  : assert result.total_expected_points == pytest.approx(16.45, abs=0.1)
-  #          (or correct the expected value). Then set the value below to ''
-  #          (empty string) - both steps below handle that case cleanly,
-  #          nothing else in this workflow needs to change.
-  # -------------------------------------------------------------------
-  QUARANTINED_TEST: 'tests/test_optimizer.py::test_solver_weights_xp_by_next_fixture_difficulty[2-16.4]'
 
 defaults:
   run:
@@ -135,28 +111,4 @@ jobs:
           ENVIRONMENT: test
           FPL_SYNC_ENABLED: 'false'
           RUN_RDS_CONNECTION_TEST: '0'
-        run: |
-          set -euo pipefail
-          DESELECT_ARGS=()
-          if [ -n "${QUARANTINED_TEST:-}" ]; then
-            echo "::warning::Quarantined known-failing test (owner: Vũ / P2-V03): ${QUARANTINED_TEST}"
-            DESELECT_ARGS=(--deselect "${QUARANTINED_TEST}")
-          fi
-          # bash 4.4+ (ubuntu-latest uses 5.x): "${ARR[@]}" on an empty array
-          # is safe under `set -u`, so this works with or without quarantine.
-          python -m pytest tests -q -p no:cacheprovider "${DESELECT_ARGS[@]}"
-
-      - name: Quarantined test status (informational, never fails the build)
-        # Keeps the debt visible: when Vũ's fix lands this step turns green and
-        # the QUARANTINED_TEST variable must be deleted (see workflow header).
-        continue-on-error: true
-        env:
-          ENVIRONMENT: test
-          FPL_SYNC_ENABLED: 'false'
-        run: |
-          set -euo pipefail
-          if [ -z "${QUARANTINED_TEST:-}" ]; then
-            echo "No quarantined test configured - nothing to re-run."
-            exit 0
-          fi
-          python -m pytest "${QUARANTINED_TEST}" -q -p no:cacheprovider
+        run: python -m pytest tests -q -p no:cacheprovider
