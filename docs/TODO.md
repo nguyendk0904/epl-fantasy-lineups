@@ -15,9 +15,9 @@
 | :--- | :---: | :---: | :---: |
 | **Phase 1: Local Full-Stack Product** | **17 / 17** | `100%` |  Hoàn thành |
 | **Phase 2: AWS Services Integration** | **13 / 13** | `100%` |  Hoàn thành |
-| **Phase 3: Production Deploy & E2E Test** | **0 / 14** | `0%` | ⚪ Chờ Phase 2 |
+| **Phase 3: Production Deploy & E2E Test** | **2 / 14** | `14%` | ⚪ Chờ Phase 2 |
 | **Phase 4: Live Gamification & League Operations** | **0 / 14** | `0%` | ⚪ Chờ Phase 3 |
-| **TỔNG CỘNG TOÀN DỰ ÁN** | **27 / 59** | `46%` | 🟡 Đang thực hiện |
+| **TỔNG CỘNG TOÀN DỰ ÁN** | **32 / 59** | `54%` | 🟡 Đang thực hiện |
 
 ---
 
@@ -349,7 +349,7 @@
 
 ---
 
-## 🌐 PHASE 3: DEPLOY & TEST ĐẦU CUỐI (END-TO-END) (1/14)
+## 🌐 PHASE 3: DEPLOY & TEST ĐẦU CUỐI (END-TO-END) (2/14)
 *Mục tiêu: Đưa toàn bộ sản phẩm lên Internet qua CloudFront HTTPS và AWS App Runner, xây dựng CI/CD tự động qua GitHub Actions, kiểm thử tải và chuẩn bị demo đồ án với chi phí $0.00.*
 
 ### 🎨 Nguyên (Frontend & UI Lead) - [0/3]
@@ -445,7 +445,7 @@
 
 ---
 
-### 🐳 Quang (DevOps & AWS Lead) - [1/4]
+### 🐳 Quang (DevOps & AWS Lead) - [2/4]
 
 - [x] **`P3-Q01`** *(Level 4)*: Triển khai Frontend lên AWS S3 + AWS CloudFront (SSL HTTPS, CDN)
   - *Mô tả:* Cấu hình phân phối CDN qua AWS CloudFront trỏ về origin S3 static website; cấu hình SSL/TLS miễn phí qua AWS Certificate Manager (ACM), custom error response 404 $\rightarrow$ /index.html cho SPA routing.
@@ -456,7 +456,7 @@
   - *Tiêu chí chấp nhận (Acceptance Criteria):* Website truy cập công khai qua domain HTTPS của CloudFront, định tuyến SPA hoạt động (F5 trang không bị lỗi 404).
   - *Cách kiểm chứng (Verification):* Truy cập `https://xxxx.cloudfront.net` trên trình duyệt tải trang thành công, chứng chỉ SSL hợp lệ.
 
-- [ ] **`P3-Q02`** *(Level 4)*: Đóng gói và triển khai Backend FastAPI lên AWS App Runner
+- [x] **`P3-Q02`** *(Level 4)*: Đóng gói và triển khai Backend FastAPI lên AWS App Runner
   - *Mô tả:* Triển khai container Backend FastAPI lên AWS App Runner (hoặc EC2 t4g.small Free Tier); cấu hình biến môi trường kết nối RDS an toàn, healthcheck endpoint `/health` và auto deployment.
   - *Phụ thuộc:* `P1-Q01`, `P2-Q01`, `P2-Q02`
   - *Thư mục:* `infra/aws/`

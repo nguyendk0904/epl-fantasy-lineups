@@ -1,0 +1,87 @@
+# =====================================================================
+# P3-Q02 - AWS App Runner service configuration (source-based, version 1.0)
+# Project: Fantasy Football Lineup Builder & Optimizer
+# Backend : FastAPI + SQLAlchemy 2.0 async + PuLP/CBC  (backend/Dockerfile)
+#
+# WHAT THIS FILE IS
+#   * The CANONICAL, lint-verified specification of how the FastAPI backend
+#     must run in production: runtime, build, start command, listening port,
+#     non-secret environment variables and secret references.
+#   * App Runner only reads a configuration file for services that are based
+#     on SOURCE CODE, and only when the file is named `apprunner.yaml` and
+#     sits in the ROOT of the source repository. This monorepo keeps it under
+#     infra/aws/ (P3-Q02 file allow-list: 2 files), so the runbook
+#     (infra/aws/app_runner_setup.md, Path A2) copies it to the deploy root.
+#   * For IMAGE-based services (Path A1, ECR) App Runner ignores this file:
+#     every key below is then passed to `aws apprunner create-service`
+#     (see the key -> CLI flag mapping table in the runbook, section 7.5).
+#
+# SECURITY INVARIANTS (never relax)
+#   * No plaintext secret in this file. RDS_PASSWORD comes from Secrets
+#     Manager at runtime (run.secrets -> value-from).
+#   * RDS_HOSTNAME / RDS_DB_NAME / RDS_USERNAME are NOT secrets: they are
+#     already documented in infra/aws/rds_setup.md section 2.
+#   * All four RDS_* fields must be present and non-empty; app/core/rds_config.py
+#     rejects a partial credential set and forces TLS (ssl=require) by design.
+# =====================================================================
+
+version: 1.0
+
+# Managed App Runner runtime = Python 3.11 (SSOT backend requires 3.11+).
+# The CBC solver ships as the `pulp[cbc]` wheel (requirements.txt), so no
+# extra OS package is required on this runtime.
+runtime: python3
+
+build:
+  commands:
+    build:
+      - pip install --no-cache-dir -r backend/requirements.txt
+
+run:
+  # --app-dir backend : start from the monorepo layout without a chdir,
+  #                     so `app.main:app` resolves to backend/app/main.py.
+  # --proxy-headers   : App Runner terminates TLS on its load balancer.
+  # --forwarded-allow-ips=* : accept X-Forwarded-* only from that LB; the
+  #                     service is never exposed directly to the internet.
+  # --reload          : forbidden in production (single worker, dev only).
+  command: uvicorn app.main:app --app-dir backend --host 0.0.0.0 --port 8000 --proxy-headers --forwarded-allow-ips=*
+
+  network:
+    port: 8000
+    env: PORT
+
+  # Non-secret runtime configuration (production).
+  env:
+    # "production" activates the deployment guards in core/rds_config.py:
+    # postgresql+asyncpg driver, explicit remote host, TLS mandatory.
+    - name: ENVIRONMENT
+      value: production
+    - name: RDS_HOSTNAME
+      value: fpl-fantasy-db.cr0maoomq80d.ap-southeast-1.rds.amazonaws.com
+    - name: RDS_PORT
+      value: "5432"
+    - name: RDS_DB_NAME
+      value: fantasy_fpl
+    - name: RDS_USERNAME
+      value: fpl_admin
+    # Browser origin = the live CloudFront distribution (P3-Q01). Must be a
+    # JSON array: app/core/config.py parses JSON first, CSV second.
+    - name: CORS_ORIGINS
+      value: '["https://d24f3bc3qfp5xf.cloudfront.net"]'
+    # INVARIANT: exactly ONE scheduler process (app/services/cron_scheduler.py).
+    # Keep it embedded here AND cap auto scaling MaxSize=1 (runbook 7.6);
+    # never add a second scheduler and never set MaxSize>1 with this flag on.
+    - name: FPL_SYNC_ENABLED
+      value: "true"
+    - name: FPL_SYNC_INTERVAL_SECONDS
+      value: "21600"
+    - name: FPL_BOOTSTRAP_URL
+      value: https://fantasy.premierleague.com/api/bootstrap-static/
+    - name: AWS_REGION
+      value: ap-southeast-1
+
+  # Secrets injected at runtime from AWS Secrets Manager.
+  # ARN format for a JSON key: <secret-arn>:<json-key>::  (created in runbook 7.2)
+  secrets:
+    - name: RDS_PASSWORD
+      value-from: "arn:aws:secretsmanager:ap-southeast-1:711695043505:secret:fpl/backend/rds:password::"
