@@ -1,11 +1,26 @@
+# =====================================================================
+# LEGACY / MANUAL ONLY  (decision D-5 of P3-Q03)
+# Project: Fantasy Football Lineup Builder & Optimizer
+#
+# Production frontend is a Vite build published to S3 + CloudFront
+# (P3-Q01), automated by .github/workflows/ci_cd.yml on every push/merge
+# into `main` (P3-Q03).
+#
+# This workflow previously ALSO ran on every push to `main` (and to two
+# retired feature branches), so one release triggered two competing
+# frontend deployments. Whenever GitHub Pages is disabled - or a run
+# loses the race for the `pages` concurrency group - the Actions tab
+# turns red even though the real (AWS) deployment is healthy, which makes
+# the P3-Q03 acceptance signal ("all green on main") meaningless.
+#
+# It is kept for optional demos / emergency rollback and is therefore
+# MANUAL ONLY: Actions -> "Deploy Frontend to GitHub Pages" -> Run
+# workflow. Do NOT re-add a `push:` trigger here while CloudFront is the
+# production origin.
+# =====================================================================
 name: Deploy Frontend to GitHub Pages
 
 on:
-  push:
-    branches:
-      - main
-      - feature/ui-refactor
-      - feature/deploy-github-pages
   workflow_dispatch:
 
 permissions:
