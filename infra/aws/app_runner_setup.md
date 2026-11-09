@@ -31,7 +31,7 @@
 
 ### 2.2. Thời hạn giữ 24/7
 
-- **Chính sách:** giữ backend online **24/7 phục vụ demo/báo cáo**, **tối đa tới 16/11/2026**; sau mốc đó **teardown** theo §8.3.
+- **Chính sách:** giữ backend online **24/7 phục vụ demo/báo cáo**, **tối đa tới 6/12/2026**; sau mốc đó **teardown** theo §8.3.
 - Đổi mốc? Chỉ cần sửa đúng một dòng này + ghi ngày vào `docs/TODO.md`.
 - ⚠️ Instance **không** gắn Elastic IP ⇒ `stop`/`start` sẽ **đổi public IP** và **URL sslip.io cũ mất hiệu lực** (§7.4). Muốn URL cố định: gắn EIP (miễn phí khi đang gắn vào instance chạy).
 
