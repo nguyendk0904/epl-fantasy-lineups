@@ -15,9 +15,9 @@
 | :--- | :---: | :---: | :---: |
 | **Phase 1: Local Full-Stack Product** | **17 / 17** | `100%` |  Hoàn thành |
 | **Phase 2: AWS Services Integration** | **13 / 13** | `100%` |  Hoàn thành |
-| **Phase 3: Production Deploy & E2E Test** | **2 / 14** | `14%` | ⚪ Chờ Phase 2 |
+| **Phase 3: Production Deploy & E2E Test** | **3 / 14** | `21%` | 🟡 Đang thực hiện |
 | **Phase 4: Live Gamification & League Operations** | **0 / 14** | `0%` | ⚪ Chờ Phase 3 |
-| **TỔNG CỘNG TOÀN DỰ ÁN** | **32 / 59** | `54%` | 🟡 Đang thực hiện |
+| **TỔNG CỘNG TOÀN DỰ ÁN** | **33 / 59** | `56%` | 🟡 Đang thực hiện |
 
 ---
 
@@ -349,7 +349,7 @@
 
 ---
 
-## 🌐 PHASE 3: DEPLOY & TEST ĐẦU CUỐI (END-TO-END) (2/14)
+## 🌐 PHASE 3: DEPLOY & TEST ĐẦU CUỐI (END-TO-END) (3/14)
 *Mục tiêu: Đưa toàn bộ sản phẩm lên Internet qua CloudFront HTTPS và AWS App Runner, xây dựng CI/CD tự động qua GitHub Actions, kiểm thử tải và chuẩn bị demo đồ án với chi phí $0.00.*
 
 ### 🎨 Nguyên (Frontend & UI Lead) - [0/3]
@@ -445,7 +445,7 @@
 
 ---
 
-### 🐳 Quang (DevOps & AWS Lead) - [2/4]
+### 🐳 Quang (DevOps & AWS Lead) - [3/4]
 
 - [x] **`P3-Q01`** *(Level 4)*: Triển khai Frontend lên AWS S3 + AWS CloudFront (SSL HTTPS, CDN)
   - *Mô tả:* Cấu hình phân phối CDN qua AWS CloudFront trỏ về origin S3 static website; cấu hình SSL/TLS miễn phí qua AWS Certificate Manager (ACM), custom error response 404 $\rightarrow$ /index.html cho SPA routing.
@@ -465,7 +465,7 @@
   - *Tiêu chí chấp nhận (Acceptance Criteria):* Backend FastAPI online 24/7 trên AWS, kết nối thông suốt với RDS, endpoint `/health` trả về status 200.
   - *Cách kiểm chứng (Verification):* `curl https://xxxx.awsapprunner.com/health` trả về HTTP 200 `{"status": "healthy"}`.
 
-- [ ] **`P3-Q03`** *(Level 4)*: Xây dựng pipeline GitHub Actions CI/CD tự động
+- [x] **`P3-Q03`** *(Level 4)*: Xây dựng pipeline GitHub Actions CI/CD tự động
   - *Mô tả:* Viết workflow `.github/workflows/deploy.yml`: Mỗi khi commit/PR merge vào nhánh `main` $\rightarrow$ Tự động Lint & Test Frontend + Backend $\rightarrow$ Build Vite deploy lên S3 & invalidate CloudFront cache $\rightarrow$ Deploy Backend lên App Runner.
   - *Phụ thuộc:* `P3-Q01`, `P3-Q02`
   - *Thư mục:* `.github/workflows/`
