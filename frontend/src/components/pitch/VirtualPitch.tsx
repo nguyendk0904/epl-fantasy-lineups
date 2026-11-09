@@ -78,14 +78,14 @@ export function VirtualPitch({
   return (
     <div className="w-full flex flex-col items-center">
       {/* Pitch Header / Toolbar */}
-      <div className="w-full max-w-4xl flex items-center justify-between pb-4 px-2 text-xs sm:text-sm">
+      <div className="w-full max-w-4xl flex flex-wrap items-center justify-between gap-2 pb-3 sm:pb-4 px-1 sm:px-2 text-xs sm:text-sm">
         <div className="flex items-center gap-2">
-          <span className="text-brand-muted font-medium">Sơ đồ chiến thuật:</span>
+          <span className="text-brand-muted font-medium text-xs sm:text-sm">Sơ đồ:</span>
           <div className="relative inline-block">
             <select
               value={formation}
               onChange={(e) => handleFormationSelect(e.target.value as FormationType)}
-              className="bg-brand-darker/90 border border-brand-skyblue/60 text-brand-skyblue-light font-bold text-xs sm:text-sm rounded-xl px-3.5 py-1.5 pr-8 appearance-none cursor-pointer hover:border-brand-skyblue transition-colors focus:outline-none focus:ring-2 focus:ring-brand-skyblue/30 backdrop-blur-md shadow-lg"
+              className="bg-brand-darker/90 border border-brand-skyblue/60 text-brand-skyblue-light font-bold text-xs sm:text-sm rounded-xl px-3 py-1.5 pr-8 appearance-none cursor-pointer hover:border-brand-skyblue transition-colors focus:outline-none focus:ring-2 focus:ring-brand-skyblue/30 backdrop-blur-md shadow-lg"
               aria-label="Chọn sơ đồ chiến thuật"
             >
               {FORMATIONS.map((f) => (
@@ -98,13 +98,13 @@ export function VirtualPitch({
           </div>
         </div>
 
-        <div className="flex items-center gap-3 text-xs text-brand-muted">
-          <span className="flex items-center gap-1.5 bg-brand-darker/80 backdrop-blur-md border border-white/10 px-2.5 py-1 rounded-full shadow-inner">
-            <span className="w-2.5 h-2.5 rounded-full bg-brand-hotpink-dark ring-2 ring-brand-hotpink/40 inline-block shadow-sm"></span>
+        <div className="flex items-center gap-1.5 sm:gap-3 text-[11px] sm:text-xs text-brand-muted">
+          <span className="flex items-center gap-1 sm:gap-1.5 bg-brand-darker/80 backdrop-blur-md border border-white/10 px-2 sm:px-2.5 py-1 rounded-full shadow-inner">
+            <span className="w-2 h-2 sm:w-2.5 sm:h-2.5 rounded-full bg-brand-hotpink-dark ring-2 ring-brand-hotpink/40 inline-block shadow-sm"></span>
             <strong className="text-brand-hotpink-light">(C)</strong> Captain x2
           </span>
-          <span className="flex items-center gap-1.5 bg-brand-darker/80 backdrop-blur-md border border-white/10 px-2.5 py-1 rounded-full shadow-inner">
-            <span className="w-2.5 h-2.5 rounded-full bg-brand-skyblue ring-2 ring-brand-skyblue/40 inline-block shadow-sm"></span>
+          <span className="flex items-center gap-1 sm:gap-1.5 bg-brand-darker/80 backdrop-blur-md border border-white/10 px-2 sm:px-2.5 py-1 rounded-full shadow-inner">
+            <span className="w-2 h-2 sm:w-2.5 sm:h-2.5 rounded-full bg-brand-skyblue ring-2 ring-brand-skyblue/40 inline-block shadow-sm"></span>
             <strong className="text-brand-skyblue-light">(V)</strong> Vice-Captain
           </span>
         </div>
@@ -175,7 +175,7 @@ export function VirtualPitch({
         </div>
 
         {/* 11 Vị trí xuất phát chính thức (Starting XI) - pt-12 để tránh đè banner */}
-        <div className="relative z-10 pt-12 pb-8 sm:pb-10 px-4 flex flex-col justify-between min-h-[660px] sm:min-h-[740px]">
+        <div className="relative z-10 pt-12 pb-8 sm:pb-10 px-1.5 min-[390px]:px-2.5 sm:px-4 flex flex-col justify-between min-h-[640px] sm:min-h-[740px]">
           {/* Hàng 1: Thủ Môn (GKP) */}
           <div className="flex justify-center items-center">
             <PlayerPitchSlot
@@ -244,7 +244,7 @@ export function VirtualPitch({
       </div>
 
       {/* Khu vực Ghế Dự Bị (Substitutes Bench) - Glassmorphism Cao Cấp */}
-      <div className="w-full max-w-4xl mt-5 backdrop-blur-xl bg-brand-darker/70 border border-brand-border rounded-3xl p-5 shadow-2xl relative overflow-hidden">
+      <div className="w-full max-w-4xl mt-5 backdrop-blur-xl bg-brand-darker/70 border border-brand-border rounded-3xl p-3 sm:p-5 shadow-2xl relative overflow-hidden">
         {/* Hiệu ứng phản chiếu ánh sáng kính */}
         <div className="absolute inset-x-0 top-0 h-1/3 bg-gradient-to-b from-white/5 to-transparent pointer-events-none" />
 

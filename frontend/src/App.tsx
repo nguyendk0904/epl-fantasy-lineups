@@ -1,4 +1,4 @@
-import React, { useState, useEffect, Suspense, lazy } from 'react';
+import React, { useState, useEffect, useMemo, Suspense, lazy } from 'react';
 import { createRoot } from 'react-dom/client';
 import { 
   Trophy, 
@@ -36,6 +36,8 @@ const FixturesPanel = lazy(() =>
 );
 const ShareModal = lazy(() => import('./components/share/ShareModal'));
 const SharedLineupPage = lazy(() => import('./pages/SharedLineupPage'));
+const MobilePlayerDrawer = lazy(() => import('./components/player-list/MobilePlayerDrawer'));
+import { MobilePitchControls } from './components/pitch/MobilePitchControls';
 
 export type TabType = 'pitch' | 'players' | 'optimizer' | 'compare';
 
@@ -90,10 +92,12 @@ export const SAMPLE_MARKET_PLAYERS: Player[] = [
 
 export function App() {
   const isSplit = useMediaQuery('(min-width: 1280px)');
+  const isMobile = useMediaQuery('(max-width: 768px)');
   const [activeTab, setActiveTab] = useState<TabType>('pitch');
   const [isOptimizing, setIsOptimizing] = useState<boolean>(false);
   const [optimizedResult, setOptimizedResult] = useState<OptimizerResult | null>(null);
   const [isShareModalOpen, setIsShareModalOpen] = useState<boolean>(false);
+  const [isMobileDrawerOpen, setIsMobileDrawerOpen] = useState<boolean>(false);
   const [currentHash, setCurrentHash] = useState<string>(
     typeof window !== 'undefined' ? window.location.hash : ''
   );
@@ -172,9 +176,21 @@ export function App() {
   const selectedPlayerIds = getSelectedPlayerIds();
   const validation = validateLineup();
 
+  const clubCounts = useMemo(() => {
+    const counts: Record<number, number> = {};
+    for (const p of [...startingXI, ...bench]) {
+      if (p) {
+        counts[p.team_id] = (counts[p.team_id] || 0) + 1;
+      }
+    }
+    return counts;
+  }, [startingXI, bench]);
+
   const handleAddPlayerClick = (position: PositionType, slotIndex?: number, isBench?: boolean) => {
     setTargetSlot({ position, slotIndex, isBench: !!isBench });
-    if (!isSplit) {
+    if (isMobile) {
+      setIsMobileDrawerOpen(true);
+    } else if (!isSplit) {
       setActiveTab('players');
     }
   };
@@ -183,6 +199,7 @@ export function App() {
     const success = addPlayerToLineup(player);
     if (success) {
       setActiveTab('pitch');
+      setIsMobileDrawerOpen(false);
     }
   };
 
@@ -608,7 +625,7 @@ export function App() {
                     Chọn đủ 15 cầu thủ (11 đá chính, 4 dự bị) trong ngân sách £100.0m và tối đa 3 người/CLB. Tự động lưu LocalStorage.
                   </p>
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="hidden sm:flex items-center gap-2">
                   <button
                     onClick={() => loadSampleLineup(INITIAL_STARTING_XI, INITIAL_BENCH)}
                     className="px-3 py-2 rounded-xl bg-brand-card hover:bg-brand-card-hover text-brand-white text-xs font-semibold border border-brand-skyblue/40 transition-colors"
@@ -640,6 +657,22 @@ export function App() {
                   </button>
                   )}
                 </div>
+              </div>
+
+              {/* Mobile Pitch Controls for screens < 768px */}
+              <div className="block md:hidden mb-4">
+                <MobilePitchControls
+                  formation={formation}
+                  onFormationChange={setFormation}
+                  onOpenPlayerDrawer={() => {
+                    setTargetSlot(null);
+                    setIsMobileDrawerOpen(true);
+                  }}
+                  onAutoOptimize={() => setActiveTab('optimizer')}
+                  onShare={() => setIsShareModalOpen(true)}
+                  remainingBudget={remainingBudget}
+                  totalPlayers={totalPlayers}
+                />
               </div>
 
               {/* Integrated VirtualPitch Component (Chia đôi 2 cột khi isSplit >= 1280px) */}
@@ -777,6 +810,24 @@ export function App() {
               isLoading={isSharing}
               errorMessage={shareError}
               onShare={shareLineup}
+            />
+          </Suspense>
+        </ErrorBoundary>
+      )}
+
+      {/* Mobile Player Drawer */}
+      {isMobileDrawerOpen && (
+        <ErrorBoundary>
+          <Suspense fallback={<LoadingSpinner message="Đang mở danh sách cầu thủ..." />}>
+            <MobilePlayerDrawer
+              isOpen={isMobileDrawerOpen}
+              onClose={() => setIsMobileDrawerOpen(false)}
+              targetSlot={targetSlot}
+              players={SAMPLE_MARKET_PLAYERS}
+              selectedPlayerIds={selectedPlayerIds}
+              onSelectPlayer={handleSelectPlayerFromMarket}
+              remainingBudget={remainingBudget}
+              clubCounts={clubCounts}
             />
           </Suspense>
         </ErrorBoundary>

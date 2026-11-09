@@ -115,9 +115,9 @@ export const LineupComparisonView: React.FC<LineupComparisonProps> = ({
   return (
     <div className="space-y-6">
       {/* Top Banner & Quick Action */}
-      <div className="bg-gradient-to-r from-brand-card via-brand-darker to-brand-darker border border-brand-border rounded-2xl p-5 shadow-2xl backdrop-blur-md flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+      <div className="bg-gradient-to-r from-brand-card via-brand-darker to-brand-darker border border-brand-border rounded-2xl p-4 sm:p-5 shadow-2xl backdrop-blur-md flex flex-col md:flex-row items-start md:items-center justify-between gap-3 sm:gap-4">
         <div>
-          <h3 className="text-lg font-bold text-brand-white flex items-center gap-2">
+          <h3 className="text-base sm:text-lg font-bold text-brand-white flex items-center gap-2">
             <GitCompare className="w-5 h-5 text-brand-skyblue-light" />
             So Sánh Đội Hình Song Song (Head-to-Head Comparison)
           </h3>
@@ -129,7 +129,7 @@ export const LineupComparisonView: React.FC<LineupComparisonProps> = ({
         {onApplyLineupB && lineupB.players.length > 0 && (
           <button
             onClick={onApplyLineupB}
-            className="px-4 py-2.5 rounded-xl bg-brand-hotpink-dark hover:bg-brand-hotpink text-brand-white font-bold text-sm flex items-center gap-2 shadow-lg shadow-brand-hotpink/25 hover:brightness-110 active:scale-95 transition-all"
+            className="w-full sm:w-auto px-4 py-2.5 rounded-xl bg-brand-hotpink-dark hover:bg-brand-hotpink text-brand-white font-bold text-xs sm:text-sm flex items-center justify-center gap-2 shadow-lg shadow-brand-hotpink/25 hover:brightness-110 active:scale-95 transition-all"
           >
             <Check className="w-4 h-4 stroke-[3]" />
             <span>Áp Dụng {lineupB.title} Vào Sân Bóng</span>
@@ -138,15 +138,15 @@ export const LineupComparisonView: React.FC<LineupComparisonProps> = ({
       </div>
 
       {/* Grid: Radar Chart & Metrics Cards */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-6">
         {/* Radar Chart (Recharts) */}
-        <div className="lg:col-span-7 bg-brand-card/90 border border-brand-border rounded-2xl p-5 shadow-xl backdrop-blur-md flex flex-col">
+        <div className="lg:col-span-7 bg-brand-card/90 border border-brand-border rounded-2xl p-4 sm:p-5 shadow-xl backdrop-blur-md flex flex-col">
           <h4 className="text-sm font-bold text-brand-white mb-2 flex items-center gap-2">
             <Sparkles className="w-4 h-4 text-brand-skyblue-light" />
             Biểu Đồ Radar Chỉ Số Sức Mạnh (5 Trục Năng Lực)
           </h4>
 
-          <div className="w-full h-72 sm:h-80">
+          <div className="w-full h-64 sm:h-80">
             <ResponsiveContainer width="100%" height="100%">
               <RadarChart cx="50%" cy="50%" outerRadius="75%" data={radarData}>
                 <PolarGrid stroke="#164B63" />
