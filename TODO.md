@@ -13,11 +13,11 @@
 
 | Giai đoạn (Phase) | Hoàn thành | Tỷ lệ | Trạng thái |
 | :--- | :---: | :---: | :---: |
-| **Phase 1: Local Full-Stack Product** | **17 / 17** | `100%` | 🟡 Đang thực hiện |
-| **Phase 2: AWS Services Integration** | **9 / 14** | `64%` | 🟡 Đang thực hiện |
-| **Phase 3: Production Deploy & E2E Test** | **0 / 14** | `0%` | ⚪ Chờ Phase 2 |
+| **Phase 1: Local Full-Stack Product** | **17 / 17** | `100%` | Hoàn thành |
+| **Phase 2: AWS Services Integration** | **14 / 14** | `100%` | Hoàn thành |
+| **Phase 3: Production Deploy & E2E Test** | **2 / 14** | `14%` | 🟡 Đang thực hiện |
 | **Phase 4: Live Gamification & League Operations** | **0 / 14** | `0%` | ⚪ Chờ Phase 3 |
-| **TỔNG CỘNG TOÀN DỰ ÁN** | **26 / 59** | `44%` | 🟡 Đang thực hiện |
+| **TỔNG CỘNG TOÀN DỰ ÁN** | **32 / 59** | `54%` | 🟡 Đang thực hiện |
 
 ---
 
