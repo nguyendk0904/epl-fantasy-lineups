@@ -17,7 +17,17 @@ export function getApiBaseUrl(): string {
   const configuredUrl = import.meta.env.VITE_API_BASE_URL;
   if (configuredUrl && typeof configuredUrl === 'string' && configuredUrl.trim() !== '') {
     // Strip trailing slash if present for consistency
-    return configuredUrl.trim().replace(/\/+$/, '');
+    const trimmed = configuredUrl.trim().replace(/\/+$/, '');
+    // If it is a relative path (e.g. /api/v1), prepend window.location.origin in browser
+    if (trimmed.startsWith('/') && typeof window !== 'undefined') {
+      return `${window.location.origin}${trimmed}`;
+    }
+    return trimmed;
+  }
+
+  // When running inside browser on port 5173, reverse proxy /api/v1 is available directly
+  if (typeof window !== 'undefined' && window.location.port === '5173') {
+    return `${window.location.origin}/api/v1`;
   }
 
   return DEFAULT_LOCAL_BASE_URL;
