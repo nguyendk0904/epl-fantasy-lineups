@@ -5,7 +5,7 @@ import autoprefixer from 'autoprefixer';
 
 // https://vitejs.dev/config/
 export default defineConfig({
-  base: process.env.NODE_ENV === 'production' ? '/epl-fantasy-lineups/' : '/',
+  base: '/',
   plugins: [react()],
   css: {
     postcss: {
