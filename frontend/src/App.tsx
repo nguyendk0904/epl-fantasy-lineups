@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Suspense, lazy } from 'react';
 import { createRoot } from 'react-dom/client';
 import { 
   Trophy, 
@@ -16,15 +16,26 @@ import {
 } from 'lucide-react';
 import { VirtualPitch } from './components/pitch/VirtualPitch';
 import { PlayerTable } from './components/player-list/PlayerTable';
-import { OptimizerControl, OptimizerConfig, OptimizerResult } from './components/optimizer/OptimizerControl';
-import { LineupComparisonView } from './components/comparison/LineupComparisonView';
-import { FixturesPanel } from './components/fixtures/FixturesPanel';
-import { ShareModal } from './components/share/ShareModal';
-import { SharedLineupPage } from './pages/SharedLineupPage';
+import type { OptimizerConfig, OptimizerResult } from './components/optimizer/OptimizerControl';
+import { LoadingSpinner } from './components/common/LoadingSpinner';
+import { ErrorBoundary } from './components/common/ErrorBoundary';
 import { useShareLineup } from './hooks/useShareLineup';
 import { PositionType, Player, LineupPlayer, FormationType } from './types';
 import { useLineupStore, TOTAL_BUDGET } from './stores/lineupStore';
 import { useMediaQuery } from './hooks/useMediaQuery';
+
+// Code Splitting & Lazy Loading (P3-NG01)
+const OptimizerControl = lazy(() =>
+  import('./components/optimizer/OptimizerControl').then((m) => ({ default: m.OptimizerControl }))
+);
+const LineupComparisonView = lazy(() =>
+  import('./components/comparison/LineupComparisonView').then((m) => ({ default: m.LineupComparisonView }))
+);
+const FixturesPanel = lazy(() =>
+  import('./components/fixtures/FixturesPanel').then((m) => ({ default: m.FixturesPanel }))
+);
+const ShareModal = lazy(() => import('./components/share/ShareModal'));
+const SharedLineupPage = lazy(() => import('./pages/SharedLineupPage'));
 
 export type TabType = 'pitch' | 'players' | 'optimizer' | 'compare';
 
@@ -418,14 +429,18 @@ export function App() {
 
   if (activeSharedCode) {
     return (
-      <SharedLineupPage
-        code={activeSharedCode}
-        onNavigateHome={() => {
-          if (typeof window !== 'undefined') {
-            window.location.hash = '';
-          }
-        }}
-      />
+      <ErrorBoundary>
+        <Suspense fallback={<LoadingSpinner fullScreen message="Đang tải đội hình chia sẻ..." />}>
+          <SharedLineupPage
+            code={activeSharedCode}
+            onNavigateHome={() => {
+              if (typeof window !== 'undefined') {
+                window.location.hash = '';
+              }
+            }}
+          />
+        </Suspense>
+      </ErrorBoundary>
     );
   }
 
@@ -678,7 +693,11 @@ export function App() {
             </div>
 
             {/* Bảng Fixtures Ngoại Hạng Anh bên dưới sân */}
-            <FixturesPanel />
+            <ErrorBoundary>
+              <Suspense fallback={<LoadingSpinner message="Đang tải lịch thi đấu..." />}>
+                <FixturesPanel />
+              </Suspense>
+            </ErrorBoundary>
           </section>
         )}
 
@@ -711,43 +730,57 @@ export function App() {
         {/* Tab Bộ Tối Ưu Hóa (Optimizer) */}
         {activeTab === 'optimizer' && (
           <section className="space-y-4">
-            <OptimizerControl
-              availablePlayers={SAMPLE_MARKET_PLAYERS}
-              currentSquad={currentFullSquad}
-              onOptimize={handleRunOptimizer}
-              isOptimizing={isOptimizing}
-            />
+            <ErrorBoundary>
+              <Suspense fallback={<LoadingSpinner message="Đang tải bộ tối ưu đội hình..." />}>
+                <OptimizerControl
+                  availablePlayers={SAMPLE_MARKET_PLAYERS}
+                  currentSquad={currentFullSquad}
+                  onOptimize={handleRunOptimizer}
+                  isOptimizing={isOptimizing}
+                />
+              </Suspense>
+            </ErrorBoundary>
           </section>
         )}
 
         {/* Tab So Sánh Đội Hình (Compare) */}
         {activeTab === 'compare' && (
           <section className="space-y-4">
-            <LineupComparisonView
-              lineupA={{
-                title: 'Đội Hình Của Bạn',
-                players: currentFullSquad,
-              }}
-              lineupB={{
-                title: optimizedResult ? 'Đội Hình Tối Ưu (AI Solver)' : 'Đội Hình Mẫu FPL Stars',
-                players: optimizedResult ? optimizedFullSquad : [...INITIAL_STARTING_XI, ...INITIAL_BENCH],
-              }}
-              onApplyLineupB={optimizedResult ? handleApplyOptimizedLineup : undefined}
-            />
+            <ErrorBoundary>
+              <Suspense fallback={<LoadingSpinner message="Đang tải biểu đồ và so sánh đội hình..." />}>
+                <LineupComparisonView
+                  lineupA={{
+                    title: 'Đội Hình Của Bạn',
+                    players: currentFullSquad,
+                  }}
+                  lineupB={{
+                    title: optimizedResult ? 'Đội Hình Tối Ưu (AI Solver)' : 'Đội Hình Mẫu FPL Stars',
+                    players: optimizedResult ? optimizedFullSquad : [...INITIAL_STARTING_XI, ...INITIAL_BENCH],
+                  }}
+                  onApplyLineupB={optimizedResult ? handleApplyOptimizedLineup : undefined}
+                />
+              </Suspense>
+            </ErrorBoundary>
           </section>
         )}
       </main>
 
       {/* Share Lineup Modal */}
-      <ShareModal
-        isOpen={isShareModalOpen}
-        onClose={() => setIsShareModalOpen(false)}
-        shareUrl={shareUrl}
-        shareCode={shareCode}
-        isLoading={isSharing}
-        errorMessage={shareError}
-        onShare={shareLineup}
-      />
+      {isShareModalOpen && (
+        <ErrorBoundary>
+          <Suspense fallback={<LoadingSpinner fullScreen message="Đang tải cửa sổ chia sẻ..." />}>
+            <ShareModal
+              isOpen={isShareModalOpen}
+              onClose={() => setIsShareModalOpen(false)}
+              shareUrl={shareUrl}
+              shareCode={shareCode}
+              isLoading={isSharing}
+              errorMessage={shareError}
+              onShare={shareLineup}
+            />
+          </Suspense>
+        </ErrorBoundary>
+      )}
 
       {/* Footer */}
       <footer className="border-t border-brand-border bg-brand-darker/80 py-4 mt-auto text-center text-xs text-brand-muted">
