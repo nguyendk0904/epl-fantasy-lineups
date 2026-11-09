@@ -19,6 +19,7 @@ import { PlayerTable } from './components/player-list/PlayerTable';
 import type { OptimizerConfig, OptimizerResult } from './components/optimizer/OptimizerControl';
 import { LoadingSpinner } from './components/common/LoadingSpinner';
 import { ErrorBoundary } from './components/common/ErrorBoundary';
+import { OfflineBanner } from './components/common/OfflineBanner';
 import { useShareLineup } from './hooks/useShareLineup';
 import { PositionType, Player, LineupPlayer, FormationType } from './types';
 import { useLineupStore, TOTAL_BUDGET } from './stores/lineupStore';
@@ -447,6 +448,7 @@ export function App() {
   if (activeSharedCode) {
     return (
       <ErrorBoundary>
+        <OfflineBanner />
         <Suspense fallback={<LoadingSpinner fullScreen message="Đang tải đội hình chia sẻ..." />}>
           <SharedLineupPage
             code={activeSharedCode}
@@ -463,6 +465,9 @@ export function App() {
 
   return (
     <div className="min-h-screen bg-brand-dark text-brand-white flex flex-col font-sans selection:bg-brand-hotpink-dark selection:text-brand-white">
+      {/* Offline Connectivity Banner */}
+      <OfflineBanner />
+
       {/* Toast Notification */}
       {notification && (
         <div className="fixed top-20 right-6 z-50 bg-brand-skyblue text-brand-darker font-bold px-4 py-2.5 rounded-xl shadow-2xl border border-brand-skyblue-light flex items-center gap-2 animate-toast-in">

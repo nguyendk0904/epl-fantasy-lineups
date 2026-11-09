@@ -15,9 +15,9 @@
 | :--- | :---: | :---: | :---: |
 | **Phase 1: Local Full-Stack Product** | **17 / 17** | `100%` |  Hoàn thành |
 | **Phase 2: AWS Services Integration** | **13 / 13** | `100%` |  Hoàn thành |
-| **Phase 3: Production Deploy & E2E Test** | **5 / 14** | `36%` | 🟡 Đang thực hiện |
+| **Phase 3: Production Deploy & E2E Test** | **6 / 14** | `43%` | 🟡 Đang thực hiện |
 | **Phase 4: Live Gamification & League Operations** | **0 / 14** | `0%` | ⚪ Chờ Phase 3 |
-| **TỔNG CỘNG TOÀN DỰ ÁN** | **35 / 59** | `59%` | 🟡 Đang thực hiện |
+| **TỔNG CỘNG TOÀN DỰ ÁN** | **36 / 59** | `61%` | 🟡 Đang thực hiện |
 
 ---
 
@@ -352,7 +352,7 @@
 ## 🌐 PHASE 3: DEPLOY & TEST ĐẦU CUỐI (END-TO-END) (3/14)
 *Mục tiêu: Đưa toàn bộ sản phẩm lên Internet qua CloudFront HTTPS và AWS App Runner, xây dựng CI/CD tự động qua GitHub Actions, kiểm thử tải và chuẩn bị demo đồ án với chi phí $0.00.*
 
-### 🎨 Nguyên (Frontend & UI Lead) - [2/3]
+### 🎨 Nguyên (Frontend & UI Lead) - [3/3]
 
 - [x] **`P3-NG01`** *(Level 2)*: Tối ưu hiệu năng: Code splitting, Lazy loading, giảm bundle < 500KB
   - *Mô tả:* Áp dụng `React.lazy()` và `Suspense` cho các tab (Optimizer, Compare, Pitch); cấu hình `manualChunks` trong `vite.config.ts` chia nhỏ Recharts và Lucide Icons để bundle size < 500KB.
@@ -374,7 +374,7 @@
   - *Cách kiểm chứng (Verification):* Kiểm thử giao diện qua Chrome DevTools Mobile Emulation (iPhone 14, Pixel 7, iPad Mini).
   - *Ghi chú triển khai (09/11/2026):* Tạo `MobilePitchControls.tsx` (quick formation chips, stats, action pills) và `MobilePlayerDrawer.tsx` (bottom-sheet drawer chọn cầu thủ với search, target slot sync, club limits). Tối ưu kích thước thẻ cầu thủ responsive trên mobile (`w-[62px] min-[390px]:w-[70px] min-[440px]:w-20 sm:w-24`), chạm tap để chọn Captain/Vice-Captain. Tối ưu bố cục `LineupComparisonView` trên mobile. 69/69 tests pass 100%.
 
-- [ ] **`P3-NG03`** *(Level 1)*: Thực hiện User Acceptance Testing (UAT) & Hoàn thiện UI states
+- [x] **`P3-NG03`** *(Level 1)*: Thực hiện User Acceptance Testing (UAT) & Hoàn thiện UI states
   - *Mô tả:* Kiểm thử giao diện người dùng trên 3 trình duyệt (Chrome, Safari, Edge): Bổ sung skeleton loader khi fetch dữ liệu, thông báo Toast chuyên nghiệp, xử lý mất mạng offline và banner thông báo.
   - *Phụ thuộc:* `P3-NG01`, `P3-NG02`
   - *Thư mục:* `frontend/src/components/common/`
@@ -382,6 +382,7 @@
   - *Branch:* `feature/P3-NG03-uat-testing`
   - *Tiêu chí chấp nhận (Acceptance Criteria):* Đầy đủ trạng thái loading skeleton, không có lỗi console rác, hiển thị banner cảnh báo khi mất kết nối mạng.
   - *Cách kiểm chứng (Verification):* Test offline mode trên trình duyệt kiểm tra hiển thị `OfflineBanner`.
+  - *Ghi chú triển khai (09/11/2026):* Tạo `SkeletonLoader.tsx` (hỗ trợ các biến thể pitch-slot, player-row, card, stat-widget, text) và `OfflineBanner.tsx` (tự động phát hiện mạng online/offline qua window events, nút kiểm tra lại và thông báo khôi phục). Tích hợp vào `App.tsx`. 77/77 tests pass 100%.
 
 ---
 
