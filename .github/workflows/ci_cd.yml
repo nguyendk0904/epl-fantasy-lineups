@@ -1,0 +1,369 @@
+# =====================================================================
+# P3-Q03 - GitHub Actions CI/CD pipeline (CI -> AWS deploy, zero touch)
+# Project: Fantasy Football Lineup Builder & Optimizer
+# Owner  : Quang (DevOps & AWS Lead)  Branch: feature/P3-Q03-github-actions-cicd
+#
+# FLOW (push / PR-merge into `main`, or manual dispatch)
+#   1. backend-tests  -> reusable test_backend.yml (ruff + compileall + pytest)
+#   2. frontend-ci    -> npm ci -> tsc (advisory) -> vitest -> vite build
+#                        -> upload `frontend-dist` artifact
+#   3. deploy-frontend (main only) -> S3 sync (--sse AES256, cache-control)
+#                        -> CloudFront invalidation -> HTTPS smoke test
+#   4. deploy-backend  (main only) -> docker build -> ECR push (sha + latest)
+#                        -> SSM Run Command on EC2 (pull + restart container)
+#                        -> /health smoke test
+#   pull_request -> only steps 1-2 run: production is NEVER touched by a PR.
+#
+# WHY THE BACKEND IS DEPLOYED TO EC2 + ECR INSTEAD OF APP RUNNER
+#   `aws apprunner list-services` returns SubscriptionRequiredException on
+#   this account (App Runner is closed to new customers), so P3-Q02 shipped
+#   the backend as a Docker container on EC2 t3.micro `i-0f1e71fa1a78b0013`
+#   behind Caddy, image pulled from ECR repo `fpl-backend`. This workflow
+#   automates exactly the four manual steps of
+#   infra/aws/app_runner_setup.md §7.2 (build, tag, push, restart) so the
+#   acceptance criterion "no manual deploy" holds on the real infrastructure.
+#
+# SECURITY INVARIANTS (never relax)
+#   * No long-lived AWS keys: GitHub OIDC -> IAM role (`secrets.AWS_ROLE_ARN`).
+#   * No secret value appears in this file or in the logs.
+#   * Every upload uses `--sse AES256` (bucket policy DenyInsecureObjectUpload).
+#   * Deploy jobs are gated on `github.event_name != 'pull_request'`.
+#   * CloudFront/EC2/RDS are only allowed to be scaled by infra tasks, never
+#     here: this pipeline ships artifacts, it does not create infrastructure.
+#
+# REQUIRED REPOSITORY CONFIGURATION
+#   Settings -> Secrets and variables -> Actions
+#   secret AWS_ROLE_ARN                 arn:aws:iam::<acct>:role/<oidc-role>
+#   var    AWS_DEPLOY_ENABLED           'false' freezes all deploys (default on)
+#   var    AWS_REGION                   default ap-southeast-1
+#   var    S3_BUCKET_NAME               default fpl-lineup-frontend-prod
+#   var    CLOUDFRONT_DISTRIBUTION_ID   default E3N44ZRJO1UZ2C
+#   var    SITE_URL                     default https://d24f3bc3qfp5xf.cloudfront.net
+#   var    ECR_REPOSITORY               default fpl-backend
+#   var    EC2_INSTANCE_ID              default i-0f1e71fa1a78b0013
+#   var    API_HEALTH_URL               default https://54.255.194.74.sslip.io/health
+#   (every var is optional: the defaults match infra/aws/*.md as of 09/11/2026)
+# =====================================================================
+name: CI/CD Pipeline (AWS)
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  id-token: write # GitHub OIDC -> AWS STS (no static access keys)
+
+concurrency:
+  # One pipeline per ref. PR runs cancel each other (cheap, disposable);
+  # a `main` run is never cancelled mid-deploy.
+  group: ci-cd-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+env:
+  NODE_VERSION: '20'
+  AWS_REGION: ${{ vars.AWS_REGION || 'ap-southeast-1' }}
+  S3_BUCKET_NAME: ${{ vars.S3_BUCKET_NAME || 'fpl-lineup-frontend-prod' }}
+  CLOUDFRONT_DISTRIBUTION_ID: ${{ vars.CLOUDFRONT_DISTRIBUTION_ID || 'E3N44ZRJO1UZ2C' }}
+  SITE_URL: ${{ vars.SITE_URL || 'https://d24f3bc3qfp5xf.cloudfront.net' }}
+  ECR_REPOSITORY: ${{ vars.ECR_REPOSITORY || 'fpl-backend' }}
+  EC2_INSTANCE_ID: ${{ vars.EC2_INSTANCE_ID || 'i-0f1e71fa1a78b0013' }}
+  API_HEALTH_URL: ${{ vars.API_HEALTH_URL || 'https://54.255.194.74.sslip.io/health' }}
+
+jobs:
+  # -------------------------------------------------------------------
+  # 1. BACKEND GATE - ruff + compileall + pytest
+  #    Implementation lives in test_backend.yml (single source of truth).
+  #    Skipped on pull_request on purpose: test_backend.yml already runs
+  #    itself on `backend/**` PRs, so calling it here as well would execute
+  #    the exact same suite twice for one PR.
+  # -------------------------------------------------------------------
+  backend-tests:
+    name: Backend Lint & Test
+    if: github.event_name != 'pull_request'
+    uses: ./.github/workflows/test_backend.yml
+
+  # -------------------------------------------------------------------
+  # 2. FRONTEND GATE - lint (advisory tsc), vitest, production build
+  # -------------------------------------------------------------------
+  frontend-ci:
+    name: Frontend Lint, Test & Build
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: frontend
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js ${{ env.NODE_VERSION }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install dependencies (exact lockfile)
+        run: npm ci --no-audit --no-fund
+
+      - name: Lint - TypeScript type check (advisory)
+        # frontend/ has no committed tsconfig.json (P1-NG01 scope), so CI
+        # generates an ephemeral one mirroring the vite.config.ts aliases.
+        # NON-BLOCKING by decision: the current tree already carries type
+        # debt in components owned by the Frontend Lead (see handoff H-1).
+        # A blocking gate here would paint `main` red and freeze releases.
+        continue-on-error: true
+        run: |
+          set -euo pipefail
+          cat > tsconfig.ci.json <<'JSON'
+          {
+            "compilerOptions": {
+              "target": "ES2020",
+              "lib": ["ES2020", "DOM", "DOM.Iterable"],
+              "module": "ESNext",
+              "moduleResolution": "bundler",
+              "jsx": "react-jsx",
+              "strict": true,
+              "noEmit": true,
+              "skipLibCheck": true,
+              "esModuleInterop": true,
+              "allowSyntheticDefaultImports": true,
+              "resolveJsonModule": true,
+              "isolatedModules": true,
+              "baseUrl": ".",
+              "paths": { "@/*": ["./src/*"] }
+            },
+            "include": ["src"]
+          }
+          JSON
+          npx tsc -p tsconfig.ci.json
+
+      - name: Unit tests (vitest)
+        run: npm test
+
+      - name: Build production bundle (CloudFront root base)
+        # vite.config.ts forces base='/epl-fantasy-lineups/' when
+        # NODE_ENV=production (GitHub Pages legacy). CloudFront serves the
+        # bucket root, so the base MUST be overridden to '/', otherwise
+        # index.html asks for /epl-fantasy-lineups/assets/*.js -> blank page.
+        # `npm run build -- --base=/` => `vite build --base=/` (package.json).
+        run: npm run build -- --base=/
+
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-dist
+          path: frontend/dist
+          retention-days: 3
+          if-no-files-found: error
+
+  # -------------------------------------------------------------------
+  # 3. DEPLOY FRONTEND - S3 (private bucket + OAC) + CloudFront
+  #    Cache policy mirrors infra/aws/cloudfront_setup.md §6.3:
+  #      * hashed assets -> immutable, 1 year
+  #      * index.html    -> must-revalidate (SPA shell must never be stale)
+  # -------------------------------------------------------------------
+  deploy-frontend:
+    name: Deploy Frontend to S3 + CloudFront
+    needs:
+      - backend-tests
+      - frontend-ci
+    if: github.event_name != 'pull_request' && vars.AWS_DEPLOY_ENABLED != 'false'
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    environment:
+      name: production
+      url: ${{ vars.SITE_URL || 'https://d24f3bc3qfp5xf.cloudfront.net' }}
+
+    steps:
+      - name: Download build artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: frontend-dist
+          path: frontend/dist
+
+      - name: Configure AWS credentials (OIDC)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          role-session-name: gha-frontend-${{ github.run_id }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Verify AWS identity
+        run: aws sts get-caller-identity --query '[Account, Arn]' --output text
+
+      - name: Sync hashed assets to S3 (immutable, long cache)
+        run: |
+          set -euo pipefail
+          # --sse AES256 is mandatory: bucket policy carries
+          # DenyInsecureObjectUpload, an unencrypted PUT is AccessDenied.
+          aws s3 sync frontend/dist/assets "s3://${S3_BUCKET_NAME}/assets/" \
+            --delete \
+            --sse AES256 \
+            --cache-control 'public, max-age=31536000, immutable'
+
+      - name: Sync remaining static files (revalidate every load)
+        run: |
+          set -euo pipefail
+          aws s3 sync frontend/dist "s3://${S3_BUCKET_NAME}" \
+            --delete \
+            --sse AES256 \
+            --exclude 'assets/*' \
+            --exclude 'index.html' \
+            --cache-control 'public, max-age=0, must-revalidate'
+
+      - name: Upload SPA shell (index.html)
+        run: |
+          set -euo pipefail
+          aws s3 cp frontend/dist/index.html "s3://${S3_BUCKET_NAME}/index.html" \
+            --sse AES256 \
+            --content-type 'text/html; charset=utf-8' \
+            --cache-control 'public, max-age=0, must-revalidate'
+
+      - name: Invalidate CloudFront cache
+        run: |
+          set -euo pipefail
+          INVALIDATION_ID=$(aws cloudfront create-invalidation \
+            --distribution-id "${CLOUDFRONT_DISTRIBUTION_ID}" \
+            --paths '/' '/index.html' \
+            --query 'Invalidation.Id' --output text)
+          echo "CloudFront invalidation: ${INVALIDATION_ID}"
+          aws cloudfront wait invalidation-completed \
+            --distribution-id "${CLOUDFRONT_DISTRIBUTION_ID}" \
+            --id "${INVALIDATION_ID}"
+
+      - name: Smoke test (HTTPS 200 + SPA shell + hashed asset)
+        run: |
+          set -euo pipefail
+          CODE=$(curl -sS -m 20 -o /tmp/index.html -w '%{http_code}' "${SITE_URL}/")
+          echo "GET ${SITE_URL}/ -> HTTP ${CODE}"
+          test "${CODE}" = "200"
+          grep -q '<div id="root"' /tmp/index.html
+
+          ASSET=$(grep -oE '/assets/[A-Za-z0-9._-]+\.js' /tmp/index.html | head -n 1)
+          test -n "${ASSET}"
+          ASSET_CODE=$(curl -sS -m 20 -o /dev/null -w '%{http_code}' "${SITE_URL}${ASSET}")
+          echo "GET ${SITE_URL}${ASSET} -> HTTP ${ASSET_CODE}"
+          test "${ASSET_CODE}" = "200"
+
+  # -------------------------------------------------------------------
+  # 4. DEPLOY BACKEND - docker image -> ECR -> EC2 container (SSM)
+  #    Automation of the 4 manual steps in app_runner_setup.md §7.2.
+  #    The EC2 instance has no SSH: the rollout is a signed SSM Run
+  #    Command, and the container reads /opt/fpl/backend.env (written at
+  #    boot from Secrets Manager) so no credential travels through CI.
+  # -------------------------------------------------------------------
+  deploy-backend:
+    name: Deploy Backend to ECR + EC2
+    needs:
+      - backend-tests
+      - frontend-ci
+    if: github.event_name != 'pull_request' && vars.AWS_DEPLOY_ENABLED != 'false'
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    environment:
+      name: production
+      url: ${{ vars.API_HEALTH_URL || 'https://54.255.194.74.sslip.io/health' }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials (OIDC)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          role-session-name: gha-backend-${{ github.run_id }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Verify AWS identity
+        run: aws sts get-caller-identity --query '[Account, Arn]' --output text
+
+      - name: Build and push image to ECR (SHA + latest)
+        run: |
+          set -euo pipefail
+          ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
+          REGISTRY="${ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com"
+          REPO="${REGISTRY}/${ECR_REPOSITORY}"
+
+          if ! aws ecr describe-repositories --repository-names "${ECR_REPOSITORY}" >/dev/null 2>&1; then
+            aws ecr create-repository --repository-name "${ECR_REPOSITORY}" \
+              --image-scanning-configuration scanOnPush=true >/dev/null
+          fi
+
+          aws ecr get-login-password --region "${AWS_REGION}" \
+            | docker login --username AWS --password-stdin "${REGISTRY}"
+
+          docker build --pull -t "${REPO}:${GITHUB_SHA}" -t "${REPO}:latest" backend/
+          docker push "${REPO}:${GITHUB_SHA}"
+          docker push "${REPO}:latest"
+          echo "Pushed ${REPO}:${GITHUB_SHA}"
+
+      - name: Roll out new container on EC2 via SSM Run Command
+        run: |
+          set -euo pipefail
+          ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
+          REGISTRY="${ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com"
+          IMAGE="${REGISTRY}/${ECR_REPOSITORY}:${GITHUB_SHA}"
+
+          # jq builds the parameter JSON: no hand-escaped quoting, so an
+          # unexpected character can never corrupt the remote script.
+          jq -n --arg region "${AWS_REGION}" --arg registry "${REGISTRY}" --arg image "${IMAGE}" '{
+            commands: [
+              "set -eu",
+              "echo Deploying \($image)",
+              "aws ecr get-login-password --region \($region) | docker login --username AWS --password-stdin \($registry)",
+              "docker pull \($image)",
+              "docker rm -f fpl-backend 2>/dev/null || true",
+              "docker run -d --name fpl-backend --restart unless-stopped --env-file /opt/fpl/backend.env -p 127.0.0.1:8000:8000 \($image)",
+              "docker image prune -f >/dev/null 2>&1 || true",
+              "docker ps --filter name=fpl-backend --format \"{{.Names}} | {{.Status}}\""
+            ]
+          }' > /tmp/ssm-params.json
+
+          COMMAND_ID=$(aws ssm send-command \
+            --instance-ids "${EC2_INSTANCE_ID}" \
+            --document-name "AWS-RunShellScript" \
+            --comment "P3-Q03 deploy ${GITHUB_SHA}" \
+            --timeout-seconds 900 \
+            --parameters file:///tmp/ssm-params.json \
+            --query 'Command.CommandId' --output text)
+          echo "SSM command id: ${COMMAND_ID}"
+
+          aws ssm wait command-executed \
+            --command-id "${COMMAND_ID}" --instance-id "${EC2_INSTANCE_ID}" || true
+
+          STATUS=$(aws ssm get-command-invocation --command-id "${COMMAND_ID}" \
+            --instance-id "${EC2_INSTANCE_ID}" --query 'Status' --output text)
+          aws ssm get-command-invocation --command-id "${COMMAND_ID}" \
+            --instance-id "${EC2_INSTANCE_ID}" --query 'StandardOutputContent' --output text
+          aws ssm get-command-invocation --command-id "${COMMAND_ID}" \
+            --instance-id "${EC2_INSTANCE_ID}" --query 'StandardErrorContent' --output text
+
+          if [ "${STATUS}" != "Success" ]; then
+            echo "::error::SSM rollout failed with status ${STATUS}"
+            exit 1
+          fi
+
+      - name: Smoke test backend /health
+        run: |
+          set -euo pipefail
+          for attempt in $(seq 1 15); do
+            CODE=$(curl -s -m 10 -o /tmp/health.json -w '%{http_code}' "${API_HEALTH_URL}" || true)
+            if [ "${CODE}" = "200" ] && grep -q 'healthy' /tmp/health.json; then
+              echo "Backend healthy after ${attempt} attempt(s):"
+              cat /tmp/health.json
+              exit 0
+            fi
+            echo "attempt ${attempt}: HTTP ${CODE}"
+            sleep 10
+          done
+          echo "::error::Backend did not become healthy at ${API_HEALTH_URL}"
+          exit 1
