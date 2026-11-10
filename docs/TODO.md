@@ -15,9 +15,9 @@
 | :--- | :---: | :---: | :---: |
 | **Phase 1: Local Full-Stack Product** | **17 / 17** | `100%` |  Hoàn thành |
 | **Phase 2: AWS Services Integration** | **13 / 13** | `100%` |  Hoàn thành |
-| **Phase 3: Production Deploy & E2E Test** | **6 / 14** | `43%` | 🟡 Đang thực hiện |
+| **Phase 3: Production Deploy & E2E Test** | **7 / 14** | `50%` | 🟡 Đang thực hiện |
 | **Phase 4: Live Gamification & League Operations** | **0 / 14** | `0%` | ⚪ Chờ Phase 3 |
-| **TỔNG CỘNG TOÀN DỰ ÁN** | **36 / 59** | `61%` | 🟡 Đang thực hiện |
+| **TỔNG CỘNG TOÀN DỰ ÁN** | **37 / 59** | `62%` | 🟡 Đang thực hiện |
 
 ---
 
@@ -457,7 +457,7 @@
 
 ---
 
-### 🐳 Quang (DevOps & AWS Lead) - [3/4]
+### 🐳 Quang (DevOps & AWS Lead) - [4/4]
 
 - [x] **`P3-Q01`** *(Level 4)*: Triển khai Frontend lên AWS S3 + AWS CloudFront (SSL HTTPS, CDN)
   - *Mô tả:* Cấu hình phân phối CDN qua AWS CloudFront trỏ về origin S3 static website; cấu hình SSL/TLS miễn phí qua AWS Certificate Manager (ACM), custom error response 404 $\rightarrow$ /index.html cho SPA routing.
@@ -486,7 +486,7 @@
   - *Tiêu chí chấp nhận (Acceptance Criteria):* Khi merge PR vào `main`, pipeline GitHub Actions tự động kích hoạt, chạy test và deploy thành công lên AWS mà không cần thao tác tay.
   - *Cách kiểm chứng (Verification):* Kiểm tra tab Actions trên GitHub báo cáo trạng thái xanh (Success).
 
-- [ ] **`P3-Q04`** *(Level 1)*: Kiểm tra hóa đơn AWS Billing, đối soát $0.00 và viết báo cáo Cloud
+- [x] **`P3-Q04`** *(Level 1)*: Kiểm tra hóa đơn AWS Billing, đối soát $0.00 và viết báo cáo Cloud
   - *Mô tả:* Đối soát toàn bộ tài nguyên trên AWS Management Console đảm bảo chi phí chính xác $0.00 (nằm trong Free Tier); viết tài liệu `CLOUD_ARCHITECTURE.md` tổng hợp sơ đồ kiến trúc đám mây nộp đồ án.
   - *Phụ thuộc:* `P3-Q01`, `P3-Q02`, `P3-Q03`
   - *Thư mục:* `docs/`
