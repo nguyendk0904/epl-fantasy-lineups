@@ -42,6 +42,7 @@
 #   var    ECR_REPOSITORY               default fpl-backend
 #   var    EC2_INSTANCE_ID              default i-0f1e71fa1a78b0013
 #   var    API_HEALTH_URL               default https://54.255.194.74.sslip.io/health
+#   var    API_BASE_URL                 default https://54.255.194.74.sslip.io/api/v1
 #   (every var is optional: the defaults match infra/aws/*.md as of 09/11/2026)
 # =====================================================================
 name: CI/CD Pipeline (AWS)
@@ -154,6 +155,14 @@ jobs:
         # bucket root, so the base MUST be overridden to '/', otherwise
         # index.html asks for /epl-fantasy-lineups/assets/*.js -> blank page.
         # `npm run build -- --base=/` => `vite build --base=/` (package.json).
+        # P3-Q05 (gap I-1): frontend/.env.production ships the RELATIVE
+        # '/api/v1', so the CDN-served SPA called CloudFront itself; CloudFront
+        # has no /api/* origin (S3 only) and its SPA fallback answered with
+        # index.html (200 text/html) instead of JSON. A real process env var
+        # overrides .env files in Vite, so the absolute backend URL is baked in
+        # here and can be changed without touching frontend/ (Nguyen's scope).
+        env:
+          VITE_API_BASE_URL: ${{ vars.API_BASE_URL || 'https://54.255.194.74.sslip.io/api/v1' }}
         run: npm run build -- --base=/
 
       - name: Upload build artifact
