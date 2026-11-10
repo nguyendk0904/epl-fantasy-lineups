@@ -11,6 +11,7 @@ from app.api.v1.endpoints.lineups import router as lineups_router
 from app.api.v1.endpoints.lineup_share import router as lineup_share_router
 from app.services.cron_scheduler import FPLSyncScheduler
 from app.core.logging_config import configure_logging, RequestLoggingMiddleware
+from app.core.rate_limiter import APIRateLimiter, RateLimitMiddleware
 
 
 @asynccontextmanager
@@ -41,6 +42,8 @@ app = FastAPI(
 )
 
 # CORS Middleware configuration
+app.state.rate_limiter = APIRateLimiter(settings)
+app.add_middleware(RateLimitMiddleware, limiter=app.state.rate_limiter, routes=app.router.routes)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.CORS_ORIGINS,

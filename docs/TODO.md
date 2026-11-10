@@ -386,7 +386,7 @@
 
 ---
 
-### ⚙️ Nhất (Backend Core & FPL Sync Lead) - [1/3] (NH01 xong code/test local, chờ nghiệm thu CloudWatch)
+### ⚙️ Nhất (Backend Core & FPL Sync Lead) - [2/3] (NH01/NH02 xong code/test local, chờ nghiệm thu production)
 
 - [x] **`P3-NH01`** *(Level 2)*: Cấu hình Structured Logging và tích hợp đẩy log lên AWS CloudWatch
   - *Trạng thái theo xác nhận của NH:* Xong code/test local; **CHỜ NGHIỆM THU CloudWatch thật**, chưa xác nhận log đã gửi thành công lên AWS.
@@ -400,7 +400,10 @@
   - *Tiêu chí chấp nhận (Acceptance Criteria):* Mỗi request ghi nhận JSON log có timestamp, HTTP method, path, response status và latency; log lỗi tự động đẩy lên CloudWatch.
   - *Cách kiểm chứng (Verification):* Gửi request lỗi và kiểm tra log xuất hiện trên AWS CloudWatch Console.
 
-- [ ] **`P3-NH02`** *(Level 2)*: Tích hợp Rate Limiting (FastAPI-Limiter) ngăn chặn spam request
+- [x] **`P3-NH02`** *(Level 2)*: Tích hợp Rate Limiting (FastAPI-Limiter) ngăn chặn spam request
+  - *Trạng thái theo xác nhận của NH:* Xong code/test local; **CHỜ NGHIỆM THU rate limiting qua proxy/domain production và Redis thật nếu dùng nhiều worker**.
+  - *Bằng chứng:* NH02: 21/21 pass; bộ hồi quy đã chạy trong `.venv`: 199 passed, 4 skipped. Bộ đếm dùng chung kiểm tra bằng backend giả lập, chưa nghiệm thu Redis thật.
+  - *Bàn giao Quang:* Deploy dependencies SlowAPI/limits/Redis client, cấu hình trusted proxy ở Uvicorn. Mặc định rate limit bật và storage `memory://` chỉ phù hợp một process; nhiều worker/replica phải dùng chung `RATE_LIMIT_STORAGE_URI`. Không cần mở RDS public.
   - *Mô tả:* Tích hợp middleware giới hạn tần suất gọi API (tối đa 60 requests/phút cho `/players`, 10 requests/phút cho `/optimizer/solve`) bằng SlowAPI / FastAPI-Limiter bảo vệ backend không bị quá tải.
   - *Phụ thuộc:* `P1-NH03`, `P1-V03`
   - *Thư mục:* `backend/app/core/`, `backend/tests/`
