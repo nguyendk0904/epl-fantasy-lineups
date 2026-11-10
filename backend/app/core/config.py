@@ -1,4 +1,4 @@
-from typing import List, Union
+from typing import List, Literal, Union
 import json
 from pydantic import Field, SecretStr, field_validator, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -34,6 +34,10 @@ class Settings(BaseSettings):
     AWS_REGION: str = "ap-southeast-1"
     S3_BUCKET_NAME: str = "fpl-lineup-frontend-prod"
     CLOUDFRONT_DISTRIBUTION_ID: str = ""
+    LOG_LEVEL: Literal["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"] = "INFO"
+    CLOUDWATCH_LOGGING_ENABLED: bool = False
+    CLOUDWATCH_LOG_GROUP: str = Field(default="/fpl/backend", min_length=1, max_length=512, pattern=r"^[A-Za-z0-9_./#-]+$")
+    CLOUDWATCH_SEND_INTERVAL_SECONDS: int = Field(default=5, ge=1, le=60)
 
     @field_validator("CORS_ORIGINS", mode="before")
     @classmethod
