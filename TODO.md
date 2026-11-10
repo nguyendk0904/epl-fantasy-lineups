@@ -212,12 +212,15 @@
 - [ ] **`P3-NG02`** *(Level 2)*: Hoàn thiện trải nghiệm responsive trên Mobile & Tablet: Co giãn sân bóng, drawer danh sách. *(Branch: `feature/P3-NG02-mobile-responsive`)*
 - [ ] **`P3-NG03`** *(Level 1)*: Thực hiện User Acceptance Testing (UAT): Rà soát UI states (Loading skeleton, Error boundary). *(Branch: `feature/P3-NG03-uat-testing`)*
 
-### ⚙️ Nhất (Backend) - [1/3] (NH01 xong code/test local, chờ nghiệm thu CloudWatch)
+### ⚙️ Nhất (Backend) - [2/3] (NH01/NH02 xong code/test local, chờ nghiệm thu production)
 - [x] **`P3-NH01`** *(Level 2)*: Cấu hình Structured Logging và tích hợp đẩy log lên AWS CloudWatch theo dõi lỗi production. *(Branch: `feature/P3-NH01-cloudwatch-logging`)*
   - *Trạng thái theo xác nhận của NH:* Xong code/test local; **CHỜ NGHIỆM THU CloudWatch thật**, chưa xác nhận log đã gửi thành công lên AWS.
   - *Bằng chứng:* 23/23 test logging pass trong `.venv`, có Watchtower với AWS client stub; bộ hồi quy đã chạy: 178 passed, 4 skipped. `pip check` không có xung đột dependencies.
   - *Bàn giao Quang:* Deploy image mới có Watchtower/boto3, tạo Log Group/retention và cấp quyền ghi cho instance role; bật `CLOUDWATCH_LOGGING_ENABLED=true`, cấu hình `CLOUDWATCH_LOG_GROUP` và `AWS_REGION`. CloudWatch mặc định tắt; không mở RDS public cho bước này.
-- [ ] **`P3-NH02`** *(Level 2)*: Tích hợp Rate Limiting (FastAPI-Limiter) ngăn chặn spam request vào backend. *(Branch: `feature/P3-NH02-api-rate-limit`)*
+- [x] **`P3-NH02`** *(Level 2)*: Tích hợp Rate Limiting (FastAPI-Limiter) ngăn chặn spam request vào backend. *(Branch: `feature/P3-NH02-api-rate-limit`)*
+  - *Trạng thái theo xác nhận của NH:* Xong code/test local; **CHỜ NGHIỆM THU rate limiting qua proxy/domain production và Redis thật nếu dùng nhiều worker**.
+  - *Bằng chứng:* NH02: 21/21 pass; bộ hồi quy đã chạy trong `.venv`: 199 passed, 4 skipped. Bộ đếm dùng chung kiểm tra bằng backend giả lập, chưa nghiệm thu Redis thật.
+  - *Bàn giao Quang:* Deploy dependencies SlowAPI/limits/Redis client, cấu hình trusted proxy ở Uvicorn. Mặc định rate limit bật và storage `memory://` chỉ phù hợp một process; nhiều worker/replica phải dùng chung `RATE_LIMIT_STORAGE_URI`. Không cần mở RDS public.
 - [ ] **`P3-NH03`** *(Level 2)*: Viết bộ kịch bản kiểm thử API đầu cuối (End-to-End API Test Suite) tự động bằng Pytest. *(Branch: `feature/P3-NH03-e2e-api-tests`)*
 
 ### 🧠 Vũ (Data & Algorithm) - [0/3]

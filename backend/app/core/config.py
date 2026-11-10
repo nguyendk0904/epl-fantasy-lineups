@@ -1,5 +1,6 @@
 from typing import List, Literal, Union
 import json
+from urllib.parse import urlsplit
 from pydantic import Field, SecretStr, field_validator, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 from app.core.rds_config import resolve_database_url
@@ -38,6 +39,22 @@ class Settings(BaseSettings):
     CLOUDWATCH_LOGGING_ENABLED: bool = False
     CLOUDWATCH_LOG_GROUP: str = Field(default="/fpl/backend", min_length=1, max_length=512, pattern=r"^[A-Za-z0-9_./#-]+$")
     CLOUDWATCH_SEND_INTERVAL_SECONDS: int = Field(default=5, ge=1, le=60)
+    RATE_LIMIT_ENABLED: bool = True
+    RATE_LIMIT_STORAGE_URI: SecretStr = Field(default=SecretStr("memory://"), repr=False, exclude=True)
+
+    @field_validator("RATE_LIMIT_STORAGE_URI")
+    @classmethod
+    def validate_rate_limit_storage(cls, value: SecretStr) -> SecretStr:
+        uri = value.get_secret_value()
+        if uri == "memory://":
+            return value
+        try:
+            parsed = urlsplit(uri)
+            if parsed.scheme in {"redis", "rediss"} and parsed.hostname and (parsed.port is None or 1 <= parsed.port <= 65535):
+                return value
+        except ValueError:
+            pass
+        raise ValueError("Rate-limit storage must be memory:// or a valid redis:// or rediss:// URL")
 
     @field_validator("CORS_ORIGINS", mode="before")
     @classmethod
