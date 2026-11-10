@@ -1,4 +1,5 @@
 from contextlib import asynccontextmanager
+import asyncio
 
 from fastapi import FastAPI, APIRouter
 from fastapi.middleware.cors import CORSMiddleware
@@ -9,20 +10,25 @@ from app.api.v1.endpoints.optimizer import router as optimizer_router
 from app.api.v1.endpoints.lineups import router as lineups_router
 from app.api.v1.endpoints.lineup_share import router as lineup_share_router
 from app.services.cron_scheduler import FPLSyncScheduler
+from app.core.logging_config import configure_logging, RequestLoggingMiddleware
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    log_runtime = await asyncio.to_thread(configure_logging, settings)
     worker = None
-    if settings.FPL_SYNC_ENABLED:
-        worker = FPLSyncScheduler(interval_seconds=settings.FPL_SYNC_INTERVAL_SECONDS)
-        worker.start()
-    app.state.fpl_sync_scheduler = worker
     try:
+        if settings.FPL_SYNC_ENABLED:
+            worker = FPLSyncScheduler(interval_seconds=settings.FPL_SYNC_INTERVAL_SECONDS)
+            worker.start()
+        app.state.fpl_sync_scheduler = worker
         yield
     finally:
-        if worker is not None:
-            await worker.stop()
+        try:
+            if worker is not None:
+                await worker.stop()
+        finally:
+            await asyncio.to_thread(log_runtime.close)
 
 app = FastAPI(
     lifespan=lifespan,
@@ -42,6 +48,7 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+app.add_middleware(RequestLoggingMiddleware)
 
 # API v1 Router
 api_v1_router = APIRouter(prefix=settings.API_V1_STR)

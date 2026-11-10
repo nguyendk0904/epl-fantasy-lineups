@@ -386,9 +386,12 @@
 
 ---
 
-### ⚙️ Nhất (Backend Core & FPL Sync Lead) - [0/3]
+### ⚙️ Nhất (Backend Core & FPL Sync Lead) - [1/3] (NH01 xong code/test local, chờ nghiệm thu CloudWatch)
 
-- [ ] **`P3-NH01`** *(Level 2)*: Cấu hình Structured Logging và tích hợp đẩy log lên AWS CloudWatch
+- [x] **`P3-NH01`** *(Level 2)*: Cấu hình Structured Logging và tích hợp đẩy log lên AWS CloudWatch
+  - *Trạng thái theo xác nhận của NH:* Xong code/test local; **CHỜ NGHIỆM THU CloudWatch thật**, chưa xác nhận log đã gửi thành công lên AWS.
+  - *Bằng chứng:* 23/23 test logging pass trong `.venv`, có Watchtower với AWS client stub; bộ hồi quy đã chạy: 178 passed, 4 skipped. `pip check` không có xung đột dependencies.
+  - *Bàn giao Quang:* Deploy image mới có Watchtower/boto3, tạo Log Group/retention và cấp quyền ghi cho instance role; bật `CLOUDWATCH_LOGGING_ENABLED=true`, cấu hình `CLOUDWATCH_LOG_GROUP` và `AWS_REGION`. CloudWatch mặc định tắt; không mở RDS public cho bước này.
   - *Mô tả:* Cấu hình `logging` xuất log định dạng JSON chuẩn; tích hợp `watchtower` gửi log lỗi hệ thống và API latency lên AWS CloudWatch Log Groups để giám sát production.
   - *Phụ thuộc:* `P2-NH01`
   - *Thư mục:* `backend/app/core/`, `backend/tests/`
