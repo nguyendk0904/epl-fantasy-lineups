@@ -212,7 +212,7 @@
 - [ ] **`P3-NG02`** *(Level 2)*: Hoàn thiện trải nghiệm responsive trên Mobile & Tablet: Co giãn sân bóng, drawer danh sách. *(Branch: `feature/P3-NG02-mobile-responsive`)*
 - [ ] **`P3-NG03`** *(Level 1)*: Thực hiện User Acceptance Testing (UAT): Rà soát UI states (Loading skeleton, Error boundary). *(Branch: `feature/P3-NG03-uat-testing`)*
 
-### ⚙️ Nhất (Backend) - [2/3] (NH01/NH02 xong code/test local, chờ nghiệm thu production)
+### ⚙️ Nhất (Backend) - [3/3] (xong code/test local, chờ nghiệm thu production)
 - [x] **`P3-NH01`** *(Level 2)*: Cấu hình Structured Logging và tích hợp đẩy log lên AWS CloudWatch theo dõi lỗi production. *(Branch: `feature/P3-NH01-cloudwatch-logging`)*
   - *Trạng thái theo xác nhận của NH:* Xong code/test local; **CHỜ NGHIỆM THU CloudWatch thật**, chưa xác nhận log đã gửi thành công lên AWS.
   - *Bằng chứng:* 23/23 test logging pass trong `.venv`, có Watchtower với AWS client stub; bộ hồi quy đã chạy: 178 passed, 4 skipped. `pip check` không có xung đột dependencies.
@@ -221,7 +221,10 @@
   - *Trạng thái theo xác nhận của NH:* Xong code/test local; **CHỜ NGHIỆM THU rate limiting qua proxy/domain production và Redis thật nếu dùng nhiều worker**.
   - *Bằng chứng:* NH02: 21/21 pass; bộ hồi quy đã chạy trong `.venv`: 199 passed, 4 skipped. Bộ đếm dùng chung kiểm tra bằng backend giả lập, chưa nghiệm thu Redis thật.
   - *Bàn giao Quang:* Deploy dependencies SlowAPI/limits/Redis client, cấu hình trusted proxy ở Uvicorn. Mặc định rate limit bật và storage `memory://` chỉ phù hợp một process; nhiều worker/replica phải dùng chung `RATE_LIMIT_STORAGE_URI`. Không cần mở RDS public.
-- [ ] **`P3-NH03`** *(Level 2)*: Viết bộ kịch bản kiểm thử API đầu cuối (End-to-End API Test Suite) tự động bằng Pytest. *(Branch: `feature/P3-NH03-e2e-api-tests`)*
+- [x] **`P3-NH03`** *(Level 2)*: Viết bộ kịch bản kiểm thử API đầu cuối (End-to-End API Test Suite) tự động bằng Pytest. *(Branch: `feature/P3-NH03-e2e-api-tests`)*
+  - *Trạng thái theo xác nhận của NH:* Xong code/test local; **CHỜ NGHIỆM THU PostgreSQL/RDS và backend đã deploy**, chưa xác nhận E2E cloud.
+  - *Bằng chứng:* E2E: 19 passed, 1 skipped; toàn backend: 257 passed, 5 skipped trong `.venv` với CBC thật và Alembic. Test cloud mặc định skip; nguồn FPL ngoài được mock cho suite local.
+  - *Bàn giao Quang:* `E2E_TEST_DATABASE_URL` phải trỏ database PostgreSQL riêng có tên kết thúc `_test` (suite tạo/dọn schema riêng). Remote: `E2E_REMOTE_BASE_URL` + `E2E_ALLOW_REMOTE_WRITES=1`, chạy `pytest tests/test_e2e_api_suite.py -k deployed -q` trên deployment test cô lập đã có dữ liệu. Remote để lại snapshot nghiệm thu vì API không có DELETE.
 
 ### 🧠 Vũ (Data & Algorithm) - [0/3]
 - [ ] **`P3-V01`** *(Level 3)*: Stress test thuật toán Optimizer: Đo đạc thời gian giải khi có 20-50 request đồng thời. *(Branch: `feature/P3-V01-optimizer-stress-test`)*

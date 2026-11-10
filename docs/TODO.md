@@ -386,7 +386,7 @@
 
 ---
 
-### ⚙️ Nhất (Backend Core & FPL Sync Lead) - [2/3] (NH01/NH02 xong code/test local, chờ nghiệm thu production)
+### ⚙️ Nhất (Backend Core & FPL Sync Lead) - [3/3] (xong code/test local, chờ nghiệm thu production)
 
 - [x] **`P3-NH01`** *(Level 2)*: Cấu hình Structured Logging và tích hợp đẩy log lên AWS CloudWatch
   - *Trạng thái theo xác nhận của NH:* Xong code/test local; **CHỜ NGHIỆM THU CloudWatch thật**, chưa xác nhận log đã gửi thành công lên AWS.
@@ -412,7 +412,10 @@
   - *Tiêu chí chấp nhận (Acceptance Criteria):* Trả về HTTP status 429 Too Many Requests khi gọi quá hạn mức cho phép; reset hạn mức sau 60 giây.
   - *Cách kiểm chứng (Verification):* `pytest backend/tests/test_rate_limiter.py` pass 100%.
 
-- [ ] **`P3-NH03`** *(Level 2)*: Viết bộ kịch bản kiểm thử API đầu cuối (End-to-End API Test Suite)
+- [x] **`P3-NH03`** *(Level 2)*: Viết bộ kịch bản kiểm thử API đầu cuối (End-to-End API Test Suite)
+  - *Trạng thái theo xác nhận của NH:* Xong code/test local; **CHỜ NGHIỆM THU PostgreSQL/RDS và backend đã deploy**, chưa xác nhận E2E cloud.
+  - *Bằng chứng:* E2E: 19 passed, 1 skipped; toàn backend: 257 passed, 5 skipped trong `.venv` với CBC thật và Alembic. Test cloud mặc định skip; nguồn FPL ngoài được mock cho suite local.
+  - *Bàn giao Quang:* `E2E_TEST_DATABASE_URL` phải trỏ database PostgreSQL riêng có tên kết thúc `_test` (suite tạo/dọn schema riêng). Remote: `E2E_REMOTE_BASE_URL` + `E2E_ALLOW_REMOTE_WRITES=1`, chạy `pytest tests/test_e2e_api_suite.py -k deployed -q` trên deployment test cô lập đã có dữ liệu. Remote để lại snapshot nghiệm thu vì API không có DELETE.
   - *Mô tả:* Bộ kiểm thử tích hợp tự động bằng Pytest bao quát toàn bộ REST APIs (`/players`, `/teams`, `/optimizer/solve`, `/lineups/compare`, `/lineups/share`), kiểm tra mã HTTP 200, 400, 404, 422 và tính nhất quán dữ liệu.
   - *Phụ thuộc:* `P1-NH03`, `P1-NH04`, `P1-V03`, `P1-V04`, `P2-NH02`
   - *Thư mục:* `backend/tests/`
