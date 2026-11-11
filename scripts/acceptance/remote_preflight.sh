@@ -77,6 +77,10 @@ PY
 
 echo
 echo "== platform"
+echo "image     = $(docker inspect "$C" --format '{{.Config.Image}}')"
 echo "environment = $(docker exec "$C" printenv ENVIRONMENT)"
-echo "uvicorn processes = $(docker top "$C" -eo args 2>/dev/null | grep -c '[u]vicorn')"
+# uvicorn's console script runs as /opt/venv/bin/python; with --workers=1 there
+# is exactly one process (no child solver/worker process).
+echo "server processes (1 = single process) = $(docker top "$C" 2>/dev/null | awk 'NR>1 && /python/ {n++} END {print n+0}')"
 echo "fpl-worker count = $(docker ps -a --format '{{.Names}}' | grep -c '^fpl-worker$')"
+echo "API command       = $(docker inspect "$C" --format '{{json .Config.Cmd}}')"

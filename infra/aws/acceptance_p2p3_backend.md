@@ -53,6 +53,11 @@ git status                         -> working tree clean
 HEAD == origin/main == a20716d     "Merge pull request #47 from …/feature/P3-Q05-frontend-api-base-url"
 ```
 
+> **Cập nhật 22:29 UTC+7:** commit công cụ nghiệm thu `1ace8af` (chỉ `scripts/`, `infra/aws/`, `.github/`, `.env.example`,
+> `.gitattributes` — **không đổi một dòng nào trong `backend/`**) đã được CI/CD tự build → push ECR → SSM rollout.
+> Image đang chạy chuyển sang tag `1ace8af…`, `fpl-backend` healthy, `fpl-worker` chạy lại (1 container),
+> 2 flag proxy và toàn bộ env `CLOUDWATCH_*`/`RATE_LIMIT_*` được giữ nguyên ⇒ bảng sha256 của code app bên dưới vẫn đúng.
+
 ### 3.2. Image đang chạy **chính là** bản build của `a20716d`
 
 Không cần build lại: tag image bằng đúng SHA của `main`, và nội dung file trong container được đối chiếu bằng sha256 với source (chuẩn hoá LF vì Windows checkout CRLF):
