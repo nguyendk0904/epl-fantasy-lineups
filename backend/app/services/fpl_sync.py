@@ -42,6 +42,12 @@ class _TeamData(BaseModel):
     strength_defence_home: int | None = None
     strength_defence_away: int | None = None
 
+    @field_validator("strength", mode="before")
+    @classmethod
+    def default_null_strength(cls, value):
+        """Use the existing default when FPL explicitly returns null."""
+        return 3 if value is None else value
+
 
 class _PlayerData(BaseModel):
     model_config = ConfigDict(extra="ignore")
