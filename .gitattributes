@@ -1,0 +1,8 @@
+# Shell scripts and Dockerfile must keep LF endings even on a Windows clone:
+# CRLF breaks shebangs in SSM Run Command (`/usr/bin/env: bash\r`) and inside
+# `docker build` contexts.
+*.sh        text eol=lf
+scripts/**  text eol=lf
+Dockerfile  text eol=lf
+*.yml       text eol=lf
+*.yaml      text eol=lf

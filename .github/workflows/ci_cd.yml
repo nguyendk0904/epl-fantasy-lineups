@@ -322,6 +322,19 @@ jobs:
           REGISTRY="${ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com"
           IMAGE="${REGISTRY}/${ECR_REPOSITORY}:${GITHUB_SHA}"
 
+          # Trusted proxy (P3-NH02): Caddy listens on the host and forwards to
+          # 127.0.0.1:8000, which docker NATs onto the default bridge, so the
+          # app sees the bridge gateway 172.17.0.1 as the peer. uvicorn trusts
+          # X-Forwarded-For ONLY from that address, which is what makes the rate
+          # limiter key on the real client IP. Do not remove these two flags:
+          # without them every visitor shares one bucket.
+          #
+          # Single sync worker (P2-NH03): fpl-worker runs the dedicated
+          # scheduler; the API container keeps FPL_SYNC_ENABLED=false so there
+          # is never a second scheduler. --no-healthcheck is required because
+          # the image healthcheck probes HTTP :8000, which the scheduler does
+          # not serve (otherwise the worker is permanently "unhealthy").
+          #
           # jq builds the parameter JSON: no hand-escaped quoting, so an
           # unexpected character can never corrupt the remote script.
           jq -n --arg region "${AWS_REGION}" --arg registry "${REGISTRY}" --arg image "${IMAGE}" '{
@@ -331,9 +344,11 @@ jobs:
               "aws ecr get-login-password --region \($region) | docker login --username AWS --password-stdin \($registry)",
               "docker pull \($image)",
               "docker rm -f fpl-backend 2>/dev/null || true",
-              "docker run -d --name fpl-backend --restart unless-stopped --env-file /opt/fpl/backend.env -p 127.0.0.1:8000:8000 \($image)",
+              "docker run -d --name fpl-backend --restart unless-stopped --env-file /opt/fpl/backend.env -p 127.0.0.1:8000:8000 --log-opt max-size=10m --log-opt max-file=3 \($image) uvicorn app.main:app --host 0.0.0.0 --port 8000 --proxy-headers --forwarded-allow-ips=172.17.0.1",
+              "docker rm -f fpl-worker 2>/dev/null || true",
+              "docker run -d --name fpl-worker --restart unless-stopped --no-healthcheck --env-file /opt/fpl/backend.env --log-opt max-size=10m --log-opt max-file=3 \($image) python -m app.services.cron_scheduler",
               "docker image prune -f >/dev/null 2>&1 || true",
-              "docker ps --filter name=fpl-backend --format \"{{.Names}} | {{.Status}}\""
+              "docker ps --filter name=fpl- --format \"{{.Names}} | {{.Status}}\""
             ]
           }' > /tmp/ssm-params.json
 
