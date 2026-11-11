@@ -33,6 +33,25 @@ def payload():
     }
 
 
+@pytest.mark.parametrize("strength", [None, 4])
+def test_team_strength_defaults_only_for_null(payload, strength):
+    payload["teams"][0]["strength"] = strength
+    teams, _ = fpl_sync._parse_payload(payload)
+    assert teams[0]["strength"] == (3 if strength is None else strength)
+
+
+def test_missing_team_strength_keeps_default(payload):
+    del payload["teams"][0]["strength"]
+    teams, _ = fpl_sync._parse_payload(payload)
+    assert teams[0]["strength"] == 3
+
+
+def test_invalid_team_strength_is_rejected(payload):
+    payload["teams"][0]["strength"] = "invalid"
+    with pytest.raises(ValueError):
+        fpl_sync._parse_payload(payload)
+
+
 def client_for(payload=None, *, status=200, content=None, exception=None):
     def respond(request):
         if exception is not None:
