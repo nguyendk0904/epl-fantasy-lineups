@@ -15,6 +15,10 @@
 # printed to stdout/stderr and the script exits with the SSM status.
 # =====================================================================
 set -euo pipefail
+# Git Bash on Windows rewrites "/abs/path" arguments (including the right-hand
+# side of VAR=/abs/path) into C:/Program Files/Git/abs/path before the AWS CLI
+# sees them, which silently corrupts remote commands. Must be off.
+export MSYS_NO_PATHCONV=1
 
 INSTANCE_ID="${FPL_INSTANCE_ID:-i-0f1e71fa1a78b0013}"
 REGION="${FPL_AWS_REGION:-ap-southeast-1}"
