@@ -179,15 +179,18 @@
 - [ ] **`P2-NG02`** *(Level 2)*: Màn hình xem đội hình qua link chia sẻ (`/share/:code`) ở chế độ Read-only. *(Branch: `feature/P2-NG02-view-shared-lineup`, Thư mục: `frontend/src/pages/`, Files: `SharedLineupPage.tsx`)*
 - [x] **`P2-NG03`** *(Level 1)*: Cấu hình file môi trường `.env.production` trỏ API về domain Cloud. *(Branch: `feature/P2-NG03-frontend-env-prod`, Thư mục: `frontend/`, Files: `.env.production`)*
 
-### ⚙️ Nhất (Backend) - [3/3] (NH02/NH03 xong triển khai, chờ nghiệm thu RDS/cloud)
+### ⚙️ Nhất (Backend) - [3/3] (NH02 đã nghiệm thu; NH03 đạt sync, còn bằng chứng lịch 6 giờ)
 - [x] **`P2-NH01`** *(Level 3)*: Chuyển chuỗi kết nối Database sang Amazon RDS PostgreSQL qua biến môi trường. *(Branch: `feature/P2-NH01-rds-connection`, Thư mục: `backend/app/core/`, Files: `config.py`, `database.py`, `rds_config.py`, `backend/tests/test_rds_connection.py`)*
   - *Bằng chứng NH cung cấp ngày 2026-11-04:* `29 passed, 19 warnings in 2.47s`, gồm test `SELECT 1` trên RDS thật, không skip. Hồi quy do AI chạy trước đó: 90 passed, 3 skipped (live RDS chưa bật và hai test PostgreSQL của FPL sync).
   - *Fallback:* Dev không cấu hình RDS dùng `DATABASE_URL` local; cấu hình RDS thiếu một phần hoặc kết nối lỗi được báo lỗi, không tự chuyển database. Production yêu cầu database remote có TLS.
 - [x] **`P2-NH02`** *(Level 2)*: REST API `POST /api/v1/lineups/share` và `GET /share/:code` đọc/ghi snapshot RDS. *(Branch: `feature/P2-NH02-shared-lineups-api`, Thư mục: `backend/app/api/v1/endpoints/`, Files: `lineup_share.py`)*
-  - *Trạng thái theo xác nhận của NH:* Hoàn thành phần code và test local; **CHỜ NGHIỆM THU lưu/đọc trên PostgreSQL/RDS thật**, chưa xác nhận hoàn thành nghiệm thu cloud.
+  - *Nghiệm thu cập nhật 12/11/2026:* **ĐẠT PostgreSQL/RDS và luồng share trên deployment**, theo bằng chứng Quang bàn giao qua NH; AI không trực tiếp chạy lại AWS.
+  - *Bằng chứng cloud:* `test_postgres_snapshot_roundtrip_and_collision` PASSED trên `fantasy_fpl_test`; E2E deployment sau bản sửa `0ded78e` pass, exit code 0. Tham chiếu [bàn giao Quang, §4.3](infra/aws/acceptance_p2p3_backend.md); đường dẫn tính từ repository root.
   - *Bằng chứng:* NH02: 26 passed, 1 skipped; bộ hồi quy đã chạy: 125 passed, 4 skipped. Test PostgreSQL riêng của NH02 skip do chưa cấu hình `SHARE_TEST_DATABASE_URL`.
 - [x] **`P2-NH03`** *(Level 3)*: Cron job / Background worker định kỳ chạy FPL sync trên Cloud khi có Gameweek mới. *(Branch: `feature/P2-NH03-cloud-sync-cron`, Thư mục: `backend/app/services/`, Files: `cron_scheduler.py`)*
-  - *Trạng thái theo xác nhận của NH:* Xong code/test local; **CHỜ NGHIỆM THU sync trên RDS thật và vận hành worker trên cloud**.
+  - *Nghiệm thu cập nhật 12/11/2026:* **ĐẠT sync RDS và vận hành ban đầu; CHỜ bằng chứng scheduler tự kiểm tra sau đủ 6 giờ**. Giữ `[x]` cho phần triển khai theo xác nhận NH, chưa coi lịch chạy cloud đã nghiệm thu đầy đủ.
+  - *Bằng chứng Quang gửi qua NH:* Backend/worker chạy image `0ded78e7113a7b71d8de1b5a414a29dda9d25e0b`, đúng một worker. Collector lúc `2026-11-11T21:04:56+00:00`: worker running, restarts=0, API=200, teams=20, players=672, shared_lineups=1, migration `002_add_shared_lineups`, TLS=true. Worker bắt đầu `15:57:24Z`, sync thành công `15:57:26Z`; collector sau khoảng 5 giờ 7 phút, chưa chứng minh lần kiểm tra 6 giờ. Cần log scheduler từ khoảng `2026-11-11T21:57:24Z` trở đi; Gameweek chưa đổi thì skip sync là hợp lệ.
+  - *Bản sửa nghiệm thu:* Map `strength=null` thành mặc định 3, giữ nguyên số hợp lệ và từ chối giá trị không hợp lệ. Test tái hiện fail trước sửa; FPL Sync + scheduler sau sửa: **54 passed, 2 skipped** (hai test PostgreSQL chưa cấu hình trong terminal AI).
   - *Bằng chứng:* NH03: 30/30 pass; bộ hồi quy đã chạy: 155 passed, 4 skipped (các test PostgreSQL/RDS chưa cấu hình).
   - *Vận hành:* API mặc định `FPL_SYNC_ENABLED=false`; chỉ bật một worker duy nhất (chạy riêng hoặc nhúng API). Kiểm tra ngay khi chạy rồi mỗi 21600 giây; trạng thái Gameweek trong bộ nhớ, khởi động lại sẽ sync một lần.
 
@@ -212,17 +215,20 @@
 - [ ] **`P3-NG02`** *(Level 2)*: Hoàn thiện trải nghiệm responsive trên Mobile & Tablet: Co giãn sân bóng, drawer danh sách. *(Branch: `feature/P3-NG02-mobile-responsive`)*
 - [ ] **`P3-NG03`** *(Level 1)*: Thực hiện User Acceptance Testing (UAT): Rà soát UI states (Loading skeleton, Error boundary). *(Branch: `feature/P3-NG03-uat-testing`)*
 
-### ⚙️ Nhất (Backend) - [3/3] (xong code/test local, chờ nghiệm thu production)
+### ⚙️ Nhất (Backend) - [3/3] (đã nghiệm thu cloud theo bằng chứng Quang bàn giao)
 - [x] **`P3-NH01`** *(Level 2)*: Cấu hình Structured Logging và tích hợp đẩy log lên AWS CloudWatch theo dõi lỗi production. *(Branch: `feature/P3-NH01-cloudwatch-logging`)*
-  - *Trạng thái theo xác nhận của NH:* Xong code/test local; **CHỜ NGHIỆM THU CloudWatch thật**, chưa xác nhận log đã gửi thành công lên AWS.
+  - *Nghiệm thu cập nhật 12/11/2026:* **ĐẠT CloudWatch thật**, theo tài liệu Quang bàn giao, không phải AI trực tiếp chạy lại AWS.
+  - *Bằng chứng cloud:* `infra/aws/acceptance_p2p3_backend.md` §4.1: `/fpl/backend` và `/fpl/worker` retention 30 ngày; instance role có quyền ghi; log ERROR JSON thật có timestamp, method, path, status_code và latency_ms.
   - *Bằng chứng:* 23/23 test logging pass trong `.venv`, có Watchtower với AWS client stub; bộ hồi quy đã chạy: 178 passed, 4 skipped. `pip check` không có xung đột dependencies.
   - *Bàn giao Quang:* Deploy image mới có Watchtower/boto3, tạo Log Group/retention và cấp quyền ghi cho instance role; bật `CLOUDWATCH_LOGGING_ENABLED=true`, cấu hình `CLOUDWATCH_LOG_GROUP` và `AWS_REGION`. CloudWatch mặc định tắt; không mở RDS public cho bước này.
 - [x] **`P3-NH02`** *(Level 2)*: Tích hợp Rate Limiting (FastAPI-Limiter) ngăn chặn spam request vào backend. *(Branch: `feature/P3-NH02-api-rate-limit`)*
-  - *Trạng thái theo xác nhận của NH:* Xong code/test local; **CHỜ NGHIỆM THU rate limiting qua proxy/domain production và Redis thật nếu dùng nhiều worker**.
+  - *Nghiệm thu cập nhật 12/11/2026:* **ĐẠT qua proxy/domain deployment với một process**, theo bằng chứng Quang bàn giao.
+  - *Bằng chứng cloud:* `infra/aws/acceptance_p2p3_backend.md` §4.2: players 60 request được phép rồi 429 có `Retry-After`, IP khác vẫn 200; solve chặn sau 10 request; ghi nhận reset sau 60 giây. Storage `memory://` chỉ được nghiệm thu cho một process. Redis thật chưa kiểm chứng, chỉ bắt buộc trước khi tăng worker/replica.
   - *Bằng chứng:* NH02: 21/21 pass; bộ hồi quy đã chạy trong `.venv`: 199 passed, 4 skipped. Bộ đếm dùng chung kiểm tra bằng backend giả lập, chưa nghiệm thu Redis thật.
   - *Bàn giao Quang:* Deploy dependencies SlowAPI/limits/Redis client, cấu hình trusted proxy ở Uvicorn. Mặc định rate limit bật và storage `memory://` chỉ phù hợp một process; nhiều worker/replica phải dùng chung `RATE_LIMIT_STORAGE_URI`. Không cần mở RDS public.
 - [x] **`P3-NH03`** *(Level 2)*: Viết bộ kịch bản kiểm thử API đầu cuối (End-to-End API Test Suite) tự động bằng Pytest. *(Branch: `feature/P3-NH03-e2e-api-tests`)*
-  - *Trạng thái theo xác nhận của NH:* Xong code/test local; **CHỜ NGHIỆM THU PostgreSQL/RDS và backend đã deploy**, chưa xác nhận E2E cloud.
+  - *Nghiệm thu cập nhật 12/11/2026:* **ĐẠT PostgreSQL/RDS và E2E deployment**, theo báo cáo Quang được NH cung cấp; AI không trực tiếp đọc log trên EC2.
+  - *Bằng chứng cloud:* Bộ PostgreSQL theo `infra/aws/acceptance_p2p3_backend.md` §4.3: **261 passed, 1 skipped** (remote E2E lúc đó chưa chạy). Sau deploy image `0ded78e`, Quang báo `test_deployed_api_journey_opt_in` PASSED, exit code 0, target `https://54.255.194.74.sslip.io`; log `/opt/fpl/evidence/20261111T160606Z-pytest-deployed.log`. Remote E2E tạo một snapshot nghiệm thu.
   - *Bằng chứng:* E2E: 19 passed, 1 skipped; toàn backend: 257 passed, 5 skipped trong `.venv` với CBC thật và Alembic. Test cloud mặc định skip; nguồn FPL ngoài được mock cho suite local.
   - *Bàn giao Quang:* `E2E_TEST_DATABASE_URL` phải trỏ database PostgreSQL riêng có tên kết thúc `_test` (suite tạo/dọn schema riêng). Remote: `E2E_REMOTE_BASE_URL` + `E2E_ALLOW_REMOTE_WRITES=1`, chạy `pytest tests/test_e2e_api_suite.py -k deployed -q` trên deployment test cô lập đã có dữ liệu. Remote để lại snapshot nghiệm thu vì API không có DELETE.
 

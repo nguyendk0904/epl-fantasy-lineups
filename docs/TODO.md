@@ -15,9 +15,9 @@
 | :--- | :---: | :---: | :---: |
 | **Phase 1: Local Full-Stack Product** | **17 / 17** | `100%` |  Hoàn thành |
 | **Phase 2: AWS Services Integration** | **13 / 13** | `100%` |  Hoàn thành |
-| **Phase 3: Production Deploy & E2E Test** | **7 / 14** | `50%` | 🟡 Đang thực hiện |
+| **Phase 3: Production Deploy & E2E Test** | **10 / 13** | `77%` | 🟡 Theo checklist: NG 3/3, NH 3/3, V 0/3, Q 4/4 |
 | **Phase 4: Live Gamification & League Operations** | **0 / 14** | `0%` | ⚪ Chờ Phase 3 |
-| **TỔNG CỘNG TOÀN DỰ ÁN** | **37 / 59** | `62%` | 🟡 Đang thực hiện |
+| **TỔNG CỘNG TOÀN DỰ ÁN** | **40 / 57** | `70%` | 🟡 Theo checklist; xem ghi chú nghiệm thu từng task |
 
 ---
 
@@ -205,7 +205,7 @@
 
 ---
 
-## ☁️ PHASE 2: TÍCH HỢP SỬ DỤNG CÁC DỊCH VỤ CỦA AWS (9/14)
+## ☁️ PHASE 2: TÍCH HỢP SỬ DỤNG CÁC DỊCH VỤ CỦA AWS (13/13)
 *Mục tiêu: Đưa CSDL lên Amazon RDS, lưu trữ static web trên S3, tối ưu Connection Pool cho db.t4g.micro, bổ sung độ khó trận đấu FDR và kích hoạt AWS Budgets Alert ($1.00) bảo vệ tài khoản của Quang.*
 
 ### 🎨 Nguyên (Frontend & UI Lead) - [3/3]
@@ -239,7 +239,7 @@
 
 ---
 
-### ⚙️ Nhất (Backend Core & FPL Sync Lead) - [3/3] (NH02/NH03 xong triển khai, chờ nghiệm thu RDS/cloud)
+### ⚙️ Nhất (Backend Core & FPL Sync Lead) - [3/3] (NH02 đã nghiệm thu; NH03 đạt sync, còn bằng chứng lịch 6 giờ)
 
 - [x] **`P2-NH01`** *(Level 3)*: Chuyển chuỗi kết nối Database sang Amazon RDS PostgreSQL
   - *Mô tả:* Cập nhật cấu hình kết nối DB hỗ trợ kết nối an toàn tới AWS RDS qua biến môi trường (`RDS_HOSTNAME`, `RDS_DB_NAME`, `RDS_USERNAME`, `RDS_PASSWORD`); cơ chế fallback tự động về Postgres local khi dev offline.
@@ -253,7 +253,8 @@
   - *Cách kiểm chứng (Verification):* `pytest backend/tests/test_rds_connection.py` pass 100%.
 
 - [x] **`P2-NH02`** *(Level 2)*: REST API `POST /api/v1/lineups/share` & `GET /api/v1/lineups/share/:code`
-  - *Trạng thái theo xác nhận của NH:* Hoàn thành phần code và test local; **CHỜ NGHIỆM THU lưu/đọc trên PostgreSQL/RDS thật**, chưa xác nhận hoàn thành nghiệm thu cloud.
+  - *Nghiệm thu cập nhật 12/11/2026:* **ĐẠT PostgreSQL/RDS và luồng share trên deployment**, theo bằng chứng Quang bàn giao qua NH; AI không trực tiếp chạy lại AWS.
+  - *Bằng chứng cloud:* `test_postgres_snapshot_roundtrip_and_collision` PASSED trên `fantasy_fpl_test`; E2E deployment sau bản sửa `0ded78e` pass, exit code 0. Tham chiếu [bàn giao Quang, §4.3](../infra/aws/acceptance_p2p3_backend.md).
   - *Bằng chứng:* NH02: 26 passed, 1 skipped; bộ hồi quy đã chạy: 125 passed, 4 skipped. Test PostgreSQL riêng của NH02 skip do chưa cấu hình `SHARE_TEST_DATABASE_URL`.
   - *Mô tả:* Endpoint lưu snapshot đội hình (15 cầu thủ, formation, captain) sinh mã short-code ngẫu nhiên (6 ký tự base62) lưu vào bảng `shared_lineups` trên RDS, và endpoint truy vấn snapshot theo mã code.
   - *Phụ thuộc:* `P2-NH01`, `P2-V01`
@@ -264,7 +265,9 @@
   - *Cách kiểm chứng (Verification):* `pytest backend/tests/test_share_api.py` pass 100%.
 
 - [x] **`P2-NH03`** *(Level 3)*: Cron job / Background worker định kỳ chạy FPL sync trên Cloud
-  - *Trạng thái theo xác nhận của NH:* Xong code/test local; **CHỜ NGHIỆM THU sync trên RDS thật và vận hành worker trên cloud**.
+  - *Nghiệm thu cập nhật 12/11/2026:* **ĐẠT sync RDS và vận hành ban đầu; CHỜ bằng chứng scheduler tự kiểm tra sau đủ 6 giờ**. Giữ `[x]` cho phần triển khai theo xác nhận NH, chưa coi lịch chạy cloud đã nghiệm thu đầy đủ.
+  - *Bằng chứng Quang gửi qua NH:* Backend/worker chạy image `0ded78e7113a7b71d8de1b5a414a29dda9d25e0b`, đúng một worker. Collector lúc `2026-11-11T21:04:56+00:00`: worker running, restarts=0, API=200, teams=20, players=672, shared_lineups=1, migration `002_add_shared_lineups`, TLS=true. Worker bắt đầu `15:57:24Z`, sync thành công `15:57:26Z`; collector sau khoảng 5 giờ 7 phút, chưa chứng minh lần kiểm tra 6 giờ. Cần log scheduler từ khoảng `2026-11-11T21:57:24Z` trở đi; Gameweek chưa đổi thì skip sync là hợp lệ.
+  - *Bản sửa nghiệm thu:* Map `strength=null` thành mặc định 3, giữ nguyên số hợp lệ và từ chối giá trị không hợp lệ. Test tái hiện fail trước sửa; FPL Sync + scheduler sau sửa: **54 passed, 2 skipped** (hai test PostgreSQL chưa cấu hình trong terminal AI).
   - *Bằng chứng:* NH03: 30/30 pass; bộ hồi quy đã chạy: 155 passed, 4 skipped (các test PostgreSQL/RDS chưa cấu hình).
   - *Vận hành:* API mặc định `FPL_SYNC_ENABLED=false`; chỉ bật một worker duy nhất (chạy riêng hoặc nhúng API). Kiểm tra ngay khi chạy rồi mỗi 21600 giây; trạng thái Gameweek trong bộ nhớ, khởi động lại sẽ sync một lần.
   - *Mô tả:* Service scheduler (APScheduler / asyncio task) định kỳ kích hoạt `fpl_sync.py` kiểm tra và kéo dữ liệu mới từ FPL API mỗi khi có Gameweek mới mà không cần trigger thủ công.
@@ -349,7 +352,7 @@
 
 ---
 
-## 🌐 PHASE 3: DEPLOY & TEST ĐẦU CUỐI (END-TO-END) (3/14)
+## 🌐 PHASE 3: DEPLOY & TEST ĐẦU CUỐI (END-TO-END) (10/13)
 *Mục tiêu: Đưa toàn bộ sản phẩm lên Internet qua CloudFront HTTPS và AWS App Runner, xây dựng CI/CD tự động qua GitHub Actions, kiểm thử tải và chuẩn bị demo đồ án với chi phí $0.00.*
 
 ### 🎨 Nguyên (Frontend & UI Lead) - [3/3]
@@ -386,10 +389,11 @@
 
 ---
 
-### ⚙️ Nhất (Backend Core & FPL Sync Lead) - [3/3] (xong code/test local, chờ nghiệm thu production)
+### ⚙️ Nhất (Backend Core & FPL Sync Lead) - [3/3] (đã nghiệm thu cloud theo bằng chứng Quang bàn giao)
 
 - [x] **`P3-NH01`** *(Level 2)*: Cấu hình Structured Logging và tích hợp đẩy log lên AWS CloudWatch
-  - *Trạng thái theo xác nhận của NH:* Xong code/test local; **CHỜ NGHIỆM THU CloudWatch thật**, chưa xác nhận log đã gửi thành công lên AWS.
+  - *Nghiệm thu cập nhật 12/11/2026:* **ĐẠT CloudWatch thật**, theo tài liệu Quang bàn giao, không phải AI trực tiếp chạy lại AWS.
+  - *Bằng chứng cloud:* `infra/aws/acceptance_p2p3_backend.md` §4.1: `/fpl/backend` và `/fpl/worker` retention 30 ngày; instance role có quyền ghi; log ERROR JSON thật có timestamp, method, path, status_code và latency_ms.
   - *Bằng chứng:* 23/23 test logging pass trong `.venv`, có Watchtower với AWS client stub; bộ hồi quy đã chạy: 178 passed, 4 skipped. `pip check` không có xung đột dependencies.
   - *Bàn giao Quang:* Deploy image mới có Watchtower/boto3, tạo Log Group/retention và cấp quyền ghi cho instance role; bật `CLOUDWATCH_LOGGING_ENABLED=true`, cấu hình `CLOUDWATCH_LOG_GROUP` và `AWS_REGION`. CloudWatch mặc định tắt; không mở RDS public cho bước này.
   - *Mô tả:* Cấu hình `logging` xuất log định dạng JSON chuẩn; tích hợp `watchtower` gửi log lỗi hệ thống và API latency lên AWS CloudWatch Log Groups để giám sát production.
@@ -401,7 +405,8 @@
   - *Cách kiểm chứng (Verification):* Gửi request lỗi và kiểm tra log xuất hiện trên AWS CloudWatch Console.
 
 - [x] **`P3-NH02`** *(Level 2)*: Tích hợp Rate Limiting (FastAPI-Limiter) ngăn chặn spam request
-  - *Trạng thái theo xác nhận của NH:* Xong code/test local; **CHỜ NGHIỆM THU rate limiting qua proxy/domain production và Redis thật nếu dùng nhiều worker**.
+  - *Nghiệm thu cập nhật 12/11/2026:* **ĐẠT qua proxy/domain deployment với một process**, theo bằng chứng Quang bàn giao.
+  - *Bằng chứng cloud:* `infra/aws/acceptance_p2p3_backend.md` §4.2: players 60 request được phép rồi 429 có `Retry-After`, IP khác vẫn 200; solve chặn sau 10 request; ghi nhận reset sau 60 giây. Storage `memory://` chỉ được nghiệm thu cho một process. Redis thật chưa kiểm chứng, chỉ bắt buộc trước khi tăng worker/replica.
   - *Bằng chứng:* NH02: 21/21 pass; bộ hồi quy đã chạy trong `.venv`: 199 passed, 4 skipped. Bộ đếm dùng chung kiểm tra bằng backend giả lập, chưa nghiệm thu Redis thật.
   - *Bàn giao Quang:* Deploy dependencies SlowAPI/limits/Redis client, cấu hình trusted proxy ở Uvicorn. Mặc định rate limit bật và storage `memory://` chỉ phù hợp một process; nhiều worker/replica phải dùng chung `RATE_LIMIT_STORAGE_URI`. Không cần mở RDS public.
   - *Mô tả:* Tích hợp middleware giới hạn tần suất gọi API (tối đa 60 requests/phút cho `/players`, 10 requests/phút cho `/optimizer/solve`) bằng SlowAPI / FastAPI-Limiter bảo vệ backend không bị quá tải.
@@ -413,7 +418,8 @@
   - *Cách kiểm chứng (Verification):* `pytest backend/tests/test_rate_limiter.py` pass 100%.
 
 - [x] **`P3-NH03`** *(Level 2)*: Viết bộ kịch bản kiểm thử API đầu cuối (End-to-End API Test Suite)
-  - *Trạng thái theo xác nhận của NH:* Xong code/test local; **CHỜ NGHIỆM THU PostgreSQL/RDS và backend đã deploy**, chưa xác nhận E2E cloud.
+  - *Nghiệm thu cập nhật 12/11/2026:* **ĐẠT PostgreSQL/RDS và E2E deployment**, theo báo cáo Quang được NH cung cấp; AI không trực tiếp đọc log trên EC2.
+  - *Bằng chứng cloud:* Bộ PostgreSQL theo `infra/aws/acceptance_p2p3_backend.md` §4.3: **261 passed, 1 skipped** (remote E2E lúc đó chưa chạy). Sau deploy image `0ded78e`, Quang báo `test_deployed_api_journey_opt_in` PASSED, exit code 0, target `https://54.255.194.74.sslip.io`; log `/opt/fpl/evidence/20261111T160606Z-pytest-deployed.log`. Remote E2E tạo một snapshot nghiệm thu.
   - *Bằng chứng:* E2E: 19 passed, 1 skipped; toàn backend: 257 passed, 5 skipped trong `.venv` với CBC thật và Alembic. Test cloud mặc định skip; nguồn FPL ngoài được mock cho suite local.
   - *Bàn giao Quang:* `E2E_TEST_DATABASE_URL` phải trỏ database PostgreSQL riêng có tên kết thúc `_test` (suite tạo/dọn schema riêng). Remote: `E2E_REMOTE_BASE_URL` + `E2E_ALLOW_REMOTE_WRITES=1`, chạy `pytest tests/test_e2e_api_suite.py -k deployed -q` trên deployment test cô lập đã có dữ liệu. Remote để lại snapshot nghiệm thu vì API không có DELETE.
   - *Mô tả:* Bộ kiểm thử tích hợp tự động bằng Pytest bao quát toàn bộ REST APIs (`/players`, `/teams`, `/optimizer/solve`, `/lineups/compare`, `/lineups/share`), kiểm tra mã HTTP 200, 400, 404, 422 và tính nhất quán dữ liệu.
