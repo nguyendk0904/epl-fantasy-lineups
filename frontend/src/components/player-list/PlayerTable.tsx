@@ -23,6 +23,7 @@ import {
 } from 'lucide-react';
 import { Player, PositionType } from '../../types';
 import { PlayerFilters, FilterState } from './PlayerFilters';
+import { getPlayerKitUrl } from '../pitch/PlayerPitchSlot';
 
 export interface PlayerTableProps {
   players: Player[];
@@ -36,6 +37,8 @@ export interface PlayerTableProps {
   onCancelTargetSlot?: () => void;
   className?: string;
   variant?: 'default' | 'compact';
+  teams?: { id: number; short_name: string; name: string }[];
+  isLoading?: boolean;
 }
 
 const POSITION_BADGE_COLORS: Record<PositionType, string> = {
@@ -53,6 +56,8 @@ export const PlayerTable: React.FC<PlayerTableProps> = ({
   onCancelTargetSlot,
   className = '',
   variant = 'default',
+  teams,
+  isLoading = false,
 }) => {
   const isCompact = variant === 'compact';
 
@@ -118,24 +123,38 @@ export const PlayerTable: React.FC<PlayerTableProps> = ({
           const isSuspended = player.status === 's';
 
           return (
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2.5">
+              <img
+                src={getPlayerKitUrl(
+                  player.team_id,
+                  player.element_type,
+                  player.team_code,
+                  player.team_short_name
+                )}
+                alt={player.team_short_name || player.web_name}
+                className="w-7 h-7 sm:w-8 sm:h-8 object-contain drop-shadow shrink-0"
+                loading="lazy"
+                onError={(e) => {
+                  (e.target as HTMLElement).style.display = 'none';
+                }}
+              />
               <div className="flex flex-col min-w-0">
                 <div className="flex items-center gap-1.5 flex-wrap">
                   <span className="font-semibold text-brand-white text-xs sm:text-sm hover:text-brand-skyblue-light transition-colors truncate">
                     {player.web_name}
                   </span>
                   {isInjured && (
-                    <span className="px-1 py-0.2 bg-brand-hotpink/20 text-brand-hotpink-light border border-brand-hotpink/40 text-[10px] rounded font-bold" title="Chấn thương">
+                    <span className="px-1.5 py-0.5 bg-brand-hotpink/20 text-brand-hotpink-light border border-brand-hotpink/40 text-[10px] rounded font-bold" title="Chấn thương">
                       Injured
                     </span>
                   )}
                   {isDoubtful && (
-                    <span className="px-1 py-0.2 bg-white/10 text-brand-white border border-white/20 text-[10px] rounded font-bold" title="Khả năng ra sân 75%">
+                    <span className="px-1.5 py-0.5 bg-white/10 text-brand-white border border-white/20 text-[10px] rounded font-bold" title="Khả năng ra sân 75%">
                       Doubt
                     </span>
                   )}
                   {isSuspended && (
-                    <span className="px-1 py-0.2 bg-brand-hotpink-dark text-brand-white border border-brand-hotpink text-[10px] rounded font-bold" title="Treo giò">
+                    <span className="px-1.5 py-0.5 bg-brand-hotpink-dark text-brand-white border border-brand-hotpink text-[10px] rounded font-bold" title="Treo giò">
                       Susp
                     </span>
                   )}
@@ -230,11 +249,16 @@ export const PlayerTable: React.FC<PlayerTableProps> = ({
             )}
           </button>
         ),
-        cell: ({ row }) => (
-          <span className="text-brand-white text-xs sm:text-sm">
-            {row.original.form !== undefined ? row.original.form.toFixed(1) : '-'}
-          </span>
-        ),
+        cell: ({ row }) => {
+          const form = row.original.form;
+          return (
+            <span className="text-brand-white text-xs sm:text-sm">
+              {form !== undefined && form !== null && !isNaN(Number(form))
+                ? Number(form).toFixed(1)
+                : '-'}
+            </span>
+          );
+        },
       },
       {
         accessorKey: 'expected_points_next',
@@ -253,13 +277,16 @@ export const PlayerTable: React.FC<PlayerTableProps> = ({
             )}
           </button>
         ),
-        cell: ({ row }) => (
-          <span className="text-brand-white font-semibold text-xs sm:text-sm">
-            {row.original.expected_points_next !== undefined
-              ? row.original.expected_points_next.toFixed(1)
-              : '-'}
-          </span>
-        ),
+        cell: ({ row }) => {
+          const xp = row.original.expected_points_next;
+          return (
+            <span className="text-brand-white font-semibold text-xs sm:text-sm">
+              {xp !== undefined && xp !== null && !isNaN(Number(xp))
+                ? Number(xp).toFixed(1)
+                : '-'}
+            </span>
+          );
+        },
       },
       {
         id: 'action',
@@ -328,6 +355,11 @@ export const PlayerTable: React.FC<PlayerTableProps> = ({
     },
   });
 
+  // Tự động nhảy về trang 1 khi filters thay đổi để tránh trường hợp trang hiện tại vượt quá tổng số trang mới
+  useEffect(() => {
+    table.setPageIndex(0);
+  }, [filters]);
+
   return (
     <div className={`space-y-3 ${className}`}>
       {/* Target Slot Banner */}
@@ -340,7 +372,7 @@ export const PlayerTable: React.FC<PlayerTableProps> = ({
             <div>
               <p className="text-xs sm:text-sm font-bold text-brand-skyblue-light flex items-center gap-1.5 flex-wrap">
                 <span>Vị trí nhắm:</span>
-                <span className="px-1.5 py-0.2 rounded bg-brand-skyblue text-brand-darker font-black text-xs uppercase">
+                <span className="px-1.5 py-0.5 rounded bg-brand-skyblue text-brand-darker font-black text-xs uppercase">
                   {targetSlot.position}
                 </span>
                 <span className="text-brand-muted text-xs font-normal">
@@ -367,7 +399,7 @@ export const PlayerTable: React.FC<PlayerTableProps> = ({
       )}
 
       {/* Filters */}
-      <PlayerFilters filters={filters} onFilterChange={setFilters} compact={isCompact} />
+      <PlayerFilters filters={filters} onFilterChange={setFilters} teams={teams} compact={isCompact} />
 
       {/* Table Container */}
       <div className="bg-brand-card/90 border border-brand-border rounded-xl overflow-hidden shadow-xl backdrop-blur-md">
@@ -390,7 +422,16 @@ export const PlayerTable: React.FC<PlayerTableProps> = ({
               ))}
             </thead>
             <tbody className="divide-y divide-brand-border/60">
-              {table.getRowModel().rows.length > 0 ? (
+              {isLoading ? (
+                <tr>
+                  <td colSpan={columns.length} className="px-4 py-10 text-center text-brand-muted">
+                    <div className="flex flex-col items-center justify-center gap-2.5">
+                      <div className="w-6 h-6 border-2 border-brand-skyblue border-t-transparent rounded-full animate-spin" />
+                      <p className="text-xs font-semibold text-brand-skyblue-light">Đang tải dữ liệu cầu thủ từ Premier League...</p>
+                    </div>
+                  </td>
+                </tr>
+              ) : table.getRowModel().rows.length > 0 ? (
                 table.getRowModel().rows.map((row) => (
                   <tr
                     key={row.id}

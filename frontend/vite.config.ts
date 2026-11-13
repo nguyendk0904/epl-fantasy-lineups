@@ -54,5 +54,12 @@ export default defineConfig({
   server: {
     port: 5173,
     host: true,
+    proxy: {
+      '/api': {
+        target: 'https://54.255.194.74.sslip.io',
+        changeOrigin: true,
+        secure: false,
+      },
+    },
   },
 });

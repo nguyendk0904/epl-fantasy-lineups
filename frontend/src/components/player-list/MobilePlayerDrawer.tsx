@@ -17,6 +17,7 @@ export interface MobilePlayerDrawerProps {
   onSelectPlayer: (player: Player) => void;
   remainingBudget?: number;
   clubCounts?: Record<number, number>;
+  teams?: { id: number; short_name: string; name: string }[];
 }
 
 type SortField = 'total_points' | 'now_cost_desc' | 'now_cost_asc' | 'form' | 'expected_points_next';
@@ -38,7 +39,9 @@ export const MobilePlayerDrawer: React.FC<MobilePlayerDrawerProps> = ({
   onSelectPlayer,
   remainingBudget = 100.0,
   clubCounts = {},
+  teams,
 }) => {
+  const teamList = teams && teams.length > 0 ? teams : PREMIER_LEAGUE_TEAMS;
   const [search, setSearch] = useState('');
   const [position, setPosition] = useState<PositionType | 'ALL'>(targetSlot ? targetSlot.position : 'ALL');
   const [teamId, setTeamId] = useState<number | 'ALL'>('ALL');
@@ -222,8 +225,8 @@ export const MobilePlayerDrawer: React.FC<MobilePlayerDrawerProps> = ({
                 className="w-full bg-brand-card border border-brand-border text-brand-white text-xs rounded-xl px-2.5 py-1.5 pr-7 appearance-none focus:outline-none focus:border-brand-skyblue"
                 aria-label="Lọc theo CLB"
               >
-                <option value="ALL">Tất cả CLB ({PREMIER_LEAGUE_TEAMS.length})</option>
-                {PREMIER_LEAGUE_TEAMS.map((t) => (
+                <option value="ALL">Tất cả CLB ({teamList.length})</option>
+                {teamList.map((t) => (
                   <option key={t.id} value={t.id}>
                     {t.name} ({t.short_name})
                   </option>
@@ -279,7 +282,12 @@ export const MobilePlayerDrawer: React.FC<MobilePlayerDrawerProps> = ({
                   {/* Left: Shirt & Info */}
                   <div className="flex items-center gap-2.5 min-w-0">
                     <img
-                      src={getPlayerKitUrl(player.team_id, player.element_type, player.team_code)}
+                      src={getPlayerKitUrl(
+                        player.team_id,
+                        player.element_type,
+                        player.team_code,
+                        player.team_short_name
+                      )}
                       alt={player.web_name}
                       className="w-10 h-10 object-contain drop-shadow"
                       loading="lazy"

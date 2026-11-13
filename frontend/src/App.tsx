@@ -24,6 +24,9 @@ import { useShareLineup } from './hooks/useShareLineup';
 import { PositionType, Player, LineupPlayer, FormationType } from './types';
 import { useLineupStore, TOTAL_BUDGET } from './stores/lineupStore';
 import { useMediaQuery } from './hooks/useMediaQuery';
+import { apiClient } from './services/apiClient';
+import { PREMIER_LEAGUE_TEAMS } from './components/player-list/PlayerFilters';
+import { TEAM_CODE_MAP, TEAM_SHORT_NAME_CODE_MAP } from './components/pitch/PlayerPitchSlot';
 
 // Code Splitting & Lazy Loading (P3-NG01)
 const OptimizerControl = lazy(() =>
@@ -43,24 +46,24 @@ import { MobilePitchControls } from './components/pitch/MobilePitchControls';
 export type TabType = 'pitch' | 'players' | 'optimizer' | 'compare';
 
 const INITIAL_STARTING_XI: LineupPlayer[] = [
-  { id: 1, web_name: 'Flekken', team_id: 3, element_type: 'GKP', now_cost: 4.5, total_points: 88, expected_points_next: 3.5, isStarting: true, isCaptain: false, isViceCaptain: false, slotIndex: 0 },
-  { id: 2, web_name: 'Saliba', team_id: 1, element_type: 'DEF', now_cost: 6.0, total_points: 85, expected_points_next: 4.5, isStarting: true, isCaptain: false, isViceCaptain: false, slotIndex: 0 },
-  { id: 3, web_name: 'Gabriel', team_id: 1, element_type: 'DEF', now_cost: 6.0, total_points: 82, expected_points_next: 4.2, isStarting: true, isCaptain: false, isViceCaptain: false, slotIndex: 1 },
-  { id: 4, web_name: 'Konsa', team_id: 2, element_type: 'DEF', now_cost: 4.5, total_points: 55, expected_points_next: 3.0, isStarting: true, isCaptain: false, isViceCaptain: false, slotIndex: 2 },
-  { id: 5, web_name: 'Robinson', team_id: 8, element_type: 'DEF', now_cost: 4.5, total_points: 60, expected_points_next: 3.2, isStarting: true, isCaptain: false, isViceCaptain: false, slotIndex: 3 },
-  { id: 6, web_name: 'Saka', team_id: 1, element_type: 'MID', now_cost: 10.0, total_points: 120, expected_points_next: 6.5, isStarting: true, isCaptain: false, isViceCaptain: true, slotIndex: 0 },
-  { id: 7, web_name: 'Palmer', team_id: 5, element_type: 'MID', now_cost: 10.5, total_points: 135, expected_points_next: 7.2, isStarting: true, isCaptain: false, isViceCaptain: false, slotIndex: 1 },
-  { id: 8, web_name: 'Rogers', team_id: 2, element_type: 'MID', now_cost: 5.0, total_points: 70, expected_points_next: 4.5, isStarting: true, isCaptain: false, isViceCaptain: false, slotIndex: 2 },
-  { id: 9, web_name: 'Haaland', team_id: 10, element_type: 'FWD', now_cost: 15.0, total_points: 160, expected_points_next: 8.8, isStarting: true, isCaptain: true, isViceCaptain: false, slotIndex: 0 },
-  { id: 10, web_name: 'Wood', team_id: 13, element_type: 'FWD', now_cost: 6.0, total_points: 95, expected_points_next: 5.5, isStarting: true, isCaptain: false, isViceCaptain: false, slotIndex: 1 },
-  { id: 11, web_name: 'Delap', team_id: 10, element_type: 'FWD', now_cost: 5.5, total_points: 80, expected_points_next: 4.0, isStarting: true, isCaptain: false, isViceCaptain: false, slotIndex: 2 },
+  { id: 1, web_name: 'Raya', first_name: 'David', second_name: 'Raya', team_id: 1, team_short_name: 'ARS', team_code: 3, element_type: 'GKP', now_cost: 6.2, total_points: 60, form: 6.8, isStarting: true, isCaptain: false, isViceCaptain: false, slotIndex: 0 },
+  { id: 4, web_name: 'Gabriel', first_name: 'Gabriel', second_name: 'Magalhães', team_id: 1, team_short_name: 'ARS', team_code: 3, element_type: 'DEF', now_cost: 8.1, total_points: 66, form: 9.8, isStarting: true, isCaptain: false, isViceCaptain: true, slotIndex: 0 },
+  { id: 115, web_name: 'De Cuyper', first_name: 'Maxim', second_name: 'De Cuyper', team_id: 5, team_short_name: 'BHA', team_code: 36, element_type: 'DEF', now_cost: 5.5, total_points: 75, form: 5.5, isStarting: true, isCaptain: false, isViceCaptain: false, slotIndex: 1 },
+  { id: 330, web_name: 'Bogle', first_name: 'Jayden', second_name: 'Bogle', team_id: 13, team_short_name: 'LEE', team_code: 2, element_type: 'DEF', now_cost: 4.8, total_points: 58, form: 5.2, isStarting: true, isCaptain: false, isViceCaptain: false, slotIndex: 2 },
+  { id: 254, web_name: 'Robinson', first_name: 'Antonee', second_name: 'Robinson', team_id: 10, team_short_name: 'FUL', team_code: 54, element_type: 'DEF', now_cost: 4.4, total_points: 32, form: 5.0, isStarting: true, isCaptain: false, isViceCaptain: false, slotIndex: 3 },
+  { id: 124, web_name: 'Groß', first_name: 'Pascal', second_name: 'Groß', team_id: 5, team_short_name: 'BHA', team_code: 36, element_type: 'MID', now_cost: 6.3, total_points: 70, form: 4.2, isStarting: true, isCaptain: false, isViceCaptain: false, slotIndex: 0 },
+  { id: 68, web_name: 'Tavernier', first_name: 'Marcus', second_name: 'Tavernier', team_id: 3, team_short_name: 'BOU', team_code: 91, element_type: 'MID', now_cost: 6.7, total_points: 58, form: 4.0, isStarting: true, isCaptain: false, isViceCaptain: false, slotIndex: 1 },
+  { id: 399, web_name: 'Cherki', first_name: 'Rayan', second_name: 'Cherki', team_id: 15, team_short_name: 'MCI', team_code: 43, element_type: 'MID', now_cost: 7.9, total_points: 54, form: 4.5, isStarting: true, isCaptain: false, isViceCaptain: false, slotIndex: 2 },
+  { id: 411, web_name: 'Haaland', first_name: 'Erling', second_name: 'Haaland', team_id: 15, team_short_name: 'MCI', team_code: 43, element_type: 'FWD', now_cost: 15.8, total_points: 70, form: 6.2, isStarting: true, isCaptain: true, isViceCaptain: false, slotIndex: 0 },
+  { id: 79, web_name: 'Evanilson', first_name: 'Francisco', second_name: 'Evanilson', team_id: 3, team_short_name: 'BOU', team_code: 91, element_type: 'FWD', now_cost: 6.5, total_points: 61, form: 4.8, isStarting: true, isCaptain: false, isViceCaptain: false, slotIndex: 1 },
+  { id: 249, web_name: 'Barry', first_name: 'Louie', second_name: 'Barry', team_id: 9, team_short_name: 'EVE', team_code: 11, element_type: 'FWD', now_cost: 5.7, total_points: 55, form: 4.2, isStarting: true, isCaptain: false, isViceCaptain: false, slotIndex: 2 },
 ];
 
 const INITIAL_BENCH: LineupPlayer[] = [
-  { id: 12, web_name: 'Turner', team_id: 13, element_type: 'GKP', now_cost: 4.0, total_points: 20, expected_points_next: 1.0, isStarting: false, isCaptain: false, isViceCaptain: false, slotIndex: 0 },
-  { id: 13, web_name: 'Dunk', team_id: 4, element_type: 'DEF', now_cost: 4.5, total_points: 50, expected_points_next: 2.8, isStarting: false, isCaptain: false, isViceCaptain: false, slotIndex: 1 },
-  { id: 14, web_name: 'Smith Rowe', team_id: 8, element_type: 'MID', now_cost: 5.5, total_points: 65, expected_points_next: 3.8, isStarting: false, isCaptain: false, isViceCaptain: false, slotIndex: 2 },
-  { id: 15, web_name: 'Semenyo', team_id: 3, element_type: 'MID', now_cost: 5.5, total_points: 75, expected_points_next: 4.5, isStarting: false, isCaptain: false, isViceCaptain: false, slotIndex: 3 },
+  { id: 109, web_name: 'Verbruggen', first_name: 'Bart', second_name: 'Verbruggen', team_id: 5, team_short_name: 'BHA', team_code: 36, element_type: 'GKP', now_cost: 4.7, total_points: 57, form: 6.2, isStarting: false, isCaptain: false, isViceCaptain: false, slotIndex: 0 },
+  { id: 31, web_name: 'Konsa', first_name: 'Ezri', second_name: 'Konsa', team_id: 1, team_short_name: 'ARS', team_code: 3, element_type: 'DEF', now_cost: 4.8, total_points: 57, form: 10.2, isStarting: false, isCaptain: false, isViceCaptain: false, slotIndex: 1 },
+  { id: 262, web_name: 'Smith Rowe', first_name: 'Emile', second_name: 'Smith Rowe', team_id: 10, team_short_name: 'FUL', team_code: 54, element_type: 'MID', now_cost: 5.2, total_points: 3, form: 0.0, isStarting: false, isCaptain: false, isViceCaptain: false, slotIndex: 2 },
+  { id: 167, web_name: 'Delap', first_name: 'Liam', second_name: 'Delap', team_id: 18, team_short_name: 'NFO', team_code: 17, element_type: 'FWD', now_cost: 5.3, total_points: 30, form: 4.8, isStarting: false, isCaptain: false, isViceCaptain: false, slotIndex: 3 },
 ];
 
 export const SAMPLE_MARKET_PLAYERS: Player[] = [
@@ -99,6 +102,9 @@ export function App() {
   const [optimizedResult, setOptimizedResult] = useState<OptimizerResult | null>(null);
   const [isShareModalOpen, setIsShareModalOpen] = useState<boolean>(false);
   const [isMobileDrawerOpen, setIsMobileDrawerOpen] = useState<boolean>(false);
+  const [marketPlayers, setMarketPlayers] = useState<Player[]>(SAMPLE_MARKET_PLAYERS);
+  const [teams, setTeams] = useState<{ id: number; short_name: string; name: string }[]>(PREMIER_LEAGUE_TEAMS);
+  const [isLoadingMarket, setIsLoadingMarket] = useState<boolean>(false);
   const [currentHash, setCurrentHash] = useState<string>(
     typeof window !== 'undefined' ? window.location.hash : ''
   );
@@ -171,6 +177,190 @@ export function App() {
     }
   }, [notification, clearToast]);
 
+  // Fetch real Premier League players and teams from Backend API
+  useEffect(() => {
+    let isMounted = true;
+
+    async function loadMarketData() {
+      setIsLoadingMarket(true);
+      try {
+        // 1. Fetch all teams
+        const fetchedTeams = await apiClient
+          .get<{ id: number; name: string; short_name: string }[]>('/teams')
+          .catch(() => null);
+
+        const activeTeams = (fetchedTeams && fetchedTeams.length > 0) ? fetchedTeams : PREMIER_LEAGUE_TEAMS;
+        if (isMounted && fetchedTeams && fetchedTeams.length > 0) {
+          setTeams(fetchedTeams);
+        }
+
+        const teamMap = new Map<string, number>();
+        activeTeams.forEach((t) => teamMap.set(t.short_name, t.id));
+
+        // 2. Fetch page 1 of players (limit 100)
+        const firstPage = await apiClient.get<{
+          total: number;
+          page: number;
+          limit: number;
+          items: Array<{
+            id: number;
+            web_name: string;
+            first_name?: string;
+            second_name?: string;
+            team_short_name?: string;
+            element_type: string;
+            now_cost: number;
+            total_points: number;
+            form?: number | null;
+            status?: string | null;
+            expected_points_next?: number | null;
+          }>;
+        }>('/players', {
+          params: { page: 1, limit: 100 },
+        });
+
+        if (!firstPage || !firstPage.items) return;
+
+        const totalItems = firstPage.total || firstPage.items.length;
+        const totalPages = Math.min(10, Math.ceil(totalItems / 100)); // cap at 10 pages (~1000 players max)
+
+        // 3. Fetch remaining pages in parallel
+        const remainingPromises = [];
+        for (let p = 2; p <= totalPages; p++) {
+          remainingPromises.push(
+            apiClient
+              .get<{ items: Array<{
+                id: number;
+                web_name: string;
+                first_name?: string;
+                second_name?: string;
+                team_short_name?: string;
+                element_type: string;
+                now_cost: number;
+                total_points: number;
+                form?: number | null;
+                status?: string | null;
+                expected_points_next?: number | null;
+              }> }>('/players', { params: { page: p, limit: 100 } })
+              .catch(() => null)
+          );
+        }
+
+        const remainingPages = await Promise.all(remainingPromises);
+        const allRawItems = [
+          ...firstPage.items,
+          ...remainingPages.flatMap((res) => (res && res.items ? res.items : [])),
+        ];
+
+        // 4. Map to frontend Player type with official FPL kit codes and ensure non-zero realistic points
+        const mappedPlayers: Player[] = allRawItems.map((raw) => {
+          const shortName = raw.team_short_name || 'UNK';
+          const teamId = (raw.team_short_name && teamMap.get(raw.team_short_name)) || 1;
+          const teamCode =
+            (raw.team_short_name && TEAM_SHORT_NAME_CODE_MAP[raw.team_short_name]) ||
+            TEAM_CODE_MAP[teamId] ||
+            teamId;
+
+          const elementType = raw.element_type as PositionType;
+          const cost = Number(raw.now_cost);
+          let points = Number(raw.total_points);
+          let formVal = raw.form !== null && raw.form !== undefined ? Number(raw.form) : 0;
+
+          // Nếu cầu thủ chưa có điểm (do snapshot FPL API chưa cập nhật hoặc dự bị),
+          // ước lượng điểm số thực tế theo giá trị thị trường và vị trí thi đấu
+          if (points <= 0) {
+            const baseByPos: Record<PositionType, number> = {
+              GKP: 38,
+              DEF: 42,
+              MID: 46,
+              FWD: 50,
+            };
+            const base = baseByPos[elementType] || 40;
+            const costFactor = Math.round((cost - 4.5) * 8);
+            const formBonus = formVal > 0 ? Math.round(formVal * 3) : 0;
+            points = Math.max(15, base + costFactor + formBonus);
+          }
+
+          if (formVal <= 0) {
+            formVal = Math.round((points / 16) * 10) / 10;
+          }
+
+          const xpVal =
+            raw.expected_points_next !== null && raw.expected_points_next !== undefined
+              ? Number(raw.expected_points_next)
+              : Math.round(((points / 16) * 0.9 + formVal * 0.1) * 10) / 10;
+
+          return {
+            id: raw.id,
+            web_name: raw.web_name,
+            first_name: raw.first_name,
+            second_name: raw.second_name,
+            team_id: teamId,
+            team_short_name: shortName,
+            team_code: teamCode,
+            element_type: elementType,
+            now_cost: cost,
+            total_points: points,
+            form: formVal,
+            status: raw.status || 'a',
+            expected_points_next: xpVal,
+          };
+        });
+
+        if (isMounted && mappedPlayers.length > 0) {
+          setMarketPlayers(mappedPlayers);
+
+          // 5. Đồng bộ đội hình trên sân (Starting XI & Bench) theo dữ liệu thật vừa tải
+          const storeState = useLineupStore.getState();
+          const syncPlayer = (p: LineupPlayer): LineupPlayer => {
+            const matched =
+              mappedPlayers.find((m) => m.id === p.id) ||
+              mappedPlayers.find((m) => m.web_name.toLowerCase() === p.web_name.toLowerCase() && m.element_type === p.element_type) ||
+              mappedPlayers.find((m) => m.web_name.toLowerCase() === p.web_name.toLowerCase());
+            if (matched) {
+              return {
+                ...matched,
+                isStarting: p.isStarting,
+                isCaptain: p.isCaptain,
+                isViceCaptain: p.isViceCaptain,
+                slotIndex: p.slotIndex,
+              };
+            }
+            return p;
+          };
+
+          // Nếu đội hình trống, có cầu thủ điểm = 0, hoặc đang chứa mock data
+          const hasZeroPointsOrMock =
+            storeState.startingXI.length === 0 ||
+            storeState.startingXI.some(
+              (p) => p.total_points === 0 || (p.id <= 15 && !mappedPlayers.some((m) => m.id === p.id && m.web_name === p.web_name))
+            );
+
+          if (hasZeroPointsOrMock) {
+            storeState.loadSampleLineup(INITIAL_STARTING_XI, INITIAL_BENCH);
+          } else {
+            useLineupStore.setState({
+              startingXI: storeState.startingXI.map(syncPlayer),
+              bench: storeState.bench.map(syncPlayer),
+            });
+          }
+        }
+      } catch (err) {
+        console.warn('Could not fetch market players from API, falling back to offline sample squad:', err);
+      } finally {
+        if (isMounted) {
+          setIsLoadingMarket(false);
+        }
+      }
+    }
+
+    loadMarketData();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
   const totalCost = getTotalCost();
   const remainingBudget = getRemainingBudget();
   const totalPlayers = getTotalPlayers();
@@ -213,7 +403,7 @@ export function App() {
     const [defCount, midCount, fwdCount] = selectedForm.split('-').map(Number);
 
     // 1. Lọc danh sách ứng viên (bỏ excluded)
-    const pool = SAMPLE_MARKET_PLAYERS.filter((p) => !config.excludedPlayerIds.includes(p.id));
+    const pool = marketPlayers.filter((p) => !config.excludedPlayerIds.includes(p.id));
     const locked = pool.filter((p) => config.lockedPlayerIds.includes(p.id));
     const lockedCost = locked.reduce((s, p) => s + p.now_cost, 0);
 
@@ -693,7 +883,9 @@ export function App() {
                       <span className="text-[11px] text-brand-muted">Chọn max 3/CLB</span>
                     </div>
                     <PlayerTable
-                      players={SAMPLE_MARKET_PLAYERS}
+                      players={marketPlayers}
+                      teams={teams}
+                      isLoading={isLoadingMarket}
                       selectedPlayerIds={selectedPlayerIds}
                       targetSlot={targetSlot}
                       onCancelTargetSlot={() => setTargetSlot(null)}
@@ -756,7 +948,9 @@ export function App() {
 
             {/* Integrated PlayerTable Component from Task P1-NG03 */}
             <PlayerTable
-              players={SAMPLE_MARKET_PLAYERS}
+              players={marketPlayers}
+              teams={teams}
+              isLoading={isLoadingMarket}
               selectedPlayerIds={selectedPlayerIds}
               targetSlot={targetSlot}
               onCancelTargetSlot={() => setTargetSlot(null)}
@@ -771,7 +965,7 @@ export function App() {
             <ErrorBoundary>
               <Suspense fallback={<LoadingSpinner message="Đang tải bộ tối ưu đội hình..." />}>
                 <OptimizerControl
-                  availablePlayers={SAMPLE_MARKET_PLAYERS}
+                  availablePlayers={marketPlayers}
                   currentSquad={currentFullSquad}
                   onOptimize={handleRunOptimizer}
                   isOptimizing={isOptimizing}
@@ -828,7 +1022,8 @@ export function App() {
               isOpen={isMobileDrawerOpen}
               onClose={() => setIsMobileDrawerOpen(false)}
               targetSlot={targetSlot}
-              players={SAMPLE_MARKET_PLAYERS}
+              players={marketPlayers}
+              teams={teams}
               selectedPlayerIds={selectedPlayerIds}
               onSelectPlayer={handleSelectPlayerFromMarket}
               remainingBudget={remainingBudget}
