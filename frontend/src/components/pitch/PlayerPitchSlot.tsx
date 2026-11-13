@@ -5,24 +5,64 @@ import { X, Plus, Shield } from 'lucide-react';
 export const TEAM_CODE_MAP: Record<number, number> = {
   1: 3,    // Arsenal (ARS)
   2: 7,    // Aston Villa (AVL)
-  3: 94,   // Brentford (BRE)
-  4: 36,   // Brighton (BHA)
-  5: 8,    // Chelsea (CHE)
-  6: 31,   // Crystal Palace (CRY)
-  7: 11,   // Everton (EVE)
-  8: 54,   // Fulham (FUL)
-  9: 14,   // Liverpool (LIV)
-  10: 43,  // Man City (MCI)
-  11: 1,   // Man Utd (MUN)
-  12: 4,   // Newcastle (NEW)
-  13: 17,  // Nottingham Forest (NFO)
-  14: 6,   // Tottenham (TOT)
-  15: 21,  // West Ham (WHU)
-  16: 39,  // Wolves (WOL)
+  3: 91,   // Bournemouth (BOU)
+  4: 94,   // Brentford (BRE)
+  5: 36,   // Brighton (BHA)
+  6: 8,    // Chelsea (CHE)
+  7: 9,    // Coventry City (COV)
+  8: 31,   // Crystal Palace (CRY)
+  9: 11,   // Everton (EVE)
+  10: 54,  // Fulham (FUL)
+  11: 88,  // Hull City (HUL)
+  12: 40,  // Ipswich Town (IPS)
+  13: 2,   // Leeds (LEE)
+  14: 14,  // Liverpool (LIV)
+  15: 43,  // Man City (MCI)
+  16: 1,   // Man Utd (MUN)
+  17: 4,   // Newcastle (NEW)
+  18: 17,  // Nottingham Forest (NFO)
+  19: 6,   // Tottenham (TOT)
+  20: 56,  // Sunderland (SUN)
 };
 
-export function getPlayerKitUrl(teamId: number, position: PositionType, teamCode?: number): string {
-  const code = teamCode || TEAM_CODE_MAP[teamId] || teamId;
+export const TEAM_SHORT_NAME_CODE_MAP: Record<string, number> = {
+  ARS: 3,
+  AVL: 7,
+  BOU: 91,
+  BRE: 94,
+  BHA: 36,
+  CHE: 8,
+  COV: 9,
+  CRY: 31,
+  EVE: 11,
+  FUL: 54,
+  HUL: 88,
+  IPS: 40,
+  LEE: 2,
+  LIV: 14,
+  MCI: 43,
+  MUN: 1,
+  NEW: 4,
+  NFO: 17,
+  TOT: 6,
+  SUN: 56,
+  WHU: 21,
+  WOL: 39,
+  SOU: 20,
+  LEI: 13,
+};
+
+export function getPlayerKitUrl(
+  teamId: number,
+  position: PositionType,
+  teamCode?: number,
+  teamShortName?: string
+): string {
+  const code =
+    teamCode ||
+    (teamShortName && TEAM_SHORT_NAME_CODE_MAP[teamShortName]) ||
+    TEAM_CODE_MAP[teamId] ||
+    teamId;
   const isGKP = position === 'GKP';
   return `https://fantasy.premierleague.com/dist/img/shirts/standard/shirt_${code}${isGKP ? '_1' : ''}-66.webp`;
 }
@@ -72,7 +112,12 @@ export function PlayerPitchSlot({
     );
   }
 
-  const kitUrl = getPlayerKitUrl(player.team_id, player.element_type, player.team_code);
+  const kitUrl = getPlayerKitUrl(
+    player.team_id,
+    player.element_type,
+    player.team_code,
+    player.team_short_name
+  );
 
   return (
     <div
