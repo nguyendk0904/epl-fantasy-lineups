@@ -19,6 +19,10 @@ from app.services.optimizer_solver import (
     optimize_squad,
     solve_model_with_cbc,
 )
+from app.services.optimizer_cache import (
+    build_optimizer_cache_key,
+    optimizer_response_cache,
+)
 
 
 router = APIRouter(tags=["Optimizer"])
@@ -116,6 +120,11 @@ async def solve_optimizer(
     request: OptimizerRequest,
     db: AsyncSession = Depends(get_db),
 ) -> OptimizerResponse:
+    cache_key = build_optimizer_cache_key(request)
+    cached_response = optimizer_response_cache.get(cache_key)
+    if cached_response is not None:
+        return cached_response
+
     result = await db.execute(select(Player))
     player_rows = list(result.scalars().all())
     candidate_rows = [
@@ -177,7 +186,7 @@ async def solve_optimizer(
     total_expected_points = sum(p.expected_points_next for p in starters)
     captain = next(p for p in starters if p.id == captain_id)
 
-    return OptimizerResponse(
+    response = OptimizerResponse(
         status="optimal",
         total_cost=squad_result.total_cost,
         total_expected_points=round(total_expected_points + captain.expected_points_next, 1),
@@ -187,3 +196,5 @@ async def solve_optimizer(
         vice_captain_id=vice_captain_id,
         formation=formation,
     )
+    optimizer_response_cache.put(cache_key, response)
+    return response

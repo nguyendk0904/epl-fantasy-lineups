@@ -15,9 +15,9 @@
 | :--- | :---: | :---: | :---: |
 | **Phase 1: Local Full-Stack Product** | **17 / 17** | `100%` |  Hoàn thành |
 | **Phase 2: AWS Services Integration** | **13 / 13** | `100%` |  Hoàn thành |
-| **Phase 3: Production Deploy & E2E Test** | **11 / 13** | `85%` | 🟡 Theo checklist: NG 3/3, NH 3/3, V 1/3, Q 4/4 |
+| **Phase 3: Production Deploy & E2E Test** | **12 / 13** | `92%` | 🟡 Theo checklist: NG 3/3, NH 3/3, V 2/3, Q 4/4 |
 | **Phase 4: Live Gamification & League Operations** | **0 / 14** | `0%` | ⚪ Chờ Phase 3 |
-| **TỔNG CỘNG TOÀN DỰ ÁN** | **41 / 57** | `72%` | 🟡 Theo checklist; xem ghi chú nghiệm thu từng task |
+| **TỔNG CỘNG TOÀN DỰ ÁN** | **42 / 57** | `74%` | 🟡 Theo checklist; xem ghi chú nghiệm thu từng task |
 
 ---
 
@@ -432,7 +432,7 @@
 
 ---
 
-### 🧠 Vũ (Data & Algorithm Engineer) - [1/3]
+### 🧠 Vũ (Data & Algorithm Engineer) - [2/3]
 
 - [x] **`P3-V01`** *(Level 3)*: Stress test thuật toán Optimizer dưới tải đồng thời *(được chấp nhận với ngoại lệ: p95 200 ms chưa đạt)*
   - *Mô tả:* Viết kịch bản Locust hoặc script Python benchmark giả lập 20-50 request giải quy hoạch tuyến tính đồng thời; đo đạc RAM/CPU và tinh chỉnh thời gian giải của PuLP solver duy trì < 200ms.
@@ -444,7 +444,7 @@
   - *Cách kiểm chứng (Verification):* Chạy `python backend/tests/benchmark_optimizer.py` xác nhận latency p95 < 200ms.
   - *Kết quả thực tế:* Benchmark local 30 request đồng thời đạt p95 khoảng 2.24 giây; ngưỡng 200 ms chưa đạt. Người dùng chấp nhận kết quả hiện tại; hiệu năng và RAM trên AWS chưa được đo, không mặc định AWS sẽ nhanh hơn.
 
-- [ ] **`P3-V02`** *(Level 3)*: Xây dựng cơ chế Cache kết quả Optimizer
+- [x] **`P3-V02`** *(Level 3)*: Xây dựng cơ chế Cache kết quả Optimizer
   - *Mô tả:* Xây dựng cơ chế cache LRU hoặc In-Memory Cache dựa trên hash payload `(budget, formation, locked_ids, excluded_ids)`: các request lặp lại trả kết quả ngay trong 5ms mà không cần chạy lại solver.
   - *Phụ thuộc:* `P1-V02`, `P3-V01`
   - *Thư mục:* `backend/app/services/`, `backend/tests/`
@@ -452,6 +452,7 @@
   - *Branch:* `feature/P3-V02-optimizer-cache`
   - *Tiêu chí chấp nhận (Acceptance Criteria):* Request có cùng cấu hình input trả về kết quả từ Cache trong < 5ms thay vì giải lại bằng solver.
   - *Cách kiểm chứng (Verification):* `pytest backend/tests/test_optimizer_cache.py` pass 100%.
+  - *Ghi chú:* Cache LRU ở bộ nhớ của từng process; các worker không chia sẻ cache và dữ liệu cache có thể cũ khi dữ liệu cầu thủ/FDR thay đổi.
 
 - [ ] **`P3-V03`** *(Level 1)*: Chuẩn bị bộ dữ liệu mẫu (Sample Data) và kịch bản demo đồ án
   - *Mô tả:* Chuẩn bị 3 kịch bản demo so sánh đội hình ấn tượng cho buổi nghiệm thu (Đội hình Tối ưu siêu sao vs Đội hình Cân bằng tiềm năng), tạo file seed dữ liệu và slide tóm tắt kết quả phân tích.
