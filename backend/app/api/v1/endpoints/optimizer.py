@@ -4,6 +4,7 @@ import pulp
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
+from starlette.concurrency import run_in_threadpool
 
 from app.core.database import get_db
 from app.models.player import Player
@@ -13,7 +14,11 @@ from app.schemas.optimizer import (
     OptimizerRequest,
     OptimizerResponse,
 )
-from app.services.optimizer_solver import PlayerCandidate, optimize_squad
+from app.services.optimizer_solver import (
+    PlayerCandidate,
+    optimize_squad,
+    solve_model_with_cbc,
+)
 
 
 router = APIRouter(tags=["Optimizer"])
@@ -79,7 +84,7 @@ def _optimize_starting_xi(
             model += count <= upper, f"maximum_{position}"
 
     try:
-        model.solve(pulp.COIN_CMD(msg=False))
+        solve_model_with_cbc(model)
     except pulp.PulpSolverError as exc:
         raise RuntimeError("PuLP could not run CBC for starting XI optimization.") from exc
 
@@ -131,7 +136,8 @@ async def solve_optimizer(
     rows_by_id = {row.id: row for row in candidate_rows}
 
     try:
-        squad_result = optimize_squad(
+        squad_result = await run_in_threadpool(
+            optimize_squad,
             candidates,
             budget=request.budget,
             locked_player_ids=request.locked_player_ids,
@@ -147,7 +153,8 @@ async def solve_optimizer(
     selected_ids = set(squad_result.selected_player_ids)
     selected_candidates = [p for p in candidates if p.id in selected_ids]
     try:
-        starting_ids, captain_id = _optimize_starting_xi(
+        starting_ids, captain_id = await run_in_threadpool(
+            _optimize_starting_xi,
             selected_candidates, request.target_formation
         )
     except ValueError as exc:
