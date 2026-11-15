@@ -462,6 +462,7 @@
   - *Branch:* `feature/P3-V03-demo-data-prep`
   - *Tiêu chí chấp nhận (Acceptance Criteria):* 3 kịch bản demo chạy trơn tru, số liệu chênh lệch điểm xP và radar chart thể hiện rõ giá trị của giải thuật tối ưu.
   - *Cách kiểm chứng (Verification):* Chạy `python scripts/seed_demo_scenarios.py` nạp kịch bản demo và kiểm tra giao diện hiển thị đúng kịch bản.
+  - *Tiến độ:* Unit test 5/5, dry-run pass; đã seed thành công 36 cầu thủ demo và 6 shared-lineup snapshots vào PostgreSQL local. Chưa thể kiểm tra radar trên UI với các scenario này vì frontend Compare hiện chưa tải scenario/share code; phần nối dữ liệu giao diện cần được giao cho frontend.
 
 ---
 
