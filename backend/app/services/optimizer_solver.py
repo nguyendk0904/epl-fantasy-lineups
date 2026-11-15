@@ -3,11 +3,36 @@
 from dataclasses import dataclass, replace
 import json
 import math
+import os
 from pathlib import Path
+from threading import BoundedSemaphore
 from typing import Sequence
 
 import pulp
 from app.services.fdr_service import get_next_gameweek_fdr_multipliers
+
+
+def _default_solver_capacity() -> int:
+    logical_cpus = os.cpu_count() or 1
+    return max(1, min(12, logical_cpus))
+
+
+try:
+    MAX_CONCURRENT_SOLVES = int(
+        os.getenv("FPL_MAX_CONCURRENT_SOLVES", str(_default_solver_capacity()))
+    )
+except ValueError as exc:
+    raise ValueError("FPL_MAX_CONCURRENT_SOLVES must be a positive integer.") from exc
+if MAX_CONCURRENT_SOLVES < 1:
+    raise ValueError("FPL_MAX_CONCURRENT_SOLVES must be a positive integer.")
+
+_CBC_SOLVER_GATE = BoundedSemaphore(MAX_CONCURRENT_SOLVES)
+
+
+def solve_model_with_cbc(model: pulp.LpProblem):
+    """Run one CBC solve with a bounded number of concurrent solver processes."""
+    with _CBC_SOLVER_GATE:
+        return model.solve(pulp.COIN_CMD(msg=False, threads=1))
 
 POSITION_MAP = {
     1: "GKP",
@@ -215,7 +240,7 @@ def optimize_squad(
         excluded_player_ids,
     )
     try:
-        model.solve(pulp.COIN_CMD(msg=False))
+        solve_model_with_cbc(model)
     except pulp.PulpSolverError as exc:
         raise RuntimeError(
             "PuLP could not run CBC. Install a supported CBC solver and retry."

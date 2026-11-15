@@ -10,10 +10,12 @@ from httpx import ASGITransport, AsyncClient
 from app.api.v1.endpoints.optimizer import router as optimizer_router
 from app.core.database import get_db
 from app.services.optimizer_solver import (
+    MAX_CONCURRENT_SOLVES,
     PlayerCandidate,
     _build_optimizer_model,
     load_players_from_json,
     optimize_squad,
+    solve_model_with_cbc,
 )
 
 DATA_PATH = Path(__file__).with_name("mock_data.json")
@@ -147,6 +149,26 @@ def test_candidate_shape():
     ]
     assert candidates[0].element_type == "FWD"
     assert candidates[0].now_cost == 8.5
+
+
+def test_solver_uses_single_thread_cbc_behind_a_bounded_gate(monkeypatch):
+    calls = []
+
+    class FakeSolver:
+        def __init__(self, msg, threads):
+            calls.append((msg, threads))
+
+    class FakeModel:
+        def solve(self, solver):
+            return solver
+
+    monkeypatch.setattr(pulp, "COIN_CMD", FakeSolver)
+
+    solver = solve_model_with_cbc(FakeModel())
+
+    assert calls == [(False, 1)]
+    assert isinstance(solver, FakeSolver)
+    assert 1 <= MAX_CONCURRENT_SOLVES <= 12
 
 
 def test_solver_returns_valid_squad_from_fpl_mock_data():
