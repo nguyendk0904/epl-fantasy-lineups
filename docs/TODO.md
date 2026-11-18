@@ -15,9 +15,9 @@
 | :--- | :---: | :---: | :---: |
 | **Phase 1: Local Full-Stack Product** | **17 / 17** | `100%` |  Hoàn thành |
 | **Phase 2: AWS Services Integration** | **13 / 13** | `100%` |  Hoàn thành |
-| **Phase 3: Production Deploy & E2E Test** | **12 / 13** | `92%` | 🟡 Theo checklist: NG 3/3, NH 3/3, V 2/3, Q 4/4 |
-| **Phase 4: Live Gamification & League Operations** | **0 / 14** | `0%` | ⚪ Chờ Phase 3 |
-| **TỔNG CỘNG TOÀN DỰ ÁN** | **42 / 57** | `74%` | 🟡 Theo checklist; xem ghi chú nghiệm thu từng task |
+| **Phase 3: Production Deploy & E2E Test** | **13 / 13** | `100%` | ✅ Theo checklist: NG 3/3, NH 3/3, V 3/3, Q 4/4 |
+| **Phase 4: Live Gamification & League Operations** | **1 / 14** | `7%` | ⚪ P4-V01 hoàn thành; chờ Phase 3 |
+| **TỔNG CỘNG TOÀN DỰ ÁN** | **44 / 57** | `77%` | 🟡 Theo checklist; xem ghi chú nghiệm thu từng task |
 
 ---
 
@@ -432,7 +432,7 @@
 
 ---
 
-### 🧠 Vũ (Data & Algorithm Engineer) - [2/3]
+### 🧠 Vũ (Data & Algorithm Engineer) - [3/3]
 
 - [x] **`P3-V01`** *(Level 3)*: Stress test thuật toán Optimizer dưới tải đồng thời *(được chấp nhận với ngoại lệ: p95 200 ms chưa đạt)*
   - *Mô tả:* Viết kịch bản Locust hoặc script Python benchmark giả lập 20-50 request giải quy hoạch tuyến tính đồng thời; đo đạc RAM/CPU và tinh chỉnh thời gian giải của PuLP solver duy trì < 200ms.
@@ -454,7 +454,7 @@
   - *Cách kiểm chứng (Verification):* `pytest backend/tests/test_optimizer_cache.py` pass 100%.
   - *Ghi chú:* Cache LRU ở bộ nhớ của từng process; các worker không chia sẻ cache và dữ liệu cache có thể cũ khi dữ liệu cầu thủ/FDR thay đổi.
 
-- [ ] **`P3-V03`** *(Level 1)*: Chuẩn bị bộ dữ liệu mẫu (Sample Data) và kịch bản demo đồ án
+- [x] **`P3-V03`** *(Level 1)*: Chuẩn bị bộ dữ liệu mẫu (Sample Data) và kịch bản demo đồ án
   - *Mô tả:* Chuẩn bị 3 kịch bản demo so sánh đội hình ấn tượng cho buổi nghiệm thu (Đội hình Tối ưu siêu sao vs Đội hình Cân bằng tiềm năng), tạo file seed dữ liệu và slide tóm tắt kết quả phân tích.
   - *Phụ thuộc:* `P1-V04`, `P2-V03`
   - *Thư mục:* `scripts/`, `docs/`
@@ -589,9 +589,9 @@
 
 ---
 
-### 🧠 Vũ (Data & Algorithm Engineer) - [0/3]
+### 🧠 Vũ (Data & Algorithm Engineer) - [1/3]
 
-- [ ] **`P4-V01`** *(Level 3)*: Thiết kế Schema Migration Alembic cho Gameweek & Live Operations
+- [x] **`P4-V01`** *(Level 3)*: Thiết kế Schema Migration Alembic cho Gameweek & Live Operations
   - *Mô tả:* Khai báo ORM models và tạo migration file cho các bảng: `fixtures`, `player_gameweek_stats`, `user_gameweek_lineups`, `dream_teams`.
   - *Phụ thuộc:* `P1-V01`
   - *Thư mục:* `backend/app/models/`, `backend/alembic/`
@@ -599,6 +599,7 @@
   - *Branch:* `feature/P4-V01-gameweek-schema`
   - *Tiêu chí chấp nhận (Acceptance Criteria):* Script migration tạo đầy đủ 4 bảng mới kèm khóa ngoại, indexes trên `gameweek` và `player_id`.
   - *Cách kiểm chứng (Verification):* `alembic upgrade head` chạy thành công; `pytest backend/tests/test_gameweek_models.py` pass 100%.
+  - *Ghi chú nghiệm thu:* 6 unit tests pass và `alembic upgrade head --sql` sinh DDL đầy đủ. Chưa áp dụng migration lên database thật.
 
 - [ ] **`P4-V02`** *(Level 3)*: Xây dựng Game Engine tính điểm tự động (`scoring_engine.py`)
   - *Mô tả:* Logic chấm điểm đội hình người chơi: nhân đôi điểm Captain (x2), cơ chế Auto-sub thay thế cầu thủ không ra sân từ hàng ghế dự bị, tính tổng điểm Gameweek và cập nhật bảng xếp hạng.
