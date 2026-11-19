@@ -16,8 +16,8 @@
 | **Phase 1: Local Full-Stack Product** | **17 / 17** | `100%` |  Hoàn thành |
 | **Phase 2: AWS Services Integration** | **13 / 13** | `100%` |  Hoàn thành |
 | **Phase 3: Production Deploy & E2E Test** | **13 / 13** | `100%` | ✅ Theo checklist: NG 3/3, NH 3/3, V 3/3, Q 4/4 |
-| **Phase 4: Live Gamification & League Operations** | **2 / 14** | `14%` | 🟡 P4-V01 và P4-V02 hoàn thành; chờ các task Phase 4 tiếp theo |
-| **TỔNG CỘNG TOÀN DỰ ÁN** | **45 / 57** | `79%` | 🟡 Theo checklist; xem ghi chú nghiệm thu từng task |
+| **Phase 4: Live Gamification & League Operations** | **3 / 14** | `21%` | 🟡 P4-V01, P4-V02 và P4-V03 hoàn thành; chờ các task Phase 4 tiếp theo |
+| **TỔNG CỘNG TOÀN DỰ ÁN** | **46 / 57** | `81%` | 🟡 Theo checklist; xem ghi chú nghiệm thu từng task |
 
 ---
 
@@ -506,7 +506,7 @@
 
 ---
 
-## 🏆 PHASE 4: VẬN HÀNH MÙA GIẢI & GAMIFICATION (0/14)
+## 🏆 PHASE 4: VẬN HÀNH MÙA GIẢI & GAMIFICATION (3/14)
 *Mục tiêu: Vận hành trực tiếp với FPL thật: Lịch thi đấu 38 vòng, chấm điểm live, quản lý chấn thương, BXH và luật chuyển nhượng 3 người/tuần.*
 
 ### 🎨 Nguyên (Frontend & UI Lead) - [0/4]
@@ -589,7 +589,7 @@
 
 ---
 
-### 🧠 Vũ (Data & Algorithm Engineer) - [2/3]
+### 🧠 Vũ (Data & Algorithm Engineer) - [3/3]
 
 - [x] **`P4-V01`** *(Level 3)*: Thiết kế Schema Migration Alembic cho Gameweek & Live Operations
   - *Mô tả:* Khai báo ORM models và tạo migration file cho các bảng: `fixtures`, `player_gameweek_stats`, `user_gameweek_lineups`, `dream_teams`.
@@ -611,7 +611,7 @@
   - *Cách kiểm chứng (Verification):* `pytest backend/tests/test_scoring_engine.py` pass 100%.
   - *Ghi chú nghiệm thu:* Scoring engine flush điểm vòng vào `user_gameweek_lineups.gameweek_points`; schema hiện chưa có bảng `leaderboards`, nên NH04 cần tổng hợp BXH từ điểm các vòng. Auto-sub xét bench order, giữ đội hình hợp lệ và cộng stats qua mọi fixture trong Gameweek.
 
-- [ ] **`P4-V03`** *(Level 3)*: Nâng cấp PuLP Optimizer: Lọc Chấn thương & Gợi ý 3 Chuyển nhượng Tối ưu
+- [x] **`P4-V03`** *(Level 3)*: Nâng cấp PuLP Optimizer: Lọc Chấn thương & Gợi ý 3 Chuyển nhượng Tối ưu
   - *Mô tả:* Optimizer tự động loại bỏ cầu thủ chấn thương/treo giò (tỷ lệ ra sân < 50%) và xây dựng Transfer Optimizer: giữ khung đội hình hiện tại và giải bài toán chọn tối đa 3 lượt thay người mang lại xP cao nhất trong ngân sách.
   - *Phụ thuộc:* `P1-V02`
   - *Thư mục:* `backend/app/services/`
