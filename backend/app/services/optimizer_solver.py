@@ -51,6 +51,7 @@ class PlayerCandidate:
     element_type: str  # GKP, DEF, MID, or FWD
     now_cost: float
     expected_points_next: float
+    status: str = "a"
 
 
 @dataclass(frozen=True)
@@ -85,6 +86,7 @@ def load_players_from_json(path: str | Path) -> list[PlayerCandidate]:
                 element_type=position,
                 now_cost=float(element["now_cost"]) / 10,
                 expected_points_next=float(element["ep_next"]),
+                status=str(element.get("status", "a")),
             )
         except (KeyError, TypeError, ValueError) as exc:
             raise ValueError(
@@ -188,6 +190,9 @@ def optimize_squad(
     """Solve the squad model and return the selected players and their totals."""
     if not math.isfinite(budget) or budget < 0:
         raise ValueError("Budget must be a finite, non-negative number.")
+
+    # Filter out injured/suspended/unavailable players.
+    players = [p for p in players if getattr(p, "status", "a") == "a"]
 
     player_ids = [player.id for player in players]
     if len(player_ids) != len(set(player_ids)):
