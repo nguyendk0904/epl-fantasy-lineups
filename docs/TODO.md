@@ -352,7 +352,7 @@
 
 ---
 
-## 🌐 PHASE 3: DEPLOY & TEST ĐẦU CUỐI (END-TO-END) (10/13)
+## 🌐 PHASE 3: DEPLOY & TEST ĐẦU CUỐI (END-TO-END) (13/13)
 *Mục tiêu: Đưa toàn bộ sản phẩm lên Internet qua CloudFront HTTPS và AWS App Runner, xây dựng CI/CD tự động qua GitHub Actions, kiểm thử tải và chuẩn bị demo đồ án với chi phí $0.00.*
 
 ### 🎨 Nguyên (Frontend & UI Lead) - [3/3]
@@ -506,10 +506,10 @@
 
 ---
 
-## 🏆 PHASE 4: VẬN HÀNH MÙA GIẢI & GAMIFICATION (3/14)
+## 🏆 PHASE 4: VẬN HÀNH MÙA GIẢI & GAMIFICATION (4/14)
 *Mục tiêu: Vận hành trực tiếp với FPL thật: Lịch thi đấu 38 vòng, chấm điểm live, quản lý chấn thương, BXH và luật chuyển nhượng 3 người/tuần.*
 
-### 🎨 Nguyên (Frontend & UI Lead) - [0/4]
+### 🎨 Nguyên (Frontend & UI Lead) - [1/4]
 
 - [ ] **`P4-NG01`** *(Level 2)*: Màn hình Lịch thi đấu các tuần & Độ khó trận đấu (`FixturesView`)
   - *Mô tả:* Giao diện xem lịch 38 vòng đấu Premier League, tỉ số thực tế các trận đã kết thúc, ngày giờ bóng lăn và huy hiệu độ khó trận đấu FDR (Fixture Difficulty Rating từ 1 đến 5).
@@ -520,14 +520,15 @@
   - *Tiêu chí chấp nhận (Acceptance Criteria):* Xem được lịch thi đấu 38 vòng, có thanh chọn Gameweek, hiển thị tỉ số thực tế và badge màu FDR (1-dễ đến 5-khó).
   - *Cách kiểm chứng (Verification):* `npm --prefix frontend test -- FixturesView.test.tsx` pass 100%.
 
-- [ ] **`P4-NG02`** *(Level 2)*: Huy hiệu Trạng thái Chấn thương & Treo giò (`PlayerStatusBadge`)
+- [x] **`P4-NG02`** *(Level 2)*: Huy hiệu Trạng thái Chấn thương & Treo giò (`PlayerStatusBadge`)
   - *Mô tả:* Tích hợp badge cảnh báo tình trạng y tế trực quan trên `VirtualPitch` và `PlayerTable`: Cờ đỏ 🚑 (Nghỉ thi đấu / Chấn thương 0%), cờ vàng ⚠️ (Nghi ngờ 25%-75%), cờ đỏ 🟥 (Treo giò); tooltip giải thích chi tiết lý do chấn thương (`news`).
   - *Phụ thuộc:* `P1-NG02`, `P4-NH01`
   - *Thư mục:* `frontend/src/components/common/`
   - *File tạo mới (2 files):* `frontend/src/components/common/PlayerStatusBadge.tsx`, `frontend/src/components/common/__tests__/PlayerStatusBadge.test.tsx`.
   - *Branch:* `feature/P4-NG02-player-status-badge`
   - *Tiêu chí chấp nhận (Acceptance Criteria):* Badge hiển thị chính xác theo trạng thái y tế (`d`, `i`, `s`), hover chuột hiển thị tooltip lý do chấn thương.
-  - *Cách kiểm chứng (Verification):* `npm --prefix frontend test -- PlayerStatusBadge.test.tsx` pass 100%.
+  - *Cách kiểm chứng (Verification):* `npm --prefix frontend test -- PlayerStatusBadge.test.tsx` pass 15/15 tests (100%).
+  - *Ghi chú triển khai (20/11/2026):* Xây dựng `PlayerStatusBadge.tsx` hỗ trợ đầy đủ 3 biến thể hiển thị (`badge`, `pin`, `dot`), 3 kích thước (`sm`, `md`, `lg`) và Glassmorphism tooltip. Tích hợp trực tiếp vào `PlayerPitchSlot` (pin badge trên góc áo đấu), `PlayerTable` (badge chip cạnh tên cầu thủ) và `MobilePlayerDrawer`. 92/92 tests frontend pass 100%. Build Vite 4.75s không lỗi.
 
 - [ ] **`P4-NG03`** *(Level 2)*: Bảng xếp hạng Người chơi (`LeaderboardView`) & Sân bóng vinh danh Đội hình tiêu biểu tuần (`DreamTeamModal`)
   - *Mô tả:* Màn hình Bảng xếp hạng hiển thị Top người chơi điểm cao nhất tuần và cả mùa giải (vinh danh Top 1, 2, 3 bằng huy chương vàng/bạc/đồng); Tab hiển thị Sân bóng ảo vinh danh Đội hình tiêu biểu (Dream Team) của vòng đấu.

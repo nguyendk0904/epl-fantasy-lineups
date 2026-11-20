@@ -24,6 +24,7 @@ import {
 import { Player, PositionType } from '../../types';
 import { PlayerFilters, FilterState } from './PlayerFilters';
 import { getPlayerKitUrl } from '../pitch/PlayerPitchSlot';
+import { PlayerStatusBadge } from '../common/PlayerStatusBadge';
 
 export interface PlayerTableProps {
   players: Player[];
@@ -118,9 +119,6 @@ export const PlayerTable: React.FC<PlayerTableProps> = ({
         header: 'Cầu thủ',
         cell: ({ row }) => {
           const player = row.original;
-          const isInjured = player.status === 'i';
-          const isDoubtful = player.status === 'd';
-          const isSuspended = player.status === 's';
 
           return (
             <div className="flex items-center gap-2.5">
@@ -143,21 +141,12 @@ export const PlayerTable: React.FC<PlayerTableProps> = ({
                   <span className="font-semibold text-brand-white text-xs sm:text-sm hover:text-brand-skyblue-light transition-colors truncate">
                     {player.web_name}
                   </span>
-                  {isInjured && (
-                    <span className="px-1.5 py-0.5 bg-brand-hotpink/20 text-brand-hotpink-light border border-brand-hotpink/40 text-[10px] rounded font-bold" title="Chấn thương">
-                      Injured
-                    </span>
-                  )}
-                  {isDoubtful && (
-                    <span className="px-1.5 py-0.5 bg-white/10 text-brand-white border border-white/20 text-[10px] rounded font-bold" title="Khả năng ra sân 75%">
-                      Doubt
-                    </span>
-                  )}
-                  {isSuspended && (
-                    <span className="px-1.5 py-0.5 bg-brand-hotpink-dark text-brand-white border border-brand-hotpink text-[10px] rounded font-bold" title="Treo giò">
-                      Susp
-                    </span>
-                  )}
+                  <PlayerStatusBadge
+                    status={player.status}
+                    news={player.news}
+                    chance={player.chance_of_playing_next_round}
+                    size="sm"
+                  />
                 </div>
                 {/* Ở chế độ compact hiển thị dòng phụ 'CLB · VỊ TRÍ' giống web gốc FPL */}
                 <span className="text-[11px] text-brand-muted font-medium">
