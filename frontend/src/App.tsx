@@ -12,7 +12,8 @@ import {
   RotateCcw,
   AlertTriangle,
   Zap,
-  Share2
+  Share2,
+  Calendar
 } from 'lucide-react';
 import { VirtualPitch } from './components/pitch/VirtualPitch';
 import { PlayerTable } from './components/player-list/PlayerTable';
@@ -35,15 +36,15 @@ const OptimizerControl = lazy(() =>
 const LineupComparisonView = lazy(() =>
   import('./components/comparison/LineupComparisonView').then((m) => ({ default: m.LineupComparisonView }))
 );
-const FixturesPanel = lazy(() =>
-  import('./components/fixtures/FixturesPanel').then((m) => ({ default: m.FixturesPanel }))
+const FixturesView = lazy(() =>
+  import('./components/fixtures/FixturesView').then((m) => ({ default: m.FixturesView }))
 );
 const ShareModal = lazy(() => import('./components/share/ShareModal'));
 const SharedLineupPage = lazy(() => import('./pages/SharedLineupPage'));
 const MobilePlayerDrawer = lazy(() => import('./components/player-list/MobilePlayerDrawer'));
 import { MobilePitchControls } from './components/pitch/MobilePitchControls';
 
-export type TabType = 'pitch' | 'players' | 'optimizer' | 'compare';
+export type TabType = 'pitch' | 'players' | 'optimizer' | 'compare' | 'fixtures';
 
 const INITIAL_STARTING_XI: LineupPlayer[] = [
   { id: 1, web_name: 'Raya', first_name: 'David', second_name: 'Raya', team_id: 1, team_short_name: 'ARS', team_code: 3, element_type: 'GKP', now_cost: 6.2, total_points: 60, form: 6.8, isStarting: true, isCaptain: false, isViceCaptain: false, slotIndex: 0 },
@@ -786,6 +787,18 @@ export function App() {
             <GitCompare className="w-4 h-4 text-brand-skyblue-light" />
             <span>So Sánh (Compare)</span>
           </button>
+
+          <button
+            onClick={() => setActiveTab('fixtures')}
+            className={`py-3 px-3 sm:px-4 text-xs sm:text-sm font-semibold border-b-2 flex items-center gap-2 transition-all ${
+              activeTab === 'fixtures'
+                ? 'border-brand-skyblue text-brand-skyblue-light bg-brand-skyblue/10'
+                : 'border-transparent text-brand-muted hover:text-brand-white hover:bg-brand-card/40'
+            }`}
+          >
+            <Calendar className="w-4 h-4 text-brand-skyblue-light" />
+            <span>Lịch Đấu (Fixtures)</span>
+          </button>
         </div>
       </header>
 
@@ -922,10 +935,10 @@ export function App() {
               )}
             </div>
 
-            {/* Bảng Fixtures Ngoại Hạng Anh bên dưới sân */}
+            {/* Bảng Lịch Thi Đấu & Độ Khó FDR 38 Vòng EPL */}
             <ErrorBoundary>
               <Suspense fallback={<LoadingSpinner message="Đang tải lịch thi đấu..." />}>
-                <FixturesPanel />
+                <FixturesView />
               </Suspense>
             </ErrorBoundary>
           </section>
@@ -991,6 +1004,17 @@ export function App() {
                   }}
                   onApplyLineupB={optimizedResult ? handleApplyOptimizedLineup : undefined}
                 />
+              </Suspense>
+            </ErrorBoundary>
+          </section>
+        )}
+
+        {/* Tab Lịch Thi Đấu 38 Vòng & Độ Khó FDR (P4-NG01) */}
+        {activeTab === 'fixtures' && (
+          <section className="space-y-4">
+            <ErrorBoundary>
+              <Suspense fallback={<LoadingSpinner message="Đang tải toàn bộ 38 vòng đấu Ngoại Hạng Anh..." />}>
+                <FixturesView />
               </Suspense>
             </ErrorBoundary>
           </section>

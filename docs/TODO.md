@@ -506,19 +506,20 @@
 
 ---
 
-## 🏆 PHASE 4: VẬN HÀNH MÙA GIẢI & GAMIFICATION (4/14)
+## 🏆 PHASE 4: VẬN HÀNH MÙA GIẢI & GAMIFICATION (5/14)
 *Mục tiêu: Vận hành trực tiếp với FPL thật: Lịch thi đấu 38 vòng, chấm điểm live, quản lý chấn thương, BXH và luật chuyển nhượng 3 người/tuần.*
 
-### 🎨 Nguyên (Frontend & UI Lead) - [1/4]
+### 🎨 Nguyên (Frontend & UI Lead) - [2/4]
 
-- [ ] **`P4-NG01`** *(Level 2)*: Màn hình Lịch thi đấu các tuần & Độ khó trận đấu (`FixturesView`)
+- [x] **`P4-NG01`** *(Level 2)*: Màn hình Lịch thi đấu các tuần & Độ khó trận đấu (`FixturesView`)
   - *Mô tả:* Giao diện xem lịch 38 vòng đấu Premier League, tỉ số thực tế các trận đã kết thúc, ngày giờ bóng lăn và huy hiệu độ khó trận đấu FDR (Fixture Difficulty Rating từ 1 đến 5).
   - *Phụ thuộc:* `P4-NH03`
   - *Thư mục:* `frontend/src/components/fixtures/`
   - *File tạo mới (3 files):* `frontend/src/components/fixtures/FixturesView.tsx`, `frontend/src/components/fixtures/FixtureCard.tsx`, `frontend/src/components/fixtures/__tests__/FixturesView.test.tsx`.
   - *Branch:* `feature/P4-NG01-fixtures-ui`
   - *Tiêu chí chấp nhận (Acceptance Criteria):* Xem được lịch thi đấu 38 vòng, có thanh chọn Gameweek, hiển thị tỉ số thực tế và badge màu FDR (1-dễ đến 5-khó).
-  - *Cách kiểm chứng (Verification):* `npm --prefix frontend test -- FixturesView.test.tsx` pass 100%.
+  - *Cách kiểm chứng (Verification):* `npm --prefix frontend test -- FixturesView.test.tsx` pass 14/14 tests (100%).
+  - *Ghi chú triển khai (20/11/2026):* Xây dựng `FixtureCard.tsx` (hiển thị tỉ số FT, giờ đá, áo đấu và badge FDR 1-5 kèm tooltip) và `FixturesView.tsx` (thanh cuộn 38 vòng, bộ lọc theo CLB, bảng chú thích FDR, gom nhóm theo ngày). Tích hợp tab chuyên biệt "Lịch Đấu (Fixtures)" vào Navbar và đặt dưới sân bóng. 106/106 tests frontend pass 100%. Build Vite 6.54s không lỗi.
 
 - [x] **`P4-NG02`** *(Level 2)*: Huy hiệu Trạng thái Chấn thương & Treo giò (`PlayerStatusBadge`)
   - *Mô tả:* Tích hợp badge cảnh báo tình trạng y tế trực quan trên `VirtualPitch` và `PlayerTable`: Cờ đỏ 🚑 (Nghỉ thi đấu / Chấn thương 0%), cờ vàng ⚠️ (Nghi ngờ 25%-75%), cờ đỏ 🟥 (Treo giò); tooltip giải thích chi tiết lý do chấn thương (`news`).
