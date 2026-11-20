@@ -3,6 +3,7 @@ import { X, Search, Check, ShieldAlert, ArrowUpDown, ChevronDown } from 'lucide-
 import { Player, PositionType } from '../../types';
 import { PREMIER_LEAGUE_TEAMS } from './PlayerFilters';
 import { getPlayerKitUrl } from '../pitch/PlayerPitchSlot';
+import { PlayerStatusBadge } from '../common/PlayerStatusBadge';
 
 export interface MobilePlayerDrawerProps {
   isOpen: boolean;
@@ -298,6 +299,12 @@ export const MobilePlayerDrawer: React.FC<MobilePlayerDrawerProps> = ({
                         <span className="text-xs sm:text-sm font-extrabold text-white truncate">
                           {player.web_name}
                         </span>
+                        <PlayerStatusBadge
+                          status={player.status}
+                          news={player.news}
+                          chance={player.chance_of_playing_next_round}
+                          size="sm"
+                        />
                         <span className="text-[10px] font-black px-1.5 py-0.5 rounded bg-brand-darker border border-white/10 text-brand-skyblue-light uppercase">
                           {player.element_type}
                         </span>

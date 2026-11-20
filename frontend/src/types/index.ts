@@ -15,6 +15,8 @@ export interface Player {
   total_points: number;
   form?: number;
   status?: string;
+  news?: string;
+  chance_of_playing_next_round?: number | null;
   expected_points_next?: number;
 }
 

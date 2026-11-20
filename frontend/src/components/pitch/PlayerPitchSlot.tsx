@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { PositionType, LineupPlayer } from '../../types';
 import { X, Plus, Shield } from 'lucide-react';
+import { PlayerStatusBadge } from '../common/PlayerStatusBadge';
 
 export const TEAM_CODE_MAP: Record<number, number> = {
   1: 3,    // Arsenal (ARS)
@@ -186,6 +187,15 @@ export function PlayerPitchSlot({
               V
             </div>
           )}
+
+          {/* Badge Trạng thái Chấn thương / Treo giò */}
+          <PlayerStatusBadge
+            status={player.status}
+            news={player.news}
+            chance={player.chance_of_playing_next_round}
+            variant="pin"
+            className="absolute -top-1 -left-1 z-20"
+          />
         </div>
 
         {/* 3. Tên cầu thủ (Glassmorphism Pill) + CLB nếu có */}
