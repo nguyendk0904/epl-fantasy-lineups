@@ -39,12 +39,15 @@ const LineupComparisonView = lazy(() =>
 const FixturesView = lazy(() =>
   import('./components/fixtures/FixturesView').then((m) => ({ default: m.FixturesView }))
 );
+const LeaderboardView = lazy(() =>
+  import('./components/leaderboard/LeaderboardView').then((m) => ({ default: m.LeaderboardView }))
+);
 const ShareModal = lazy(() => import('./components/share/ShareModal'));
 const SharedLineupPage = lazy(() => import('./pages/SharedLineupPage'));
 const MobilePlayerDrawer = lazy(() => import('./components/player-list/MobilePlayerDrawer'));
 import { MobilePitchControls } from './components/pitch/MobilePitchControls';
 
-export type TabType = 'pitch' | 'players' | 'optimizer' | 'compare' | 'fixtures';
+export type TabType = 'pitch' | 'players' | 'optimizer' | 'compare' | 'fixtures' | 'leaderboard';
 
 const INITIAL_STARTING_XI: LineupPlayer[] = [
   { id: 1, web_name: 'Raya', first_name: 'David', second_name: 'Raya', team_id: 1, team_short_name: 'ARS', team_code: 3, element_type: 'GKP', now_cost: 6.2, total_points: 60, form: 6.8, isStarting: true, isCaptain: false, isViceCaptain: false, slotIndex: 0 },
@@ -799,6 +802,18 @@ export function App() {
             <Calendar className="w-4 h-4 text-brand-skyblue-light" />
             <span>Lịch Đấu (Fixtures)</span>
           </button>
+
+          <button
+            onClick={() => setActiveTab('leaderboard')}
+            className={`py-3 px-3 sm:px-4 text-xs sm:text-sm font-semibold border-b-2 flex items-center gap-2 transition-all ${
+              activeTab === 'leaderboard'
+                ? 'border-brand-skyblue text-brand-skyblue-light bg-brand-skyblue/10'
+                : 'border-transparent text-brand-muted hover:text-brand-white hover:bg-brand-card/40'
+            }`}
+          >
+            <Trophy className="w-4 h-4 text-amber-400" />
+            <span>Bảng Xếp Hạng (Leaderboard)</span>
+          </button>
         </div>
       </header>
 
@@ -1015,6 +1030,17 @@ export function App() {
             <ErrorBoundary>
               <Suspense fallback={<LoadingSpinner message="Đang tải toàn bộ 38 vòng đấu Ngoại Hạng Anh..." />}>
                 <FixturesView />
+              </Suspense>
+            </ErrorBoundary>
+          </section>
+        )}
+
+        {/* Tab Bảng Xếp Hạng & Vinh Danh Cao Thủ (P4-NG03) */}
+        {activeTab === 'leaderboard' && (
+          <section className="space-y-4">
+            <ErrorBoundary>
+              <Suspense fallback={<LoadingSpinner message="Đang tải bảng xếp hạng FPL..." />}>
+                <LeaderboardView />
               </Suspense>
             </ErrorBoundary>
           </section>

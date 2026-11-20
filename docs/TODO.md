@@ -506,10 +506,10 @@
 
 ---
 
-## 🏆 PHASE 4: VẬN HÀNH MÙA GIẢI & GAMIFICATION (5/14)
+## 🏆 PHASE 4: VẬN HÀNH MÙA GIẢI & GAMIFICATION (6/14)
 *Mục tiêu: Vận hành trực tiếp với FPL thật: Lịch thi đấu 38 vòng, chấm điểm live, quản lý chấn thương, BXH và luật chuyển nhượng 3 người/tuần.*
 
-### 🎨 Nguyên (Frontend & UI Lead) - [2/4]
+### 🎨 Nguyên (Frontend & UI Lead) - [3/4]
 
 - [x] **`P4-NG01`** *(Level 2)*: Màn hình Lịch thi đấu các tuần & Độ khó trận đấu (`FixturesView`)
   - *Mô tả:* Giao diện xem lịch 38 vòng đấu Premier League, tỉ số thực tế các trận đã kết thúc, ngày giờ bóng lăn và huy hiệu độ khó trận đấu FDR (Fixture Difficulty Rating từ 1 đến 5).
@@ -531,14 +531,15 @@
   - *Cách kiểm chứng (Verification):* `npm --prefix frontend test -- PlayerStatusBadge.test.tsx` pass 15/15 tests (100%).
   - *Ghi chú triển khai (20/11/2026):* Xây dựng `PlayerStatusBadge.tsx` hỗ trợ đầy đủ 3 biến thể hiển thị (`badge`, `pin`, `dot`), 3 kích thước (`sm`, `md`, `lg`) và Glassmorphism tooltip. Tích hợp trực tiếp vào `PlayerPitchSlot` (pin badge trên góc áo đấu), `PlayerTable` (badge chip cạnh tên cầu thủ) và `MobilePlayerDrawer`. 92/92 tests frontend pass 100%. Build Vite 4.75s không lỗi.
 
-- [ ] **`P4-NG03`** *(Level 2)*: Bảng xếp hạng Người chơi (`LeaderboardView`) & Sân bóng vinh danh Đội hình tiêu biểu tuần (`DreamTeamModal`)
+- [x] **`P4-NG03`** *(Level 2)*: Bảng xếp hạng Người chơi (`LeaderboardView`) & Sân bóng vinh danh Đội hình tiêu biểu tuần (`DreamTeamModal`)
   - *Mô tả:* Màn hình Bảng xếp hạng hiển thị Top người chơi điểm cao nhất tuần và cả mùa giải (vinh danh Top 1, 2, 3 bằng huy chương vàng/bạc/đồng); Tab hiển thị Sân bóng ảo vinh danh Đội hình tiêu biểu (Dream Team) của vòng đấu.
   - *Phụ thuộc:* `P4-NH04`, `P1-NG02`
   - *Thư mục:* `frontend/src/components/leaderboard/`
   - *File tạo mới (3 files):* `frontend/src/components/leaderboard/LeaderboardView.tsx`, `frontend/src/components/leaderboard/DreamTeamModal.tsx`, `frontend/src/components/leaderboard/__tests__/LeaderboardView.test.tsx`.
   - *Branch:* `feature/P4-NG03-leaderboard-ui`
   - *Tiêu chí chấp nhận (Acceptance Criteria):* Hiển thị bảng xếp hạng phân trang rõ ràng, vinh danh Top 3; mở modal render sân cỏ 11 cầu thủ Dream Team với điểm số cao nhất.
-  - *Cách kiểm chứng (Verification):* `npm --prefix frontend test -- LeaderboardView.test.tsx` pass 100%.
+  - *Cách kiểm chứng (Verification):* `npm --prefix frontend test -- LeaderboardView.test.tsx` pass 11/11 tests (100%).
+  - *Ghi chú triển khai (20/11/2026):* Xây dựng `DreamTeamModal.tsx` (sân cỏ vinh danh 11 ngôi sao đạt điểm cao nhất vòng kèm MVP vương miện) và `LeaderboardView.tsx` (bục vinh danh Podium Top 3 vàng/bạc/đồng, bảng chi tiết phân trang, tìm kiếm manager/team, chuyển tab điểm tuần/toàn mùa). Tích hợp tab "Bảng Xếp Hạng (Leaderboard)" vào Navbar. 117/117 tests frontend pass 100%. Build Vite 7.01s không lỗi.
 
 - [ ] **`P4-NG04`** *(Level 2)*: Giao diện Luật Chuyển nhượng tuần (Tối đa 3 transfers/tuần)
   - *Mô tả:* Chế độ Chuyển nhượng (Transfer Mode): Bộ đếm hiển thị số lượt thay đổi cầu thủ còn lại `(Còn lại: X / 3)`, đếm ngược thời gian đóng cổng chuyển nhượng (Gameweek Deadline), modal xác nhận chốt đội hình tuần.
