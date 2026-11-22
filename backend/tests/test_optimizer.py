@@ -542,3 +542,42 @@ def test_solver_unavailable_player(status, action):
     else:
         result = optimize_squad(players, excluded_player_ids=[3] if action == "exclude" else [])
         assert set(result.selected_player_ids) == {p.id for p in players if p.id != 3}
+
+
+@pytest.mark.asyncio
+async def test_api_uses_adjusted_points_for_xi_captains_and_total(monkeypatch):
+    from app.services import optimizer_solver
+
+    rows = _optimizer_api_rows()
+    multipliers = {row.team_id: 0.8 for row in rows}
+    multipliers[2] = 1.2
+    multipliers[7] = 1.2
+    multipliers[12] = 1.2
+    rows[0].expected_points_next = 10.1
+    rows[1].expected_points_next = 9.3
+    rows[6].expected_points_next = 9.2
+    rows[11].expected_points_next = 8.9
+    monkeypatch.setattr(optimizer_solver, "get_next_gameweek_fdr_multipliers", lambda: multipliers)
+    async with AsyncClient(
+        transport=ASGITransport(app=_optimizer_api_app(rows)), base_url="http://test"
+    ) as client:
+        response = await client.post("/api/v1/optimizer/solve", json={"budget": 20})
+    assert response.status_code == 200
+    data = response.json()
+    assert data["status"] == "optimal"
+    assert data["captain_id"] == 2
+    assert data["vice_captain_id"] == 7
+    starting_ids = {p["id"] for p in data["starting_xi"]}
+    assert 2 in starting_ids and 1 not in starting_ids
+    assert 7 in starting_ids and 12 in starting_ids
+    expected = {row.id: round(row.expected_points_next * multipliers[row.team_id], 1) for row in rows}
+    for player in data["starting_xi"] + data["bench"]:
+        assert player["expected_points_next"] == expected[player["id"]]
+    assert data["total_expected_points"] == round(
+        sum(p["expected_points_next"] for p in data["starting_xi"])
+        + expected[data["captain_id"]], 1
+    )
+    outfield_bench = data["bench"][1:]
+    assert [p["expected_points_next"] for p in outfield_bench] == sorted(
+        [p["expected_points_next"] for p in outfield_bench], reverse=True
+    )

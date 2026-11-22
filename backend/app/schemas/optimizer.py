@@ -37,6 +37,8 @@ class OptimizerRequest(BaseModel):
 
 
 class OptimizedPlayer(BaseModel):
+    """Player with FDR-adjusted expected_points_next rounded to one decimal."""
+
     model_config = ConfigDict(from_attributes=True)
 
     id: int
