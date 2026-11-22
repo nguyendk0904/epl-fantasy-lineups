@@ -1,6 +1,6 @@
 """PuLP model and solver for selecting an FPL squad."""
 
-from dataclasses import dataclass, replace
+from dataclasses import dataclass, field, replace
 import json
 import math
 import os
@@ -56,11 +56,12 @@ class PlayerCandidate:
 
 @dataclass(frozen=True)
 class OptimizationResult:
-    """Illustrative result shape for a future solver implementation."""
+    """Selected squad and its full-precision FDR-adjusted expected points."""
 
     selected_player_ids: Sequence[int]
     total_cost: float
     total_expected_points: float
+    adjusted_expected_points: dict[int, float] = field(default_factory=dict)
 
 
 def load_players_from_json(path: str | Path) -> list[PlayerCandidate]:
@@ -281,6 +282,9 @@ def optimize_squad(
     return OptimizationResult(
         selected_player_ids=chosen_ids,
         total_cost=round(sum(player.now_cost for player in chosen_players), 1),
+        adjusted_expected_points={
+            player.id: player.expected_points_next for player in chosen_players
+        },
         total_expected_points=round(
             sum(player.expected_points_next for player in chosen_players), 1
         ),

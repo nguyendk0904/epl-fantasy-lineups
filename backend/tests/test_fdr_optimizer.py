@@ -141,3 +141,34 @@ def test_service_raises_runtime_error_for_invalid_fdr(monkeypatch):
 
     with pytest.raises(RuntimeError, match="invalid team or FDR"):
         get_next_gameweek_fdr_multipliers()
+
+
+def test_solver_returns_adjusted_points_for_selected_squad(monkeypatch):
+    from app.services import optimizer_solver
+    from app.services.optimizer_solver import PlayerCandidate, optimize_squad
+
+    positions = ["GKP"] * 2 + ["DEF"] * 5 + ["MID"] * 5 + ["FWD"] * 3
+    players = [PlayerCandidate(i, i, position, 1.0, 5.3) for i, position in enumerate(positions, 1)]
+    players.append(PlayerCandidate(16, 16, "GKP", 1.0, 6.0))
+    multipliers = {p.team_id: 1.2 for p in players}
+    multipliers[16] = 0.8
+    monkeypatch.setattr(optimizer_solver, "get_next_gameweek_fdr_multipliers", lambda: multipliers)
+    result = optimize_squad(players)
+    assert 16 not in result.selected_player_ids
+    assert set(result.adjusted_expected_points) == set(result.selected_player_ids)
+    assert len(result.adjusted_expected_points) == 15
+    for player in players:
+        if player.id in result.selected_player_ids:
+            assert result.adjusted_expected_points[player.id] == pytest.approx(
+                player.expected_points_next * multipliers[player.team_id]
+            )
+    assert result.total_expected_points == round(sum(result.adjusted_expected_points.values()), 1)
+
+
+def test_optimization_result_default_map_is_independent():
+    from app.services.optimizer_solver import OptimizationResult
+
+    first = OptimizationResult([], 0.0, 0.0)
+    second = OptimizationResult([], 0.0, 0.0)
+    first.adjusted_expected_points[1] = 5.2
+    assert second.adjusted_expected_points == {}

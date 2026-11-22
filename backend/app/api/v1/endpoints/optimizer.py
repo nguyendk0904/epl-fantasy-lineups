@@ -1,4 +1,5 @@
 from collections.abc import Sequence
+from dataclasses import replace
 
 import pulp
 from fastapi import APIRouter, Depends, HTTPException
@@ -111,7 +112,7 @@ def _as_response_player(player: PlayerCandidate, row: Player) -> OptimizedPlayer
         element_type=player.element_type,
         team_id=player.team_id,
         now_cost=player.now_cost,
-        expected_points_next=player.expected_points_next,
+        expected_points_next=round(player.expected_points_next, 1),
     )
 
 
@@ -161,7 +162,12 @@ async def solve_optimizer(
         raise HTTPException(status_code=503, detail=str(exc)) from exc
 
     selected_ids = set(squad_result.selected_player_ids)
-    selected_candidates = [p for p in candidates if p.id in selected_ids]
+    selected_candidates = [
+        replace(p, expected_points_next=squad_result.adjusted_expected_points.get(
+            p.id, p.expected_points_next
+        ))
+        for p in candidates if p.id in selected_ids
+    ]
     try:
         starting_ids, captain_id = await run_in_threadpool(
             _optimize_starting_xi,
@@ -184,13 +190,14 @@ async def solve_optimizer(
         str(sum(p.element_type == position for p in starters))
         for position in ("DEF", "MID", "FWD")
     )
-    total_expected_points = sum(p.expected_points_next for p in starters)
+    # Sum the displayed player values so the response total matches the UI.
+    total_expected_points = sum(round(p.expected_points_next, 1) for p in starters)
     captain = next(p for p in starters if p.id == captain_id)
 
     response = OptimizerResponse(
         status="optimal",
         total_cost=squad_result.total_cost,
-        total_expected_points=round(total_expected_points + captain.expected_points_next, 1),
+        total_expected_points=round(total_expected_points + round(captain.expected_points_next, 1), 1),
         starting_xi=[_as_response_player(p, rows_by_id[p.id]) for p in starters],
         bench=[_as_response_player(p, rows_by_id[p.id]) for p in bench],
         captain_id=captain_id,
