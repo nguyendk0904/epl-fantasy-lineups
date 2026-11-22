@@ -191,21 +191,18 @@ def optimize_squad(
     if not math.isfinite(budget) or budget < 0:
         raise ValueError("Budget must be a finite, non-negative number.")
 
-    # Filter out injured/suspended/unavailable players.
-    players = [p for p in players if getattr(p, "status", "a") == "a"]
-
     player_ids = [player.id for player in players]
     if len(player_ids) != len(set(player_ids)):
         raise ValueError("Player IDs must be unique.")
 
-    available_ids = set(player_ids)
-    unknown_locked_ids = set(locked_player_ids) - available_ids
+    candidate_ids = set(player_ids)
+    unknown_locked_ids = set(locked_player_ids) - candidate_ids
     if unknown_locked_ids:
         raise ValueError(
             "Locked player IDs are not in the candidate list: "
             f"{sorted(unknown_locked_ids)}."
         )
-    unknown_excluded_ids = set(excluded_player_ids) - available_ids
+    unknown_excluded_ids = set(excluded_player_ids) - candidate_ids
     if unknown_excluded_ids:
         raise ValueError(
             "Excluded player IDs are not in the candidate list: "
@@ -217,6 +214,17 @@ def optimize_squad(
             "A player cannot be both locked and excluded: "
             f"{sorted(conflicting_ids)}."
         )
+
+    # Validate IDs before filtering so excluding unavailable players is valid.
+    players = [p for p in players if getattr(p, "status", "a") == "a"]
+    available_ids = {p.id for p in players}
+    unavailable_locked_ids = set(locked_player_ids) - available_ids
+    if unavailable_locked_ids:
+        raise ValueError(
+            "Locked player(s) unavailable (injured/suspended): "
+            f"{sorted(unavailable_locked_ids)}"
+        )
+    excluded_player_ids = [pid for pid in excluded_player_ids if pid in available_ids]
 
     unknown_positions = {
         player.element_type

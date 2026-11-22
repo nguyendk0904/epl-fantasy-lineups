@@ -344,6 +344,7 @@ def _optimizer_api_rows():
             now_cost=1.0,
             expected_points_next=point,
             web_name=f"Player {index + 1}",
+            status="a",
         )
         for index, (position, point) in enumerate(zip(positions, points))
     ]
@@ -467,6 +468,7 @@ async def test_optimizer_api_applies_locked_and_excluded_ids_to_squad_solver():
             now_cost=1.0,
             expected_points_next=20.0,
             web_name="Extra goalkeeper",
+            status="a",
         )
     )
     app = _optimizer_api_app(rows)
@@ -488,3 +490,55 @@ async def test_optimizer_api_applies_locked_and_excluded_ids_to_squad_solver():
     assert data["status"] == "optimal"
     assert 2 in squad_ids
     assert 16 not in squad_ids
+
+
+@pytest.fixture(autouse=True)
+def isolated_optimizer_cache(monkeypatch):
+    from app.api.v1.endpoints import optimizer
+    from app.services.optimizer_cache import OptimizerResponseCache
+
+    monkeypatch.setattr(optimizer, "optimizer_response_cache", OptimizerResponseCache())
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("status", ["i", "s", "d"])
+@pytest.mark.parametrize("action", ["none", "exclude", "lock"])
+async def test_optimizer_api_unavailable_player(status, action):
+    rows = _optimizer_api_rows()
+    rows.append(SimpleNamespace(
+        id=16, team_id=16, element_type="GKP", now_cost=1.0,
+        expected_points_next=99.0, web_name="Unavailable star", status=status,
+    ))
+    request = {"budget": 20}
+    if action != "none":
+        request["excluded_player_ids" if action == "exclude" else "locked_player_ids"] = [16]
+    async with AsyncClient(
+        transport=ASGITransport(app=_optimizer_api_app(rows)), base_url="http://test"
+    ) as client:
+        response = await client.post("/api/v1/optimizer/solve", json=request)
+    if action == "lock":
+        assert response.status_code == 422
+        assert response.json()["detail"] == "Locked player(s) unavailable (injured/suspended): [16]"
+    else:
+        assert response.status_code == 200
+        data = response.json()
+        assert data["status"] == "optimal"
+        squad = data["starting_xi"] + data["bench"]
+        assert len(squad) == 15
+        assert 16 not in {p["id"] for p in squad}
+        assert Counter(p["element_type"] for p in squad) == {"GKP": 2, "DEF": 5, "MID": 5, "FWD": 3}
+
+
+@pytest.mark.parametrize("status", ["i", "s", "d"])
+@pytest.mark.parametrize("action", ["none", "exclude", "lock"])
+def test_solver_unavailable_player(status, action):
+    from dataclasses import replace
+
+    players = [replace(p, status=status) if p.id == 3 else p for p in _small_optimizer_pool()]
+    if action == "lock":
+        with pytest.raises(ValueError) as error:
+            optimize_squad(players, locked_player_ids=[3])
+        assert str(error.value) == "Locked player(s) unavailable (injured/suspended): [3]"
+    else:
+        result = optimize_squad(players, excluded_player_ids=[3] if action == "exclude" else [])
+        assert set(result.selected_player_ids) == {p.id for p in players if p.id != 3}
