@@ -1,12 +1,50 @@
 """Fetch upcoming FPL fixtures and expose team-specific FDR multipliers."""
 
+import logging
+from threading import Lock
+from time import monotonic
+
 import httpx
 
 FPL_FIXTURES_URL = "https://fantasy.premierleague.com/api/fixtures/"
 FDR_MULTIPLIERS = {1: 1.20, 2: 1.15, 3: 1.00, 4: 0.90, 5: 0.80}
+FDR_CACHE_TTL_SECONDS = 900
+logger = logging.getLogger(__name__)
+_cache_lock = Lock()
+_cached_multipliers: dict[int, float] | None = None
+_cache_expires_at = 0.0
+
+
+def clear_fdr_cache() -> None:
+    """Invalidate cached FDR data under the same lock used for refreshes."""
+    global _cached_multipliers, _cache_expires_at
+    with _cache_lock:
+        _cached_multipliers = None
+        _cache_expires_at = 0.0
 
 
 def get_next_gameweek_fdr_multipliers() -> dict[int, float]:
+    """Return cached FDR, falling back to stale data or neutral weights on error."""
+    global _cached_multipliers, _cache_expires_at
+    # Serialize refreshes so concurrent solves share a single successful fetch.
+    with _cache_lock:
+        if _cached_multipliers is not None and monotonic() < _cache_expires_at:
+            return _cached_multipliers.copy()
+        try:
+            multipliers = _fetch_fdr_multipliers()
+        except Exception as exc:
+            logger.warning(
+                "FDR refresh failed; using %s: %s",
+                "stale cache" if _cached_multipliers is not None else "neutral weights",
+                exc,
+            )
+            return _cached_multipliers.copy() if _cached_multipliers is not None else {}
+        _cached_multipliers = multipliers
+        _cache_expires_at = monotonic() + FDR_CACHE_TTL_SECONDS
+        return multipliers.copy()
+
+
+def _fetch_fdr_multipliers() -> dict[int, float]:
     """Return each team's average FDR multiplier for the next unplayed GW.
 
     For a double gameweek, the team's multiplier is the mean of its per-fixture

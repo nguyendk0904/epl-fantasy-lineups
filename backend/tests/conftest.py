@@ -37,6 +37,15 @@ from app.models import Player, Team
 _clients = count(1)
 
 
+@pytest.fixture(autouse=True)
+def isolated_fdr_cache():
+    from app.services.fdr_service import clear_fdr_cache
+
+    clear_fdr_cache()
+    yield
+    clear_fdr_cache()
+
+
 @pytest.fixture
 def e2e_solver(monkeypatch):
     """Expose a real CBC binary to COIN_CMD, never replace the solver."""

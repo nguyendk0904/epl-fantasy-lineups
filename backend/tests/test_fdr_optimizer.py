@@ -114,17 +114,16 @@ def test_service_averages_multiplier_for_double_gameweek(monkeypatch):
     assert multipliers[10] == pytest.approx((1.15 + 0.80) / 2)
 
 
-def test_service_raises_runtime_error_when_fpl_api_fails(monkeypatch):
+def test_service_returns_neutral_weights_when_fpl_api_fails(monkeypatch):
     def fail_request(*args, **kwargs):
         raise httpx.ConnectError("offline")
 
     monkeypatch.setattr(httpx, "get", fail_request)
 
-    with pytest.raises(RuntimeError, match="Could not fetch FPL fixtures"):
-        get_next_gameweek_fdr_multipliers()
+    assert get_next_gameweek_fdr_multipliers() == {}
 
 
-def test_service_raises_runtime_error_for_invalid_fdr(monkeypatch):
+def test_service_returns_neutral_weights_for_invalid_fdr(monkeypatch):
     fixture = {
         "event": 9,
         "finished": False,
@@ -139,8 +138,7 @@ def test_service_raises_runtime_error_for_invalid_fdr(monkeypatch):
         lambda *args, **kwargs: FixtureResponse([fixture]),
     )
 
-    with pytest.raises(RuntimeError, match="invalid team or FDR"):
-        get_next_gameweek_fdr_multipliers()
+    assert get_next_gameweek_fdr_multipliers() == {}
 
 
 def test_solver_returns_adjusted_points_for_selected_squad(monkeypatch):
