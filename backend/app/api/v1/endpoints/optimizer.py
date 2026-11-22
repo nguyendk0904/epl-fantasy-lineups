@@ -139,6 +139,7 @@ async def solve_optimizer(
             element_type=row.element_type,
             now_cost=float(row.now_cost),
             expected_points_next=float(row.expected_points_next or 0),
+            status=row.status or "a",
         )
         for row in candidate_rows
     ]
