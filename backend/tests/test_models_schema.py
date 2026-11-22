@@ -4,7 +4,15 @@ from app.models import Base, Player, Team
 
 
 def test_models_register_expected_tables():
-    assert set(Base.metadata.tables) == {"teams", "players", "shared_lineups"}
+    assert set(Base.metadata.tables) == {
+        "teams",
+        "players",
+        "shared_lineups",
+        "fixtures",
+        "player_gameweek_stats",
+        "user_gameweek_lineups",
+        "dream_teams",
+    }
 
 
 def test_team_primary_key_and_required_names():
