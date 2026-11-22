@@ -3,6 +3,8 @@
 Manual invocation (from backend/): python -m app.services.fpl_sync
 The caller supplies a session factory; every run owns a fresh session/transaction.
 No migrations, deletions, scheduler, or expected-points formula are applied here.
+FPL ep_next is stored as expected_points_next; null or missing values overwrite
+previous expected points with SQL NULL.
 """
 
 import asyncio
@@ -66,6 +68,7 @@ class _PlayerData(BaseModel):
     expected_goals: ExpectedMetric | None = None
     expected_assists: ExpectedMetric | None = None
     ict_index: ICTMetric | None = None
+    ep_next: Metric | None = None
 
     @field_validator("element_type", mode="before")
     @classmethod
@@ -96,7 +99,7 @@ def _parse_payload(payload: object) -> tuple[list[dict], list[dict]]:
         row["team_id"] = row.pop("team")
         row["element_type"] = positions[row["element_type"]]
         row["now_cost"] = Decimal(row["now_cost"]) / Decimal(10)
-        # No agreed xP mapping yet. New rows use SQL NULL; existing xP is preserved.
+        row["expected_points_next"] = row.pop("ep_next")
         players.append(row)
     if len({row["id"] for row in players}) != len(players):
         raise ValueError("Duplicate player IDs")

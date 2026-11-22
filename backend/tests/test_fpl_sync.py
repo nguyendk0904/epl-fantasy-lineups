@@ -86,7 +86,8 @@ def test_mapping_price_positions_and_nullable_metrics(payload, position, expecte
     assert row["form"] == Decimal("7.8")
     assert row["expected_goals"] == Decimal("10.25")
     assert row["expected_assists"] is None
-    assert "expected_points_next" not in row
+    assert row["expected_points_next"] is None
+    assert "ep_next" not in row
 
 
 @pytest.mark.asyncio
@@ -209,7 +210,7 @@ async def test_postgres_repeated_sync_updates_without_duplicates(payload):
             player = await session.get(Player, 10)
             assert player.now_cost == Decimal("15.3")
             assert player.total_points == 190
-            assert player.expected_points_next == Decimal("8.5")
+            assert player.expected_points_next is None
             assert (await session.get(Team, 1)).strength == 5
 
 
@@ -230,3 +231,67 @@ async def test_postgres_player_failure_rolls_back_teams(payload, monkeypatch):
         async with factory() as session:
             assert await session.scalar(select(func.count()).select_from(Team)) == 0
             assert await session.scalar(select(func.count()).select_from(Player)) == 0
+
+
+@asynccontextmanager
+async def local_sync_database():
+    engine = create_async_engine("sqlite+aiosqlite:///:memory:")
+    try:
+        async with engine.begin() as connection:
+            await connection.run_sync(
+                lambda sync: Base.metadata.create_all(
+                    sync, tables=[Team.__table__, Player.__table__]
+                )
+            )
+        yield async_sessionmaker(engine, expire_on_commit=False)
+    finally:
+        await engine.dispose()
+
+
+@pytest.mark.asyncio
+async def test_sync_ep_next_value_is_stored(payload):
+    payload["elements"][0]["ep_next"] = "5.2"
+    _, rows = fpl_sync._parse_payload(payload)
+    assert rows[0]["expected_points_next"] == Decimal("5.2")
+    assert "ep_next" not in rows[0]
+    async with local_sync_database() as factory:
+        async with client_for(payload) as client:
+            await fpl_sync.sync_fpl_data(factory, client=client)
+        async with factory() as session:
+            assert (await session.get(Player, 10)).expected_points_next == Decimal("5.2")
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("missing", [False, True])
+async def test_sync_null_or_missing_ep_next_overwrites_old_value(payload, missing):
+    payload["elements"][0]["ep_next"] = None
+    if missing:
+        del payload["elements"][0]["ep_next"]
+    second = dict(payload["elements"][0], id=11, ep_next="5.2")
+    payload["elements"].append(second)
+    _, rows = fpl_sync._parse_payload(payload)
+    assert rows[0]["expected_points_next"] is None
+    assert all("expected_points_next" in row and "ep_next" not in row for row in rows)
+    async with local_sync_database() as factory:
+        async with client_for(payload) as client:
+            await fpl_sync.sync_fpl_data(factory, client=client)
+        async with factory() as session:
+            player = await session.get(Player, 10)
+            assert player.expected_points_next is None
+            player.expected_points_next = Decimal("8.5")
+            await session.commit()
+        async with client_for(payload) as client:
+            await fpl_sync.sync_fpl_data(factory, client=client)
+        async with factory() as session:
+            assert (await session.get(Player, 10)).expected_points_next is None
+            assert (await session.get(Player, 11)).expected_points_next == Decimal("5.2")
+
+
+@pytest.mark.asyncio
+async def test_invalid_ep_next_never_opens_database(payload):
+    payload["elements"][0]["ep_next"] = "abc"
+    factory = MagicMock()
+    async with client_for(payload) as client:
+        with pytest.raises(fpl_sync.FPLSyncError, match="Invalid FPL bootstrap"):
+            await fpl_sync.sync_fpl_data(factory, client=client)
+    factory.assert_not_called()
