@@ -1,7 +1,12 @@
-"""Small process-local LRU cache for optimizer API responses."""
+"""Process-local LRU cache with TTL for optimizer API responses.
+
+Clearing from a separate sync worker cannot invalidate API process memory.
+TTL bounds response retention when workers and API run in separate processes.
+"""
 
 from collections import OrderedDict
 from threading import Lock
+from time import monotonic
 from typing import TypeAlias
 
 from app.schemas.optimizer import OptimizerRequest, OptimizerResponse
@@ -23,17 +28,22 @@ def build_optimizer_cache_key(request: OptimizerRequest) -> OptimizerCacheKey:
 class OptimizerResponseCache:
     """Thread-safe bounded LRU cache that returns independent response copies."""
 
-    def __init__(self, max_entries: int = 256) -> None:
+    def __init__(self, max_entries: int = 256, ttl_seconds: float = 900) -> None:
         if max_entries < 1:
             raise ValueError("max_entries must be a positive integer.")
         self.max_entries = max_entries
-        self._entries: OrderedDict[OptimizerCacheKey, OptimizerResponse] = OrderedDict()
+        self.ttl_seconds = ttl_seconds
+        self._entries: OrderedDict[OptimizerCacheKey, tuple[float, OptimizerResponse]] = OrderedDict()
         self._lock = Lock()
 
     def get(self, key: OptimizerCacheKey) -> OptimizerResponse | None:
         with self._lock:
-            response = self._entries.get(key)
-            if response is None:
+            entry = self._entries.get(key)
+            if entry is None:
+                return None
+            created_at, response = entry
+            if monotonic() - created_at >= self.ttl_seconds:
+                del self._entries[key]
                 return None
             self._entries.move_to_end(key)
             return response.model_copy(deep=True)
@@ -42,7 +52,7 @@ class OptimizerResponseCache:
         # Store a copy so callers cannot mutate a cached object after insertion.
         cached_response = response.model_copy(deep=True)
         with self._lock:
-            self._entries[key] = cached_response
+            self._entries[key] = (monotonic(), cached_response)
             self._entries.move_to_end(key)
             while len(self._entries) > self.max_entries:
                 self._entries.popitem(last=False)
