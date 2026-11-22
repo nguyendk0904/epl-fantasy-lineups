@@ -128,6 +128,9 @@ async def sync_fpl_data(
     An injected HTTP client stays owned by its caller. No database session is
     opened until the entire response has passed validation. Counts describe
     processed records, rather than claiming how many were newly inserted.
+    Successful commits clear optimizer and FDR caches in this process only.
+    A separate cron_scheduler worker cannot clear API memory; cache TTLs are
+    the primary freshness mechanism across processes.
     """
     if client is None:
         async with httpx.AsyncClient() as owned_client:
@@ -148,6 +151,11 @@ async def sync_fpl_data(
                 await _upsert(session, Player.__table__, players)
     except Exception as exc:
         raise FPLSyncError("FPL database sync failed; transaction rolled back") from exc
+    from app.services.optimizer_cache import optimizer_response_cache
+    from app.services.fdr_service import clear_fdr_cache
+
+    optimizer_response_cache.clear()
+    clear_fdr_cache()
     return {"teams_processed": len(teams), "players_processed": len(players)}
 
 

@@ -295,3 +295,44 @@ async def test_invalid_ep_next_never_opens_database(payload):
         with pytest.raises(fpl_sync.FPLSyncError, match="Invalid FPL bootstrap"):
             await fpl_sync.sync_fpl_data(factory, client=client)
     factory.assert_not_called()
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("failure", [None, "http", "validation", "write", "commit"])
+async def test_sync_invalidates_caches_only_after_successful_commit(payload, monkeypatch, failure):
+    from app.schemas.optimizer import OptimizerResponse
+    from app.services import optimizer_cache, fdr_service
+
+    cache = optimizer_cache.OptimizerResponseCache()
+    monkeypatch.setattr(optimizer_cache, "optimizer_response_cache", cache)
+    key = (100.0, None, (), ())
+    cached = OptimizerResponse(status="infeasible")
+    cache.put(key, cached)
+    clear_fdr = MagicMock()
+    monkeypatch.setattr(fdr_service, "clear_fdr_cache", clear_fdr)
+    factory, session, transaction = fake_sessions()
+
+    async def finish_transaction(*args):
+        assert cache.get(key) == cached
+        clear_fdr.assert_not_called()
+        if failure == "commit":
+            raise RuntimeError("commit failed")
+        return False
+
+    transaction.__aexit__.side_effect = finish_transaction
+    if failure == "write":
+        session.execute.side_effect = RuntimeError("write failed")
+    if failure == "validation":
+        payload["elements"][0]["ep_next"] = "abc"
+    async with client_for(payload, status=500 if failure == "http" else 200) as client:
+        if failure is None:
+            await fpl_sync.sync_fpl_data(factory, client=client)
+        else:
+            with pytest.raises(fpl_sync.FPLSyncError):
+                await fpl_sync.sync_fpl_data(factory, client=client)
+    if failure is None:
+        assert cache.get(key) is None
+        clear_fdr.assert_called_once_with()
+    else:
+        assert cache.get(key) == cached
+        clear_fdr.assert_not_called()

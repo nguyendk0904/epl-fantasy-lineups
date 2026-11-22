@@ -128,3 +128,36 @@ async def test_cached_optimizer_request_skips_database_and_returns_under_5ms(mon
 
     p95_ms = sorted(timings)[int(len(timings) * 0.95) - 1]
     assert p95_ms < 5.0
+
+
+@pytest.mark.parametrize("ttl", [None, 10])
+def test_cache_entry_expires_without_sliding_on_reads(monkeypatch, ttl):
+    from app.services import optimizer_cache
+
+    clock = [100.0]
+    monkeypatch.setattr(optimizer_cache, "monotonic", lambda: clock[0], raising=False)
+    cache = OptimizerResponseCache() if ttl is None else OptimizerResponseCache(ttl_seconds=ttl)
+    lifetime = 900 if ttl is None else ttl
+    key = build_optimizer_cache_key(_request())
+    cache.put(key, _response())
+    clock[0] += lifetime - 0.1
+    assert cache.get(key) is not None
+    clock[0] = 100.0 + lifetime
+    assert cache.get(key) is None
+    assert cache.get(key) is None
+
+
+def test_put_resets_entry_ttl(monkeypatch):
+    from app.services import optimizer_cache
+
+    clock = [0.0]
+    monkeypatch.setattr(optimizer_cache, "monotonic", lambda: clock[0], raising=False)
+    cache = OptimizerResponseCache(ttl_seconds=10)
+    key = build_optimizer_cache_key(_request())
+    cache.put(key, _response("Old"))
+    clock[0] = 9.0
+    cache.put(key, _response("New"))
+    clock[0] = 10.0
+    assert cache.get(key).starting_xi[0].web_name == "New"
+    clock[0] = 19.0
+    assert cache.get(key) is None
