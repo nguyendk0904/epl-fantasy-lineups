@@ -242,6 +242,33 @@ async def test_filter_by_max_cost(test_session):
 
 
 @pytest.mark.asyncio
+async def test_filter_by_min_cost(test_session):
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
+        response = await client.get("/api/v1/players?min_cost=10")
+    assert response.status_code == 200
+    data = response.json()
+    assert data["total"] == 4
+    assert sorted(item["now_cost"] for item in data["items"]) == [10, 10.5, 12.5, 15.2]
+
+
+@pytest.mark.asyncio
+async def test_min_cost_and_max_cost_include_both_bounds(test_session):
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
+        response = await client.get("/api/v1/players?min_cost=10&max_cost=10.5")
+    assert response.status_code == 200
+    data = response.json()
+    assert data["total"] == 2
+    assert sorted(item["now_cost"] for item in data["items"]) == [10, 10.5]
+
+
+@pytest.mark.asyncio
+async def test_min_cost_above_max_cost_is_rejected(test_session):
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
+        response = await client.get("/api/v1/players?min_cost=11&max_cost=10")
+    assert response.status_code == 422
+
+
+@pytest.mark.asyncio
 async def test_search_by_name(test_session):
     transport = ASGITransport(app=app)
     async with AsyncClient(transport=transport, base_url="http://test") as client:
