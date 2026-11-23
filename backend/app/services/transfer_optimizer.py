@@ -1,7 +1,7 @@
 """Transfer optimizer: suggest optimal transfers from a current squad."""
 
-from dataclasses import dataclass, replace
-from typing import Sequence
+from dataclasses import dataclass
+from typing import Mapping, Sequence
 
 import pulp
 
@@ -34,15 +34,24 @@ def optimize_transfers(
     all_candidates: Sequence[PlayerCandidate],
     budget: float = 100.0,
     max_transfers: int = 3,
+    xp_multipliers: Mapping[int, float] | None = None,
 ) -> TransferResult:
     current_ids = {p.id for p in current_squad}
+    if len(current_squad) != 15:
+        raise ValueError("Current squad must contain exactly 15 players.")
+    if len(current_ids) != len(current_squad):
+        raise ValueError("Current squad player IDs must be unique.")
+    if max_transfers < 0:
+        raise ValueError("max_transfers must be non-negative.")
     # Filter injured/unavailable candidates.
-    candidates = [p for p in all_candidates if getattr(p, "status", "a") == "a"]
-    candidate_ids = {p.id for p in candidates}
+    candidates = [p for p in all_candidates if p.id not in current_ids and p.status == "a"]
     players_by_id = _player_by_id(list(current_squad) + list(candidates))
+    multipliers = xp_multipliers or {}
+    points = {p.id: p.expected_points_next * multipliers.get(p.team_id, 1.0)
+              if p.status == "a" else 0.0 for p in players_by_id.values()}
 
     original_cost = sum(p.now_cost for p in current_squad)
-    original_points = sum(p.expected_points_next for p in current_squad)
+    original_points = sum(points[p.id] for p in current_squad)
     bank = budget - original_cost
 
     model = pulp.LpProblem("fpl_transfer_optimizer", pulp.LpMaximize)
@@ -52,14 +61,12 @@ def optimize_transfers(
     for p in current_squad:
         out_vars[p.id] = pulp.LpVariable(f"out_{p.id}", cat=pulp.LpBinary)
     for p in candidates:
-        if p.id in current_ids:
-            continue
         in_vars[p.id] = pulp.LpVariable(f"in_{p.id}", cat=pulp.LpBinary)
 
     # Objective: maximize xP gain.
     model += (
-        pulp.lpSum(players_by_id[pid].expected_points_next * in_vars[pid] for pid in in_vars)
-        - pulp.lpSum(players_by_id[pid].expected_points_next * out_vars[pid] for pid in out_vars)
+        pulp.lpSum(points[pid] * in_vars[pid] for pid in in_vars)
+        - pulp.lpSum(points[pid] * out_vars[pid] for pid in out_vars)
     ), "gain"
 
     # Transfer count constraints.
@@ -104,7 +111,7 @@ def optimize_transfers(
         raise RuntimeError("PuLP could not run CBC.") from exc
 
     status = pulp.LpStatus.get(model.status, "Unknown")
-    if status not in ("Optimal", "Not Solved"):
+    if status != "Optimal":
         if status == "Infeasible":
             # Return no transfers.
             return TransferResult(
@@ -140,7 +147,7 @@ def optimize_transfers(
                 out_player_id=out_id,
                 in_player_id=in_id,
                 cost_change=round(in_p.now_cost - out_p.now_cost, 1),
-                points_change=round(in_p.expected_points_next - out_p.expected_points_next, 1),
+                points_change=round(points[in_id] - points[out_id], 1),
             )
         )
 
@@ -148,13 +155,13 @@ def optimize_transfers(
     new_squad = [players_by_id[pid] for pid in new_squad_ids if pid in players_by_id]
     # Preserve 15 count
     total_cost = round(sum(p.now_cost for p in new_squad), 1)
-    total_points = round(sum(p.expected_points_next for p in new_squad), 1)
+    total_points = sum(points[p.id] for p in new_squad)
     points_gain = round(total_points - original_points, 1)
 
     return TransferResult(
         transfers=tuple(transfers),
         new_squad=new_squad,
         total_cost=total_cost,
-        total_expected_points=total_points,
+        total_expected_points=round(total_points, 1),
         points_gain=points_gain,
     )
