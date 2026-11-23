@@ -315,7 +315,7 @@ export const PlayerTable: React.FC<PlayerTableProps> = ({
   );
 
   // Column visibility for compact mode
-  const columnVisibility = useMemo<VisibilityState>(() => {
+  const columnVisibility = useMemo<VisibilityState>((): VisibilityState => {
     if (isCompact) {
       return {
         element_type: false,

@@ -1,3 +1,5 @@
+/// <reference types="vite/client" />
+
 /**
  * API Client Service for EPL Fantasy Lineup Builder
  * Automatically handles baseURL according to environment (dev/prod)
