@@ -1,3 +1,5 @@
+import { apiClient } from '../../services/apiClient';
+import { MockDataBanner } from '../common/MockDataBanner';
 import React, { useState, useEffect, useMemo } from 'react';
 import {
   Trophy,
@@ -80,6 +82,16 @@ export function generateLeaderboardData(gameweek: number): LeaderboardEntry[] {
   });
 }
 
+export async function loadLeaderboard(gameweek: number) {
+  try {
+    const data = await apiClient.get<LeaderboardEntry[]>('/leaderboard', { params: { gameweek } });
+    if (Array.isArray(data) && data.length > 0) return { data, isMock: false };
+  } catch {
+    // Keep the demo available when the API request fails.
+  }
+  return { data: generateLeaderboardData(gameweek), isMock: true };
+}
+
 export interface LeaderboardViewProps {
   initialGameweek?: number;
   className?: string;
@@ -97,6 +109,7 @@ export const LeaderboardView: React.FC<LeaderboardViewProps> = ({
   const [leaderboardData, setLeaderboardData] = useState<LeaderboardEntry[]>(() =>
     generateLeaderboardData(initialGameweek)
   );
+  const [isMock, setIsMock] = useState(true);
   const [isLoading, setIsLoading] = useState<boolean>(false);
 
   const pageSize = 10;
@@ -106,22 +119,10 @@ export const LeaderboardView: React.FC<LeaderboardViewProps> = ({
     let isMounted = true;
     const fetchLeaderboard = async () => {
       setIsLoading(true);
-      try {
-        const res = await fetch(`/api/v1/leaderboard?gameweek=${gameweek}`);
-        if (res.ok) {
-          const data = await res.json();
-          if (isMounted && Array.isArray(data) && data.length > 0) {
-            setLeaderboardData(data);
-            setIsLoading(false);
-            return;
-          }
-        }
-      } catch {
-        // Fallback tự động
-      }
-
+      const result = await loadLeaderboard(gameweek);
       if (isMounted) {
-        setLeaderboardData(generateLeaderboardData(gameweek));
+        setLeaderboardData(result.data);
+        setIsMock(result.isMock);
         setIsLoading(false);
       }
     };
@@ -170,6 +171,7 @@ export const LeaderboardView: React.FC<LeaderboardViewProps> = ({
       className={`bg-brand-card/90 border border-brand-border rounded-3xl p-4 sm:p-6 shadow-2xl backdrop-blur-xl space-y-6 ${className}`}
       data-testid="leaderboard-view"
     >
+      {isMock && <MockDataBanner />}
       {/* 1. Header Bảng Xếp Hạng & Nút Mở Dream Team */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-brand-border/60 pb-5">
         <div className="flex items-center gap-3">

@@ -1,4 +1,8 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
+import { apiClient } from '../../../services/apiClient';
+import { loadLeaderboard } from '../LeaderboardView';
+
+vi.mock('../../../services/apiClient', () => ({ apiClient: { get: vi.fn() } }));
 import React from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import {
@@ -9,6 +13,18 @@ import {
   DreamTeamModal,
   getDreamTeamForGameweek,
 } from '../DreamTeamModal';
+
+describe('LeaderboardView data source', () => {
+  it.each(['error', 'empty', 'live'])('labels %s data', async (source) => {
+    const sample = generateLeaderboardData(11);
+    const live = sample.slice(0, 1);
+    if (source === 'error') vi.mocked(apiClient.get).mockRejectedValueOnce(new Error('404'));
+    else vi.mocked(apiClient.get).mockResolvedValueOnce(source === 'live' ? live : []);
+    const result = await loadLeaderboard(11);
+    expect(apiClient.get).toHaveBeenCalledWith('/leaderboard', { params: { gameweek: 11 } });
+    expect(result).toEqual({ data: source === 'live' ? live : sample, isMock: source !== 'live' });
+  });
+});
 
 describe('LeaderboardView & DreamTeamModal Unit Tests (P4-NG03)', () => {
   describe('Leaderboard Data Generator', () => {
@@ -70,6 +86,7 @@ describe('LeaderboardView & DreamTeamModal Unit Tests (P4-NG03)', () => {
     it('renders header, title, and Dream Team action button', () => {
       const html = renderToStaticMarkup(<LeaderboardView initialGameweek={11} />);
       expect(html).toContain('Bảng Xếp Hạng FPL');
+      expect(html).toContain('Đang hiển thị dữ liệu mẫu (API chưa sẵn sàng)');
       expect(html).toContain('Mùa Giải 2026/27');
       expect(html).toContain('Đội Hình Tiêu Biểu (Dream Team)');
     });

@@ -1,4 +1,8 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
+import { apiClient } from '../../../services/apiClient';
+import { loadFixtures } from '../FixturesView';
+
+vi.mock('../../../services/apiClient', () => ({ apiClient: { get: vi.fn() } }));
 import React from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import {
@@ -8,6 +12,18 @@ import {
   CURRENT_GAMEWEEK,
 } from '../FixturesView';
 import { FixtureCard, getFdrConfig, FixtureItem } from '../FixtureCard';
+
+describe('FixturesView data source', () => {
+  it.each(['error', 'empty', 'live'])('labels %s data', async (source) => {
+    const sample = generate38GameweekFixtures()[11];
+    const live = sample.slice(0, 1);
+    if (source === 'error') vi.mocked(apiClient.get).mockRejectedValueOnce(new Error('404'));
+    else vi.mocked(apiClient.get).mockResolvedValueOnce(source === 'live' ? live : []);
+    const result = await loadFixtures(11);
+    expect(apiClient.get).toHaveBeenCalledWith('/fixtures', { params: { gameweek: 11 } });
+    expect(result).toEqual({ data: source === 'live' ? live : sample, isMock: source !== 'live' });
+  });
+});
 
 describe('FixturesView & FixtureCard Component Unit Tests (P4-NG01)', () => {
   describe('generate38GameweekFixtures Schedule Generator', () => {
@@ -134,6 +150,7 @@ describe('FixturesView & FixtureCard Component Unit Tests (P4-NG01)', () => {
       const html = renderToStaticMarkup(<FixturesView initialGameweek={10} />);
       expect(html).toContain('Lịch Thi Đấu &amp; Độ Khó FDR');
       expect(html).toContain('38 Vòng EPL');
+      expect(html).not.toContain('Đang hiển thị dữ liệu mẫu (API chưa sẵn sàng)');
       expect(html).toContain('Gameweek 10');
     });
 
