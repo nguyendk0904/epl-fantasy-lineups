@@ -5,7 +5,7 @@
 #
 # FLOW (push / PR-merge into `main`, or manual dispatch)
 #   1. backend-tests  -> reusable test_backend.yml (ruff + compileall + pytest)
-#   2. frontend-ci    -> npm ci -> tsc (advisory) -> vitest -> vite build
+#   2. frontend-ci    -> npm ci -> typecheck -> vitest -> vite build
 #                        -> upload `frontend-dist` artifact
 #   3. deploy-frontend (main only) -> S3 sync (--sse AES256, cache-control)
 #                        -> CloudFront invalidation -> HTTPS smoke test
@@ -90,7 +90,7 @@ jobs:
     uses: ./.github/workflows/test_backend.yml
 
   # -------------------------------------------------------------------
-  # 2. FRONTEND GATE - lint (advisory tsc), vitest, production build
+  # 2. FRONTEND GATE - typecheck, vitest, production build
   # -------------------------------------------------------------------
   frontend-ci:
     name: Frontend Lint, Test & Build
@@ -114,37 +114,8 @@ jobs:
       - name: Install dependencies (exact lockfile)
         run: npm ci --no-audit --no-fund
 
-      - name: Lint - TypeScript type check (advisory)
-        # frontend/ has no committed tsconfig.json (P1-NG01 scope), so CI
-        # generates an ephemeral one mirroring the vite.config.ts aliases.
-        # NON-BLOCKING by decision: the current tree already carries type
-        # debt in components owned by the Frontend Lead (see handoff H-1).
-        # A blocking gate here would paint `main` red and freeze releases.
-        continue-on-error: true
-        run: |
-          set -euo pipefail
-          cat > tsconfig.ci.json <<'JSON'
-          {
-            "compilerOptions": {
-              "target": "ES2020",
-              "lib": ["ES2020", "DOM", "DOM.Iterable"],
-              "module": "ESNext",
-              "moduleResolution": "bundler",
-              "jsx": "react-jsx",
-              "strict": true,
-              "noEmit": true,
-              "skipLibCheck": true,
-              "esModuleInterop": true,
-              "allowSyntheticDefaultImports": true,
-              "resolveJsonModule": true,
-              "isolatedModules": true,
-              "baseUrl": ".",
-              "paths": { "@/*": ["./src/*"] }
-            },
-            "include": ["src"]
-          }
-          JSON
-          npx tsc -p tsconfig.ci.json
+      - name: TypeScript type check
+        run: npm run typecheck
 
       - name: Unit tests (vitest)
         run: npm test
