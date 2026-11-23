@@ -29,6 +29,31 @@ class _FixtureData(BaseModel):
     finished: StrictBool
 
 
+def _parse_fixture_payload(payload: object) -> tuple[list[dict], int]:
+    """Share validation with P4-NH01; unassigned fixtures cannot fit the schema.
+
+    Return their count explicitly. Never invent a gameweek for event=null.
+    """
+    if not isinstance(payload, list) or not payload:
+        raise ValueError("Expected a non-empty fixture list")
+    rows, seen, unassigned = [], set(), 0
+    for raw in payload:
+        if not isinstance(raw, dict):
+            raise ValueError("Expected a fixture object")
+        fixture_id = raw.get("id")
+        if type(fixture_id) is not int or fixture_id <= 0 or fixture_id in seen:
+            raise ValueError("Invalid or duplicate fixture ID")
+        seen.add(fixture_id)
+        if "event" in raw and raw["event"] is None:
+            unassigned += 1
+            continue
+        fixture = _FixtureData.model_validate(raw)
+        if fixture.team_h == fixture.team_a:
+            raise ValueError("A fixture requires two different teams")
+        rows.append(fixture.model_dump())
+    return rows, unassigned
+
+
 async def sync_fixtures(session_factory: Callable[[], AsyncSession], client: httpx.AsyncClient | None = None):
     """Validate scheduled fixtures, then upsert them in a single transaction."""
     if client is None:
@@ -40,19 +65,7 @@ async def sync_fixtures(session_factory: Callable[[], AsyncSession], client: htt
     except httpx.HTTPError as exc:
         raise FPLSyncError("FPL fixtures request failed") from exc
     try:
-        payload = response.json()
-        if not isinstance(payload, list):
-            raise ValueError("Expected a fixture list")
-        rows = []
-        seen = set()
-        for raw in payload:
-            if isinstance(raw, dict) and "event" in raw and raw["event"] is None:
-                continue
-            fixture = _FixtureData.model_validate(raw)
-            if fixture.id in seen:
-                raise ValueError("Duplicate fixture ID")
-            seen.add(fixture.id)
-            rows.append(fixture.model_dump())
+        rows, _ = _parse_fixture_payload(response.json())
     except ValueError as exc:
         raise FPLSyncError("Invalid FPL fixtures payload") from exc
     try:

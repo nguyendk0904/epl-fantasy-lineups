@@ -16,8 +16,8 @@
 | **Phase 1: Local Full-Stack Product** | **17 / 17** | `100%` |  Hoàn thành |
 | **Phase 2: AWS Services Integration** | **13 / 13** | `100%` |  Hoàn thành |
 | **Phase 3: Production Deploy & E2E Test** | **13 / 13** | `100%` | ✅ Theo checklist: NG 3/3, NH 3/3, V 3/3, Q 4/4 |
-| **Phase 4: Live Gamification & League Operations** | **7 / 14** | `50%` | 🟡 Frontend 4/4, Data & Algo 3/3 |
-| **TỔNG CỘNG TOÀN DỰ ÁN** | **50 / 57** | `88%` | 🟡 Theo checklist; xem ghi chú nghiệm thu từng task |
+| **Phase 4: Live Gamification & League Operations** | **8 / 14** | `57%` | 🟡 Theo checklist: NG 4/4, NH 1/4 (code/test local), V 3/3, Q 0/3 |
+| **TỔNG CỘNG TOÀN DỰ ÁN** | **51 / 57** | `89%` | 🟡 Theo checklist; xem ghi chú nghiệm thu từng task |
 
 ---
 
@@ -506,7 +506,7 @@
 
 ---
 
-## 🏆 PHASE 4: VẬN HÀNH MÙA GIẢI & GAMIFICATION (7/14)
+## 🏆 PHASE 4: VẬN HÀNH MÙA GIẢI & GAMIFICATION (8/14)
 *Mục tiêu: Vận hành trực tiếp với FPL thật: Lịch thi đấu 38 vòng, chấm điểm live, quản lý chấn thương, BXH và luật chuyển nhượng 3 người/tuần.*
 
 ### 🎨 Nguyên (Frontend & UI Lead) - [4/4]
@@ -553,13 +553,20 @@
 
 ---
 
-### ⚙️ Nhất (Backend Core & Live Data Lead) - [0/4]
+### ⚙️ Nhất (Backend Core & Live Data Lead) - [1/4] (NH01 xong code/test local, chờ nghiệm thu PostgreSQL/RDS)
 
-- [ ] **`P4-NH01`** *(Level 3)*: Worker `live_sync.py`: Tự động cào Lịch thi đấu 38 vòng & Trạng thái y tế/chấn thương
+- [x] **`P4-NH01`** *(Level 3)*: Worker `fixture_sync.py`: Tự động cào Lịch thi đấu 38 vòng & Trạng thái y tế/chấn thương
+  - *Ý nghĩa checkbox theo xác nhận NH:* Hoàn thành code và test local; **CHƯA nghiệm thu PostgreSQL/RDS/cloud**, chưa áp dụng migration `005` lên database thật.
   - *Mô tả:* Worker kéo dữ liệu từ FPL API (`/api/fixtures/` và `/api/bootstrap-static/`), chuẩn hóa và upsert lịch 38 vòng đấu, danh sách chấn thương/treo giò kèm % khả năng ra sân vào PostgreSQL.
   - *Phụ thuộc:* `P4-V01`, `P1-NH02`
   - *Thư mục:* `backend/app/services/`
   - *File tạo mới (2 files):* `backend/app/services/fixture_sync.py`, `backend/tests/test_fixture_sync.py`.
+  - *Triển khai 23/11/2026:* Xong code/test local trên nhánh `feature/P4-NH01-sync-fixtures-injuries`; chưa nghiệm thu PostgreSQL/RDS thật. Dùng lại parser/upsert của `fpl_sync.py` và `fixtures_sync.py`, validate cả hai payload trước một transaction ghi teams → players → fixtures; lỗi ghi lịch rollback cả thông tin cầu thủ.
+  - *Schema được NH phê duyệt:* Bổ sung `players.chance_of_playing_next_round` nullable, số nguyên 0–100 và CHECK constraint; migration mới `005_add_player_availability.py` (file mới thứ 3 của task). `null`/thiếu trường giữ nghĩa chưa biết, không tự suy ra 100%; status/news lấy nguyên từ FPL.
+  - *Kiểm thử local:* Nhóm sync/schema/API lịch **81 passed, 4 skipped**; toàn backend **394 passed, 7 skipped** với CBC thật. Test 380 trận tổng hợp, upsert lặp lại, cập nhật tỉ số/lịch/trạng thái, phục hồi từ chấn thương, validate %, lỗi HTTP/JSON và rollback SQL đều pass. Các lượt PostgreSQL mới skip vì chưa đặt `FIXTURE_SYNC_TEST_DATABASE_URL`; chưa chạy lint do môi trường chưa có Ruff.
+  - *Chạy worker:* Từ `backend/`, sau khi database đã ở migration `005`, chạy `python -m app.services.fixture_sync`. Đây là lệnh một lần; Quang cấu hình lịch ở P4-Q01, không tự bật thêm scheduler P2-NH03.
+  - *Giới hạn dữ liệu:* Schema hiện yêu cầu Gameweek khác NULL. Trận có `event=null` được đếm trong `fixtures_unassigned`, tạm bỏ qua và không xóa bản ghi cũ; không tự gán vòng đấu. `fixtures_processed` là số dòng hợp lệ đã xử lý, không khẳng định luôn đủ 380 trận từ dữ liệu FPL thật.
+  - *Bàn giao PostgreSQL/cloud:* Quang/Vũ review và áp dụng migration `005` trước khi chạy image mới (bootstrap sync cũng ghi cột mới). Đặt `FIXTURE_SYNC_TEST_DATABASE_URL` trỏ database riêng kết thúc `_test`, chạy `python -m pytest tests/test_fixture_sync.py -q`; test PostgreSQL tự tạo/dọn schema riêng và chạy migration hiện có. Sau đó nghiệm thu worker với FPL/RDS thật. API contract chưa thay đổi; cache chỉ clear trong process hiện tại, process khác dùng TTL sẵn có.
   - *Branch:* `feature/P4-NH01-sync-fixtures-injuries`
   - *Tiêu chí chấp nhận (Acceptance Criteria):* Kéo và cập nhật đầy đủ 380 trận đấu và cờ trạng thái y tế (`d`, `i`, `s`) vào bảng `fixtures` và `players`.
   - *Cách kiểm chứng (Verification):* `pytest backend/tests/test_fixture_sync.py` pass 100%.

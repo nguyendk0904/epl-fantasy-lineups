@@ -62,6 +62,7 @@ class _PlayerData(BaseModel):
     now_cost: Annotated[int, Field(strict=True, gt=0, le=9999)]
     status: Annotated[str, Field(min_length=1, max_length=5)] = "a"
     news: str | None = None
+    chance_of_playing_next_round: Annotated[int, Field(strict=True, ge=0, le=100)] | None = None
     total_points: Annotated[int, Field(strict=True)] = 0
     form: Metric = Decimal("0.0")
     selected_by_percent: Metric | None = None
