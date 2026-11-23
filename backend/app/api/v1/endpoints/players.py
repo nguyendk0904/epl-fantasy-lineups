@@ -1,5 +1,5 @@
 from typing import Literal, Optional
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy import select, func, or_, desc, asc
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -23,6 +23,7 @@ SORT_COLUMN_MAP = {
 async def get_players(
     position: Optional[Literal["GKP", "DEF", "MID", "FWD"]] = Query(None, description="Position filter: GKP, DEF, MID, FWD"),
     team_id: Optional[int] = Query(None, description="Filter by team ID"),
+    min_cost: Optional[float] = Query(None, ge=0.0, description="Filter by minimum price (£m)"),
     max_cost: Optional[float] = Query(None, ge=0.0, description="Filter by maximum price (£m)"),
     search: Optional[str] = Query(None, description="Search player by name"),
     sort_by: Literal["total_points", "now_cost", "form", "expected_points_next"] = Query("total_points", description="Sort by: total_points, now_cost, form, expected_points_next"),
@@ -34,6 +35,11 @@ async def get_players(
     """Get players list with filtering, searching, sorting and pagination."""
     # Base query for filtering
     conditions = []
+
+    if min_cost is not None:
+        if max_cost is not None and min_cost > max_cost:
+            raise HTTPException(status_code=422, detail="min_cost must not exceed max_cost")
+        conditions.append(Player.now_cost >= min_cost)
 
     if position:
         conditions.append(Player.element_type == position)
