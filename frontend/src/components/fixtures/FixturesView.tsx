@@ -1,3 +1,5 @@
+import { apiClient } from '../../services/apiClient';
+import { MockDataBanner } from '../common/MockDataBanner';
 import React, { useState, useEffect, useMemo } from 'react';
 import {
   Calendar,
@@ -135,6 +137,16 @@ export function generate38GameweekFixtures(): Record<number, FixtureItem[]> {
 
 export const ALL_38_GAMEWEEK_FIXTURES = generate38GameweekFixtures();
 
+export async function loadFixtures(gameweek: number) {
+  try {
+    const data = await apiClient.get<FixtureItem[]>('/fixtures', { params: { gameweek } });
+    if (Array.isArray(data) && data.length > 0) return { data, isMock: false };
+  } catch {
+    // Keep the demo available when the API request fails.
+  }
+  return { data: ALL_38_GAMEWEEK_FIXTURES[gameweek] || [], isMock: true };
+}
+
 export interface FixturesViewProps {
   initialGameweek?: number;
   onSelectTeam?: (teamId: number) => void;
@@ -149,6 +161,7 @@ export const FixturesView: React.FC<FixturesViewProps> = ({
   const [gameweek, setGameweek] = useState<number>(initialGameweek);
   const [selectedTeamFilter, setSelectedTeamFilter] = useState<number | 'ALL'>('ALL');
   const [fixtures, setFixtures] = useState<FixtureItem[]>([]);
+  const [isMock, setIsMock] = useState(false);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [showFdrLegend, setShowFdrLegend] = useState<boolean>(false);
 
@@ -157,23 +170,10 @@ export const FixturesView: React.FC<FixturesViewProps> = ({
     let isMounted = true;
     const fetchFixtures = async () => {
       setIsLoading(true);
-      try {
-        const apiUrl = `/api/v1/fixtures?gameweek=${gameweek}`;
-        const res = await fetch(apiUrl);
-        if (res.ok) {
-          const data = await res.json();
-          if (isMounted && Array.isArray(data) && data.length > 0) {
-            setFixtures(data);
-            setIsLoading(false);
-            return;
-          }
-        }
-      } catch {
-        // Fallback tự động xuống mock dataset 38 vòng
-      }
-
+      const result = await loadFixtures(gameweek);
       if (isMounted) {
-        setFixtures(ALL_38_GAMEWEEK_FIXTURES[gameweek] || []);
+        setFixtures(result.data);
+        setIsMock(result.isMock);
         setIsLoading(false);
       }
     };
@@ -216,6 +216,7 @@ export const FixturesView: React.FC<FixturesViewProps> = ({
       className={`bg-brand-card/90 border border-brand-border rounded-2xl p-4 sm:p-6 shadow-2xl backdrop-blur-xl space-y-6 ${className}`}
       data-testid="fixtures-view"
     >
+      {isMock && <MockDataBanner />}
       {/* 1. Header & Điều hướng Gameweek */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-brand-border/60 pb-5">
         <div>
