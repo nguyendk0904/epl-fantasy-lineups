@@ -425,7 +425,7 @@ export const LeaderboardView: React.FC<LeaderboardViewProps> = ({
                               {Math.abs(rankDelta)}
                             </span>
                           ) : (
-                            <Minus className="w-2.5 h-2.5 text-brand-muted" title="Giữ nguyên thứ hạng" />
+                            <span title="Giữ nguyên thứ hạng"><Minus className="w-2.5 h-2.5 text-brand-muted" /></span>
                           )}
                         </div>
                       </div>

@@ -44,8 +44,12 @@ export interface LineupStoreState {
   };
 }
 
+type PersistedLineup = Pick<LineupStoreState,
+  'startingXI' | 'bench' | 'formation' | 'captainId' | 'viceCaptainId'
+>;
+
 export const useLineupStore = create<LineupStoreState>()(
-  persist(
+  persist<LineupStoreState, [], [], PersistedLineup>(
     (set, get) => ({
       startingXI: [],
       bench: [],

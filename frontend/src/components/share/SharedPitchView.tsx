@@ -93,11 +93,8 @@ export const SharedPitchView: React.FC<SharedPitchViewProps> = ({
                 <div key={`fwd-${idx}`} className="w-20 sm:w-24">
                   <PlayerPitchSlot
                     player={player}
-                    position="FWD"
+                    expectedPosition="FWD"
                     slotIndex={idx}
-                    isStarting={true}
-                    isCaptain={player ? player.id === captainId : false}
-                    isViceCaptain={player ? player.id === viceCaptainId : false}
                   />
                 </div>
               );
@@ -112,11 +109,8 @@ export const SharedPitchView: React.FC<SharedPitchViewProps> = ({
                 <div key={`mid-${idx}`} className="w-20 sm:w-24">
                   <PlayerPitchSlot
                     player={player}
-                    position="MID"
+                    expectedPosition="MID"
                     slotIndex={idx}
-                    isStarting={true}
-                    isCaptain={player ? player.id === captainId : false}
-                    isViceCaptain={player ? player.id === viceCaptainId : false}
                   />
                 </div>
               );
@@ -131,11 +125,8 @@ export const SharedPitchView: React.FC<SharedPitchViewProps> = ({
                 <div key={`def-${idx}`} className="w-20 sm:w-24">
                   <PlayerPitchSlot
                     player={player}
-                    position="DEF"
+                    expectedPosition="DEF"
                     slotIndex={idx}
-                    isStarting={true}
-                    isCaptain={player ? player.id === captainId : false}
-                    isViceCaptain={player ? player.id === viceCaptainId : false}
                   />
                 </div>
               );
@@ -147,11 +138,8 @@ export const SharedPitchView: React.FC<SharedPitchViewProps> = ({
             <div className="w-20 sm:w-24">
               <PlayerPitchSlot
                 player={gkpPlayer}
-                position="GKP"
+                expectedPosition="GKP"
                 slotIndex={0}
-                isStarting={true}
-                isCaptain={gkpPlayer ? gkpPlayer.id === captainId : false}
-                isViceCaptain={gkpPlayer ? gkpPlayer.id === viceCaptainId : false}
               />
             </div>
           </div>
@@ -183,12 +171,9 @@ export const SharedPitchView: React.FC<SharedPitchViewProps> = ({
                 </span>
                 <PlayerPitchSlot
                   player={player}
-                  position={expectedPos}
+                  expectedPosition={expectedPos}
                   slotIndex={idx}
                   isBench={true}
-                  isStarting={false}
-                  isCaptain={false}
-                  isViceCaptain={false}
                 />
               </div>
             );

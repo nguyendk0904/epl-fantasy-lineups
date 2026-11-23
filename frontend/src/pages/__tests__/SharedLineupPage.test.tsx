@@ -8,7 +8,7 @@ import { apiClient } from '../../services/apiClient';
 import { LineupPlayer } from '../../types';
 
 describe('P2-NG02: SharedLineupPage & SharedPitchView Unit Tests', () => {
-  const mockSharedData: SharedLineupApiResponse = {
+  const mockSharedData = {
     share_code: 'abc123',
     lineup_name: 'Arsenal & City Stars',
     total_cost: 98.5,
@@ -38,7 +38,7 @@ describe('P2-NG02: SharedLineupPage & SharedPitchView Unit Tests', () => {
       ],
     },
     created_at: '2026-11-08T12:00:00Z',
-  };
+  } satisfies SharedLineupApiResponse;
 
   beforeEach(() => {
     vi.restoreAllMocks();

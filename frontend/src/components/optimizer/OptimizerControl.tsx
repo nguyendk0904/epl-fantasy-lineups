@@ -5,7 +5,6 @@ import {
   Unlock, 
   Ban, 
   CheckCircle2, 
-  Slider, 
   Zap, 
   Info,
   RefreshCw
