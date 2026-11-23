@@ -9,7 +9,7 @@
 Dự án này áp dụng phương pháp **Vibe Coding có kỷ luật (Disciplined Vibe Coding)**. Toàn bộ tài liệu chuẩn hóa của dự án được lưu trữ tập trung tại thư mục [`docs/`](docs/README.md). Trước khi code hoặc giao việc cho AI, tất cả thành viên và AI Assistant bắt buộc phải tham chiếu:
 
 1. **[`docs/TODO.md`](docs/TODO.md)**:
-   - **Bảng theo dõi tiến độ & Đặc tả chi tiết 59 task (Phase 1 - Phase 4):** Tích hợp đầy đủ mô tả ngắn, quan hệ phụ thuộc (dependencies), thư mục được phép làm việc, tên chính xác từng file tạo mới ($\le$ 5 file/task), tiêu chí nghiệm thu (Acceptance Criteria) và cách kiểm chứng (Verification).
+   - **Bảng theo dõi tiến độ & Đặc tả chi tiết 57 task (Phase 1–4), đã hoàn thành 50/57 (88%):** Tích hợp đầy đủ mô tả ngắn, quan hệ phụ thuộc (dependencies), thư mục được phép làm việc, tên chính xác từng file tạo mới ($\le$ 5 file/task), tiêu chí nghiệm thu (Acceptance Criteria) và cách kiểm chứng (Verification).
 2. **[`docs/AI_DEVELOPMENT_GUIDE.md`](docs/AI_DEVELOPMENT_GUIDE.md)**:
    - **Cẩm nang thực chiến dành cho thành viên:** Hướng dẫn 6 bước làm việc với AI theo Giao thức Bắt tay 2 lượt (2-Way Handshake), kỹ thuật Prompting, cách thẩm định output, xử lý lỗi và kịch bản riêng cho từng bạn.
 3. **[`docs/PROJECT_ROADMAP.md`](docs/PROJECT_ROADMAP.md)**:
@@ -27,12 +27,12 @@ Dự án này áp dụng phương pháp **Vibe Coding có kỷ luật (Disciplin
 
 ## 🛠 TECH STACK
 
-- **Frontend:** React, TypeScript, Vite, TailwindCSS, Shadcn/ui, Zustand, Recharts, TanStack Table.
+- **Frontend:** React, TypeScript, Vite, TailwindCSS, Zustand, Recharts, TanStack Table.
 - **Backend:** Python (FastAPI), SQLAlchemy 2.0 Async, Alembic.
 - **Optimizer Engine:** PuLP (0-1 Integer Linear Programming with CBC Solver).
 - **Database:** PostgreSQL 15.
 - **Data Source:** Official FPL API (`bootstrap-static`, `fixtures`).
-- **Cloud Infrastructure:** AWS Free Tier (S3, CloudFront, RDS db.t4g.micro, EC2/App Runner).
+- **Cloud Infrastructure:** AWS Free Tier (S3, CloudFront, RDS db.t4g.micro, EC2 + Caddy).
 
 ---
 

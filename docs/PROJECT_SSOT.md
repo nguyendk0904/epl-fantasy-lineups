@@ -10,15 +10,15 @@
 | Layer | Technology | Version | Purpose |
 | :--- | :--- | :--- | :--- |
 | **Frontend** | React + TypeScript + Vite | React 18+, Vite 5+ | SPA Framework, hiệu năng cao, build nhanh. |
-| **Styling** | TailwindCSS + Shadcn/ui + Lucide Icons | Latest | UI System hiện đại, responsive. |
+| **Styling** | TailwindCSS + Lucide Icons | Latest | Shadcn/ui trong kế hoạch, chưa sử dụng. |
 | **Data Viz** | Recharts | Latest | Vẽ biểu đồ so sánh Radar chart, Bar chart. |
 | **State Management** | Zustand | Latest | Quản lý state sân bóng (Pitch state), localStorage. |
-| **Data Fetching** | TanStack Query (React Query) | v5 | Cache API data, polling data. |
+| **Data Fetching** | TanStack Query (React Query) | v5 | Đã khai báo dependency; chưa sử dụng trong frontend. Cache và polling bằng TanStack Query thuộc kế hoạch. |
 | **Backend** | Python (FastAPI) | 3.11+ / FastAPI 0.110+ | High-performance async REST API. |
 | **ORM / Migration** | SQLAlchemy 2.0 (Async) + Alembic | Latest | Thao tác DB type-safe, migration an toàn. |
 | **Optimization Solver** | PuLP | 2.8+ | Thư viện giải bài toán 0-1 Integer Linear Programming. |
 | **Database** | PostgreSQL | 15+ | CSDL quan hệ chính. |
-| **Infrastructure** | AWS Free Tier (S3, CloudFront, RDS db.t4g.micro, EC2/App Runner) | - | Triển khai cloud an toàn với chi phí $0. |
+| **Infrastructure** | AWS Free Tier (S3, CloudFront, RDS db.t4g.micro, EC2 + Caddy) | - | Triển khai cloud an toàn với chi phí $0. |
 
 ---
 
@@ -155,6 +155,8 @@ Tất cả các endpoint đều có tiền tố `/api/v1`.
     }
     ```
 
+**Quy ước xP (FIX-03):** Trong response của `POST /api/v1/optimizer/solve`, `expected_points_next` của từng cầu thủ là xP sau điều chỉnh FDR, làm tròn một chữ số thập phân. Solver dùng xP sau FDR ở độ chính xác đầy đủ để chọn XI và đội trưởng. `total_expected_points` bằng tổng xP hiển thị của XI cộng thêm xP hiển thị của đội trưởng, làm tròn một chữ số thập phân.
+
 ### 4.3. Comparison Endpoint (So sánh đội hình)
 - **`POST /api/v1/lineups/compare`**
   - Request Body:
@@ -183,6 +185,9 @@ Tất cả các endpoint đều có tiền tố `/api/v1`.
 ## 5. CẤU HÌNH BIẾN MÔI TRƯỜNG BẮT BUỘC (`.env.example`)
 
 ```env
+# Frontend
+VITE_API_BASE_URL=http://localhost:8000/api/v1
+
 # Backend Environment
 ENVIRONMENT=development
 PORT=8000
