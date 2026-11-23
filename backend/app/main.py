@@ -6,6 +6,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.core.config import settings
 from app.api.v1.endpoints.players import router as players_router
 from app.api.v1.endpoints.fixtures import router as fixtures_router
+from app.api.v1.endpoints.gameweeks import router as gameweeks_router
 from app.api.v1.endpoints.teams import router as teams_router
 from app.api.v1.endpoints.optimizer import router as optimizer_router
 from app.api.v1.endpoints.lineups import router as lineups_router
@@ -51,6 +52,7 @@ app.add_middleware(
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
+    expose_headers=["X-Total-Count", "X-Page", "X-Limit", "X-Total-Pages"],
 )
 app.add_middleware(RequestLoggingMiddleware)
 
@@ -71,6 +73,7 @@ async def api_health_check():
 # Include endpoint routers
 api_v1_router.include_router(players_router, prefix="/players")
 api_v1_router.include_router(fixtures_router)
+api_v1_router.include_router(gameweeks_router)
 api_v1_router.include_router(teams_router, prefix="/teams")
 api_v1_router.include_router(optimizer_router)
 api_v1_router.include_router(lineups_router)

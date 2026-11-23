@@ -196,6 +196,22 @@ Tất cả các endpoint đều có tiền tố `/api/v1`.
 
 ---
 
+### 4.5. Leaderboard & Transfers — phạm vi demo P4-NH04
+
+- **`GET /api/v1/leaderboard?gameweek=2`**: public, chỉ đọc điểm đã lưu trong `user_gameweek_lineups`; không tự gọi scoring hoặc tạo bảng BXH. Query `gameweek=1..38` bắt buộc; `sort_by=overall|gameweek` mặc định overall; `page>=1`, `limit=1..100` mặc định 100. Body giữ dạng array để tương thích loader frontend. Header `X-Total-Count`, `X-Page`, `X-Limit`, `X-Total-Pages` được expose qua CORS; ngoài trang cuối trả array rỗng.
+- Mỗi entry: `{user_id, rank, previous_rank, manager_name, team_name, gameweek_points, total_points, favorite_club, captain_name, formation}`. Tổng điểm chỉ cộng đến vòng được yêu cầu, không lấy vòng tương lai; điểm tuần là điểm của chính vòng đó. Đồng điểm dùng hạng 1,1,3 và user ID làm thứ tự phụ ổn định. `previous_rank` là hạng tương ứng tại vòng trước; 0 nghĩa chưa có entry trước.
+- Chưa có bảng users/profiles: `manager_name="Player #<id>"`, `team_name="Squad #<id>"` là nhãn demo theo ID, không phải tên cá nhân thật; `favorite_club=""` vì chưa lưu. Captain/sơ đồ lấy từ đội hình gần nhất đến vòng yêu cầu; dữ liệu chưa xác định dùng chuỗi rỗng. Frontend cần xử lý previous_rank=0 và giữ hạng server nếu muốn hiển thị đồng hạng.
+- **`POST /api/v1/transfers/confirm`**: dùng `Authorization: Bearer <demo-token>`; danh tính lấy từ token, không nhận user ID trong body. Body gồm `gameweek` (integer 1–38), `starting_player_ids` (11), `bench_player_ids` (4), `formation`, `captain_id`, `vice_captain_id`; cấm các field thừa. ID duy nhất, C/V khác nhau và thuộc XI. Giá, CLB, vị trí, deadline và số lượt đều do server kiểm tra.
+- Deadline lấy từ `events[].deadline_time` trong FPL bootstrap, dùng giờ UTC của server; nguồn không xác minh được trả 503 và không ghi DB. Kiểm tra lại sau khi đợi lock và trước commit. Sau deadline hoặc `is_locked=true` trả 400; kiểm tra đủ 15 vị trí chuẩn FPL, sơ đồ đúng XI, <=3 cầu thủ/CLB và tổng giá hiện tại <=100m.
+- Mỗi lần chốt đếm số ID mới so với đội hình đã lưu cùng vòng; nếu chưa có thì so với đội hình vòng trước gần nhất. Lần chọn 15 người đầu tiên của người chơi tính 0 lượt. Tổng tối đa 3/vòng, không chuyển lượt dư sang vòng sau; đảo bench/XI hoặc đổi C/V không tính là mua cầu thủ mới. Retry cùng đội hình không tăng số lượt. Chốt là lưu trước deadline, không khóa vĩnh viễn ngay từ lần đầu.
+- `200` trả `{lineup_id, user_id, gameweek, starting_player_ids, bench_player_ids, captain_id, vice_captain_id, formation, total_cost, transfers_count, transfers_used, remaining_transfers, deadline, is_locked}`. 400 cho giới hạn/deadline/đội hình/ngân sách; 404 nếu thiếu cầu thủ; 422 nếu body sai; 401 nếu token không hợp lệ/hết hạn; 503 nếu chưa bật demo writes, DB hoặc deadline không sẵn sàng. Lỗi không commit thay đổi một phần.
+- PostgreSQL dùng advisory transaction lock theo user để bảo vệ cả lần tạo đầu tiên; đọc row hiện có FOR UPDATE. SQLite file dùng BEGIN IMMEDIATE cho test đồng thời. Lịch sử, lượt và đội hình nằm trong một transaction; không dựa trên lock trong bộ nhớ process.
+- **Token demo, chưa phải hệ thống tài khoản/login:** `GAMEWEEK_DEMO_AUTH_ENABLED=false` mặc định. Khi bật phải đặt `GAMEWEEK_DEMO_TOKEN_SECRET` ngẫu nhiên >=32 ký tự, giữ riêng phía server. Token HMAC-SHA256 có user ID, thời hạn và audience cố định; hết hạn trả 401, đổi secret thu hồi mọi token cũ. Operator cấp token riêng từng người qua `python -m app.core.gameweek_auth --user-id 1 --hours 24` (1–168 giờ). Không có endpoint cấp token public; không gửi secret sang frontend hoặc đưa token/secret vào Git/chat/log. Chỉ chạy lệnh cấp token tại terminal riêng không bị thu thập output làm log.
+- **Chấm điểm và bàn giao Q:** Sau khi deadline qua, NH01 cập nhật các fixture đã finished và NH02 cập nhật stats, chạy `python -m app.services.gameweek_service --score-gameweek 2` để gọi scoring engine hiện có của Vũ. Chỉ chấm khi có lịch, tất cả trận vòng đã kết thúc và mỗi trận có stats; ghi điểm/khóa lineup trong một transaction, chạy lại không cộng điểm lặp. BXH đọc điểm này; chưa có chấm điểm live tự động hoặc lịch chạy mới trong P4-NH04.
+- NG cần nối token, payload và số lượt từ server vào TransferControl; màn hình hiện còn lưu cục bộ. Chưa tự thay frontend, schema DB, IAM, Docker hoặc CI/CD. Nghiệm thu PostgreSQL/RDS và tích hợp UI thực hiện riêng.
+
+---
+
 ## 5. CẤU HÌNH BIẾN MÔI TRƯỜNG BẮT BUỘC (`.env.example`)
 
 ```env

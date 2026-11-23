@@ -38,6 +38,8 @@ class JsonLogFormatter(logging.Formatter):
             self.secrets.extend((password, quote(password, safe="")))
         if config.RDS_PASSWORD is not None:
             self.secrets.append(config.RDS_PASSWORD.get_secret_value())
+        if config.GAMEWEEK_DEMO_TOKEN_SECRET is not None:
+            self.secrets.append(config.GAMEWEEK_DEMO_TOKEN_SECRET.get_secret_value())
 
     def redact(self, message: str) -> str:
         for secret in self.secrets:
