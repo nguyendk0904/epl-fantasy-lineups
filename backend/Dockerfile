@@ -20,11 +20,11 @@ RUN apt-get update \
     && apt-get install -y --no-install-recommends build-essential \
     && rm -rf /var/lib/apt/lists/*
 
-# Install declared deps + PuLP (0-1 ILP optimizer library, SSOT >= 2.8)
+# Install production dependencies, including PuLP.
 COPY requirements.txt .
 RUN python -m venv /opt/venv \
     && /opt/venv/bin/pip install --upgrade pip \
-    && /opt/venv/bin/pip install -r requirements.txt "pulp>=2.8.0"
+    && /opt/venv/bin/pip install -r requirements.txt
 
 # ---------------------------------------------------------------------
 # Stage 2: Runtime - slim image with only what is needed at run time
