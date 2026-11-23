@@ -16,8 +16,8 @@
 | **Phase 1: Local Full-Stack Product** | **17 / 17** | `100%` |  Hoàn thành |
 | **Phase 2: AWS Services Integration** | **13 / 13** | `100%` |  Hoàn thành |
 | **Phase 3: Production Deploy & E2E Test** | **13 / 13** | `100%` | ✅ Theo checklist: NG 3/3, NH 3/3, V 3/3, Q 4/4 |
-| **Phase 4: Live Gamification & League Operations** | **10 / 14** | `71%` | 🟡 Theo checklist: NG 4/4, NH 3/4 (code/test local), V 3/3, Q 0/3 |
-| **TỔNG CỘNG TOÀN DỰ ÁN** | **53 / 57** | `93%` | 🟡 Theo checklist; xem ghi chú nghiệm thu từng task |
+| **Phase 4: Live Gamification & League Operations** | **11 / 14** | `79%` | 🟡 Theo checklist: NG 4/4, NH 4/4 (code/test local), V 3/3, Q 0/3 |
+| **TỔNG CỘNG TOÀN DỰ ÁN** | **54 / 57** | `95%` | 🟡 Theo checklist; xem ghi chú nghiệm thu từng task |
 
 ---
 
@@ -506,7 +506,7 @@
 
 ---
 
-## 🏆 PHASE 4: VẬN HÀNH MÙA GIẢI & GAMIFICATION (10/14)
+## 🏆 PHASE 4: VẬN HÀNH MÙA GIẢI & GAMIFICATION (11/14)
 *Mục tiêu: Vận hành trực tiếp với FPL thật: Lịch thi đấu 38 vòng, chấm điểm live, quản lý chấn thương, BXH và luật chuyển nhượng 3 người/tuần.*
 
 ### 🎨 Nguyên (Frontend & UI Lead) - [4/4]
@@ -553,7 +553,7 @@
 
 ---
 
-### ⚙️ Nhất (Backend Core & Live Data Lead) - [3/4] (NH01–NH03 xong code/test local, chờ nghiệm thu PostgreSQL/RDS)
+### ⚙️ Nhất (Backend Core & Live Data Lead) - [4/4] (NH01–NH04 xong code/test local, chờ nghiệm thu PostgreSQL/RDS và UI)
 
 - [x] **`P4-NH01`** *(Level 3)*: Worker `fixture_sync.py`: Tự động cào Lịch thi đấu 38 vòng & Trạng thái y tế/chấn thương
   - *Ý nghĩa checkbox theo xác nhận NH:* Hoàn thành code và test local; **CHƯA nghiệm thu PostgreSQL/RDS/cloud**, chưa áp dụng migration `005` lên database thật.
@@ -603,11 +603,19 @@
   - *Tiêu chí chấp nhận (Acceptance Criteria):* Trả về danh sách trận đấu lọc theo param `gameweek`, và trả về 11 cầu thủ Dream Team kèm sơ đồ thi đấu.
   - *Cách kiểm chứng (Verification):* `pytest backend/tests/test_fixtures_api.py` pass 100%.
 
-- [ ] **`P4-NH04`** *(Level 3)*: REST API `GET /api/v1/leaderboard` & `POST /api/v1/transfers/confirm`
+- [x] **`P4-NH04`** *(Level 3)*: REST API `GET /api/v1/leaderboard` & `POST /api/v1/transfers/confirm`
+  - *Trạng thái 23/11/2026:* Xong code/test local với phạm vi demo, checkbox theo quy ước NH; **CHƯA nghiệm thu PostgreSQL/RDS, auth tài khoản thật hoặc UI**. Không đổi schema của Vũ, frontend hoặc hạ tầng. API contract/demo auth được mô tả tại SSOT §4.5.
+  - *BXH:* Tổng hợp điểm đã chấm từ `user_gameweek_lineups`, lọc vòng tương lai, sort tuần/toàn mùa, phân trang bằng query + headers; đồng hạng 1,1,3 và có hạng vòng trước. Tên manager/đội là nhãn demo theo user ID, CLB yêu thích chưa có dùng chuỗi rỗng; không sinh tên cá nhân hoặc điểm mẫu. Điểm vẫn 0 trước khi chạy scoring.
+  - *Chuyển nhượng:* Validate đủ 15 người, composition/sơ đồ/C-V, max 3/CLB và giá DB <=100m; deadline lấy FPL phía server. Đếm cộng dồn từ baseline đã lưu, tối đa 3/vòng; đăng ký đầu tiên 0 lượt, tuần mới so đội hình trước nhưng reset hạn mức, đảo bench/C-V không tốn lượt. Advisory transaction lock PostgreSQL bảo vệ cả first insert; SQLite file dùng BEGIN IMMEDIATE cho test thực sự đồng thời. Lỗi rollback toàn bộ, kiểm tra lại deadline sau đợi lock và trước commit.
+  - *Danh tính demo:* Ghi mặc định tắt; bật `GAMEWEEK_DEMO_AUTH_ENABLED` và secret riêng `GAMEWEEK_DEMO_TOKEN_SECRET` >=32 ký tự mới cấp token HMAC có hạn cho từng user ID. Không tin user ID trong body; token sai/hết hạn trả 401. Secret được che trong config/logging; chưa có bảng users/login. Chỉ operator cấp token ở terminal riêng, không ghi output vào log hay gửi secret vào chat/Git.
+  - *Bàn giao scoring:* Chạy `python -m app.services.gameweek_service --score-gameweek <gw>` sau deadline và sau khi NH01/NH02 đã sync đủ các trận finished/stats. Dùng scoring engine Vũ để ghi điểm/khóa lineups nguyên tử, chạy lại không cộng lặp; GET BXH chỉ đọc. Q cấu hình lịch trong task hạ tầng, NH04 không tự bật scheduler.
+  - *Bằng chứng local:* NH04 **46 passed, 2 skipped**; toàn backend **515 passed, 12 skipped** với CBC thật. Đã kiểm tra auth/deadline, ngân sách, dữ liệu giả từ client, giới hạn cộng dồn, retry, baseline lỗi, chấm điểm, xếp hạng/phân trang và hai request đồng thời trên SQLite file. Hai test PostgreSQL skip do chưa có `GAMEWEEK_TEST_DATABASE_URL`; chưa xác minh advisory lock trên PostgreSQL thật.
+  - *Kiểm tra cuối:* Ruff đã khai báo trong requirements-dev được cài vào `.venv`; rules CI `E9,F63,F7,F82` trên toàn `app/tests` **All checks passed**. Hai CLI cấp token/chấm điểm chạy `--help` thành công; không cấp token thật hoặc ghi dữ liệu cloud trong lượt này.
+  - *Nghiệm thu sau:* Đặt `GAMEWEEK_TEST_DATABASE_URL` trỏ database riêng kết thúc `_test`, chạy `python -m pytest tests/test_gameweeks_api.py -q`; test tự migrate/dọn schema riêng. Sau đó cùng Q chạy luồng NH01 → NH02 → chấm điểm → BXH trên deployment test; NG nối token/payload/counters vào TransferControl và xử lý previous_rank=0/đồng hạng. Các chức năng frontend vẫn dùng state cục bộ/demo cho tới lúc tích hợp.
   - *Mô tả:* API trả về bảng xếp hạng người chơi có phân trang; API tiếp nhận yêu cầu chuyển nhượng tuần và thực thi validation cứng: chặn nếu thay đổi vượt quá 3 cầu thủ hoặc quá ngân sách.
   - *Phụ thuộc:* `P4-V02`
   - *Thư mục:* `backend/app/api/v1/endpoints/`
-  - *File tạo mới (3 files):* `backend/app/schemas/gameweek.py`, `backend/app/api/v1/endpoints/gameweeks.py`, `backend/tests/test_gameweeks_api.py`.
+  - *File tạo mới (5/5 files):* `backend/app/schemas/gameweek.py`, `backend/app/api/v1/endpoints/gameweeks.py`, `backend/tests/test_gameweeks_api.py`, `backend/app/services/gameweek_service.py`, `backend/app/core/gameweek_auth.py`.
   - *Branch:* `feature/P4-NH04-leaderboard-transfers-api`
   - *Tiêu chí chấp nhận (Acceptance Criteria):* Trả về bảng xếp hạng phân trang; endpoint chuyển nhượng từ chối (HTTP 400) nếu người chơi thay đổi quá 3 cầu thủ trong 1 tuần.
   - *Cách kiểm chứng (Verification):* `pytest backend/tests/test_gameweeks_api.py` pass 100%.

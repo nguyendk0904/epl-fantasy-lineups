@@ -30,6 +30,15 @@ class Settings(BaseSettings):
     FPL_BOOTSTRAP_URL: str = "https://fantasy.premierleague.com/api/bootstrap-static/"
     FPL_SYNC_ENABLED: bool = False
     FPL_SYNC_INTERVAL_SECONDS: float = Field(default=21600, gt=0, allow_inf_nan=False)
+    GAMEWEEK_DEMO_AUTH_ENABLED: bool = False
+    GAMEWEEK_DEMO_TOKEN_SECRET: SecretStr | None = Field(default=None, repr=False, exclude=True)
+
+    @field_validator("GAMEWEEK_DEMO_TOKEN_SECRET")
+    @classmethod
+    def validate_gameweek_secret(cls, value: SecretStr | None) -> SecretStr | None:
+        if value is not None and len(value.get_secret_value()) < 32:
+            raise ValueError("Gameweek demo token secret must contain at least 32 characters")
+        return value
 
     # AWS Deployment Settings
     AWS_REGION: str = "ap-southeast-1"
@@ -76,6 +85,8 @@ class Settings(BaseSettings):
     @model_validator(mode="after")
     def select_database(self) -> "Settings":
         self.DATABASE_URL = resolve_database_url(self)
+        if self.GAMEWEEK_DEMO_AUTH_ENABLED and self.GAMEWEEK_DEMO_TOKEN_SECRET is None:
+            raise ValueError("Gameweek demo auth requires GAMEWEEK_DEMO_TOKEN_SECRET")
         return self
 
     model_config = SettingsConfigDict(
