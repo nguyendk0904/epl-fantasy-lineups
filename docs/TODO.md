@@ -16,8 +16,8 @@
 | **Phase 1: Local Full-Stack Product** | **17 / 17** | `100%` |  Hoàn thành |
 | **Phase 2: AWS Services Integration** | **13 / 13** | `100%` |  Hoàn thành |
 | **Phase 3: Production Deploy & E2E Test** | **13 / 13** | `100%` | ✅ Theo checklist: NG 3/3, NH 3/3, V 3/3, Q 4/4 |
-| **Phase 4: Live Gamification & League Operations** | **8 / 14** | `57%` | 🟡 Theo checklist: NG 4/4, NH 1/4 (code/test local), V 3/3, Q 0/3 |
-| **TỔNG CỘNG TOÀN DỰ ÁN** | **51 / 57** | `89%` | 🟡 Theo checklist; xem ghi chú nghiệm thu từng task |
+| **Phase 4: Live Gamification & League Operations** | **9 / 14** | `64%` | 🟡 Theo checklist: NG 4/4, NH 2/4 (code/test local), V 3/3, Q 0/3 |
+| **TỔNG CỘNG TOÀN DỰ ÁN** | **52 / 57** | `91%` | 🟡 Theo checklist; xem ghi chú nghiệm thu từng task |
 
 ---
 
@@ -506,7 +506,7 @@
 
 ---
 
-## 🏆 PHASE 4: VẬN HÀNH MÙA GIẢI & GAMIFICATION (8/14)
+## 🏆 PHASE 4: VẬN HÀNH MÙA GIẢI & GAMIFICATION (9/14)
 *Mục tiêu: Vận hành trực tiếp với FPL thật: Lịch thi đấu 38 vòng, chấm điểm live, quản lý chấn thương, BXH và luật chuyển nhượng 3 người/tuần.*
 
 ### 🎨 Nguyên (Frontend & UI Lead) - [4/4]
@@ -553,7 +553,7 @@
 
 ---
 
-### ⚙️ Nhất (Backend Core & Live Data Lead) - [1/4] (NH01 xong code/test local, chờ nghiệm thu PostgreSQL/RDS)
+### ⚙️ Nhất (Backend Core & Live Data Lead) - [2/4] (NH01/NH02 xong code/test local, chờ nghiệm thu PostgreSQL/RDS)
 
 - [x] **`P4-NH01`** *(Level 3)*: Worker `fixture_sync.py`: Tự động cào Lịch thi đấu 38 vòng & Trạng thái y tế/chấn thương
   - *Ý nghĩa checkbox theo xác nhận NH:* Hoàn thành code và test local; **CHƯA nghiệm thu PostgreSQL/RDS/cloud**, chưa áp dụng migration `005` lên database thật.
@@ -571,7 +571,15 @@
   - *Tiêu chí chấp nhận (Acceptance Criteria):* Kéo và cập nhật đầy đủ 380 trận đấu và cờ trạng thái y tế (`d`, `i`, `s`) vào bảng `fixtures` và `players`.
   - *Cách kiểm chứng (Verification):* `pytest backend/tests/test_fixture_sync.py` pass 100%.
 
-- [ ] **`P4-NH02`** *(Level 3)*: Worker `gameweek_sync.py`: Cào Điểm trực tiếp sau trận & Đội hình tiêu biểu
+- [x] **`P4-NH02`** *(Level 3)*: Worker `live_match_sync.py`: Cào Điểm trực tiếp sau trận & Đội hình tiêu biểu
+  - *Trạng thái 23/11/2026:* Xong code/test local; checkbox theo quy ước NH, **CHƯA nghiệm thu PostgreSQL/RDS/cloud**. Không thay đổi schema, API contract, scoring engine hoặc hạ tầng.
+  - *Luồng dữ liệu:* Đọc `/api/event/{gw}/live/` và `/api/dream-team/{gw}/`; lấy thêm `/api/element-summary/{player_id}/` cho cầu thủ có stats khác 0 để có đủ thống kê từng trận (live `explain` có thể bỏ qua chỉ số không tạo điểm). Giới hạn mặc định 4 request history đồng thời. History phải khớp tổng live theo Gameweek; nếu chưa khớp, báo lỗi để retry sau và không ghi DB.
+  - *Lưu trữ:* Upsert stats theo `(player_id, fixture_id)`, Dream Team theo `gameweek` trong một transaction. Xử lý double Gameweek, điểm âm, hiệu chỉnh về 0 và bonus cập nhật; không cộng dồn khi chạy lại. Xác minh players/fixtures tồn tại và fixture đúng vòng trước khi ghi. Không tự gọi scoring engine của Vũ.
+  - *Dream Team chưa công bố:* HTTP 404 hoặc `team=[]` vẫn cho phép đồng bộ stats; trả `dream_teams_processed=0`, giữ snapshot cũ và ghi log rõ ràng. Payload lỗi hoặc HTTP khác 404 làm cả lượt thất bại.
+  - *Phạm vi bonus/BPS:* Lưu bonus đã được trao vào `bonus_points`; **chưa lưu BPS thô** do schema không có cột BPS. Nếu nhóm yêu cầu cả BPS thô, cần phê duyệt bổ sung model/migration riêng; không coi hai giá trị này là một.
+  - *Bằng chứng local:* NH02 **41 passed, 2 skipped**; toàn backend **435 passed, 9 skipped** với CBC thật. Test SQL/HTTP dùng dữ liệu mô phỏng, PostgreSQL mới skip vì chưa cấu hình `LIVE_MATCH_TEST_DATABASE_URL`. Chỉ đọc mẫu JSON công khai để đối chiếu format FPL, chưa chạy worker ghi dữ liệu FPL thật. Ruff chưa có trong môi trường local.
+  - *Lệnh bàn giao:* Từ `backend/`, chạy `python -m app.services.live_match_sync --gameweek 1` (nhận vòng 1–38). Quang dùng đúng tên module này khi cấu hình P4-Q01; worker chạy một lần, không tự bật scheduler.
+  - *Nghiệm thu sau:* Database phải migrate và có players/fixtures đúng vòng (NH01). Đặt `LIVE_MATCH_TEST_DATABASE_URL` trỏ PostgreSQL riêng có tên kết thúc `_test`, chạy `python -m pytest tests/test_live_match_sync.py -q`; test tự migrate/dọn schema riêng. Sau đó chạy worker trên dữ liệu FPL thật, kiểm tra stats, Dream Team và tổng điểm; không chạy lên RDS khi chưa xác nhận migration `005` của NH01.
   - *Mô tả:* Worker tải dữ liệu thống kê trực tiếp từng trận đấu (`/api/event/{gw}/live/`: bàn thắng, kiến tạo, sạch lưới, điểm thưởng BPS) và dữ liệu Đội hình tiêu biểu (`/api/dream-team/{gw}/`) lưu vào DB.
   - *Phụ thuộc:* `P4-V01`
   - *Thư mục:* `backend/app/services/`
