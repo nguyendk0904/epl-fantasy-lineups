@@ -15,9 +15,9 @@
 | :--- | :---: | :---: | :---: |
 | **Phase 1: Local Full-Stack Product** | **17 / 17** | `100%` |  Hoàn thành |
 | **Phase 2: AWS Services Integration** | **13 / 13** | `100%` |  Hoàn thành |
-| **Phase 3: Production Deploy & E2E Test** | **13 / 13** | `100%` | ✅ Theo checklist: NG 3/3, NH 3/3, V 3/3, Q 4/4 |
-| **Phase 4: Live Gamification & League Operations** | **11 / 14** | `79%` | 🟡 Theo checklist: NG 4/4, NH 4/4 (code/test local), V 3/3, Q 0/3 |
-| **TỔNG CỘNG TOÀN DỰ ÁN** | **54 / 57** | `95%` | 🟡 Theo checklist; xem ghi chú nghiệm thu từng task |
+| **Phase 3: Production Deploy & E2E Test** | **13 / 13** | `100%` | Hoàn thành |
+| **Phase 4: Live Gamification & League Operations** | **12 / 14** | `86%` | 🟡 Đang hoàn thành |
+| **TỔNG CỘNG TOÀN DỰ ÁN** | **55 / 57** | `95%` | 🟡 Đang hoàn thành |
 
 ---
 
@@ -655,9 +655,9 @@
 
 ---
 
-### 🐳 Quang (DevOps & Cloud Automation Lead) - [0/3]
+### 🐳 Quang (DevOps & Cloud Automation Lead) - [1/3]
 
-- [ ] **`P4-Q01`** *(Level 3)*: Thiết lập AWS EventBridge Scheduler định kỳ chạy Live Sync
+- [x] **`P4-Q01`** *(Level 3)*: Thiết lập AWS EventBridge Scheduler định kỳ chạy Live Sync
   - *Mô tả:* Cấu hình CloudWatch Events / EventBridge tự động kích hoạt `live_sync.py` trước mỗi vòng đấu và kích hoạt `gameweek_sync.py` sau khi các trận đấu kết thúc.
   - *Phụ thuộc:* `P4-NH01`, `P4-NH02`
   - *Thư mục:* `infra/aws/`
