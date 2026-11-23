@@ -16,8 +16,8 @@
 | **Phase 1: Local Full-Stack Product** | **17 / 17** | `100%` |  Hoàn thành |
 | **Phase 2: AWS Services Integration** | **13 / 13** | `100%` |  Hoàn thành |
 | **Phase 3: Production Deploy & E2E Test** | **13 / 13** | `100%` | ✅ Theo checklist: NG 3/3, NH 3/3, V 3/3, Q 4/4 |
-| **Phase 4: Live Gamification & League Operations** | **9 / 14** | `64%` | 🟡 Theo checklist: NG 4/4, NH 2/4 (code/test local), V 3/3, Q 0/3 |
-| **TỔNG CỘNG TOÀN DỰ ÁN** | **52 / 57** | `91%` | 🟡 Theo checklist; xem ghi chú nghiệm thu từng task |
+| **Phase 4: Live Gamification & League Operations** | **10 / 14** | `71%` | 🟡 Theo checklist: NG 4/4, NH 3/4 (code/test local), V 3/3, Q 0/3 |
+| **TỔNG CỘNG TOÀN DỰ ÁN** | **53 / 57** | `93%` | 🟡 Theo checklist; xem ghi chú nghiệm thu từng task |
 
 ---
 
@@ -506,7 +506,7 @@
 
 ---
 
-## 🏆 PHASE 4: VẬN HÀNH MÙA GIẢI & GAMIFICATION (9/14)
+## 🏆 PHASE 4: VẬN HÀNH MÙA GIẢI & GAMIFICATION (10/14)
 *Mục tiêu: Vận hành trực tiếp với FPL thật: Lịch thi đấu 38 vòng, chấm điểm live, quản lý chấn thương, BXH và luật chuyển nhượng 3 người/tuần.*
 
 ### 🎨 Nguyên (Frontend & UI Lead) - [4/4]
@@ -553,7 +553,7 @@
 
 ---
 
-### ⚙️ Nhất (Backend Core & Live Data Lead) - [2/4] (NH01/NH02 xong code/test local, chờ nghiệm thu PostgreSQL/RDS)
+### ⚙️ Nhất (Backend Core & Live Data Lead) - [3/4] (NH01–NH03 xong code/test local, chờ nghiệm thu PostgreSQL/RDS)
 
 - [x] **`P4-NH01`** *(Level 3)*: Worker `fixture_sync.py`: Tự động cào Lịch thi đấu 38 vòng & Trạng thái y tế/chấn thương
   - *Ý nghĩa checkbox theo xác nhận NH:* Hoàn thành code và test local; **CHƯA nghiệm thu PostgreSQL/RDS/cloud**, chưa áp dụng migration `005` lên database thật.
@@ -588,7 +588,13 @@
   - *Tiêu chí chấp nhận (Acceptance Criteria):* Điểm số thực tế của từng cầu thủ và danh sách 11 cầu thủ Dream Team của tuần được lưu chính xác vào DB.
   - *Cách kiểm chứng (Verification):* `pytest backend/tests/test_live_match_sync.py` pass 100%.
 
-- [ ] **`P4-NH03`** *(Level 2)*: REST API `GET /api/v1/fixtures` & `GET /api/v1/dream-team/{gw}`
+- [x] **`P4-NH03`** *(Level 2)*: REST API `GET /api/v1/fixtures` & `GET /api/v1/dream-team/{gw}`
+  - *Trạng thái 23/11/2026:* Xong code/test local, checkbox theo quy ước NH; **CHƯA nghiệm thu PostgreSQL/RDS/cloud hoặc UI thật**. Không sửa frontend, schema DB, worker, hạ tầng hoặc CI/CD.
+  - *Triển khai:* Giữ nguyên response/filter/sort của API fixtures hiện có. Thêm Dream Team vào router fixtures đã đăng ký trong main; trả 11 cầu thủ theo snapshot, sơ đồ theo vị trí, stats cộng đúng Gameweek (kể cả hai trận), MVP và tổng điểm không nhân đội trưởng. Response dùng kiểu `DreamTeamData` của frontend; contract bổ sung ở SSOT §4.4.
+  - *Validation/error:* Gameweek 1–38; snapshot chưa có trả 404; snapshot/player/team/stats thiếu, sơ đồ sai hoặc tổng điểm chưa khớp trả 503. Không thay bằng đội hình mẫu hoặc điểm 0 giả; lỗi SQL có thông báo an toàn. Dream Team dùng ba truy vấn SELECT, không có N+1 hoặc ghi DB.
+  - *Bằng chứng local:* `python -m pytest tests/test_fixtures_api.py -q`: **37 passed, 1 skipped**. Toàn backend **469 passed, 10 skipped** với CBC thật; test PostgreSQL API mới skip do chưa cấu hình `FIXTURES_API_TEST_DATABASE_URL`. Lint Ruff chưa chạy vì chưa có trong môi trường local.
+  - *Nghiệm thu sau:* Đặt `FIXTURES_API_TEST_DATABASE_URL` trỏ PostgreSQL riêng tên kết thúc `_test`, chạy file test trên; test tự migrate/dọn schema riêng. Trên cloud, xác nhận migration và chạy NH01/NH02 tạo dữ liệu rồi gọi `/api/v1/fixtures?gameweek=<gw>` và `/api/v1/dream-team/<gw>` để đối chiếu dữ liệu thật. Chưa chạy test ghi dữ liệu hay gọi AWS ở lượt triển khai này.
+  - *Phối hợp NG:* DreamTeamModal hiện vẫn lấy dữ liệu mẫu; NG cần nối API mới. Metadata tên/CLB là dữ liệu hiện tại, không phải snapshot lịch sử; `team_code` không tự suy ra từ team ID.
   - *Mô tả:* Endpoint trả về danh sách lịch thi đấu theo vòng (Gameweek 1-38) kèm tỉ số, và endpoint trả về 11 cầu thủ xuất sắc nhất vòng.
   - *Phụ thuộc:* `P4-NH01`, `P4-NH02`
   - *Thư mục:* `backend/app/api/v1/endpoints/`

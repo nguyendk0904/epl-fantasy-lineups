@@ -183,6 +183,19 @@ Tất cả các endpoint đều có tiền tố `/api/v1`.
 
 ---
 
+### 4.4. Fixtures & Dream Team (P4-NH03)
+
+- **`GET /api/v1/fixtures?gameweek=1`**: `gameweek` bắt buộc, 1–38. Giữ contract đã tích hợp frontend: array các trường `id`, `gameweek`, `kickoff_time` (UTC), `kickoff_date` (`dd/mm/yyyy`), `home_team`/`away_team` (`id`, `name`, `short_name`), `team_h_score`/`team_a_score` (nullable), `team_h_difficulty`/`team_a_difficulty`, `finished`. Sắp xếp kickoff rồi ID; bỏ qua trận thiếu kickoff hoặc FDR theo contract hiện tại. Vòng không có trận đủ dữ liệu trả `200 []`; thiếu/sai Gameweek trả `422`.
+- **`GET /api/v1/dream-team/{gw}`**: `gw` từ 1–38. `200` trả cấu trúc tương thích `DreamTeamData` hiện có của frontend:
+  - `gameweek`, `formation`, `total_points`.
+  - `mvp`: `{id, name, points, team}`; `team` là tên CLB viết tắt.
+  - `players`: đúng 11 phần tử `{id, web_name, team_short_name, team_id, element_type, points, goals, assists, clean_sheet, bonus, isMvp}`. Không tự tạo `team_code` khi DB chưa có.
+- Giữ thứ tự `dream_teams.top_player_ids`; metadata tên/CLB/vị trí lấy từ players/teams hiện tại. Cộng stats qua mọi trận thuộc đúng Gameweek cho các cầu thủ được chọn; `bonus` lấy `bonus_points`, `clean_sheet=true` nếu có ít nhất một clean sheet. Không nhân điểm đội trưởng. Tổng điểm phải khớp snapshot Dream Team đã lưu; MVP là người có điểm cao nhất, bằng điểm thì chọn người xuất hiện trước trong snapshot.
+- Chưa sync snapshot trả `404`; thiếu player/team/stats, sai sơ đồ hoặc tổng điểm chưa khớp trả `503` để sync lại. Lỗi SQL trả `503` với thông báo an toàn; Gameweek sai trả `422`. API chỉ đọc DB, không gọi FPL hoặc trả dữ liệu demo.
+- Modal Dream Team hiện vẫn dùng dữ liệu mẫu; nối API vào UI là phần phối hợp riêng với NG, chưa nằm trong thay đổi backend này.
+
+---
+
 ## 5. CẤU HÌNH BIẾN MÔI TRƯỜNG BẮT BUỘC (`.env.example`)
 
 ```env
