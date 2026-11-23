@@ -76,17 +76,15 @@ jobs:
         with:
           python-version: ${{ env.PYTHON_VERSION }}
           cache: pip
-          cache-dependency-path: backend/requirements.txt
+          cache-dependency-path: |
+            backend/requirements.txt
+            backend/requirements-dev.txt
 
       - name: Install dependencies
         run: |
           set -euo pipefail
           python -m pip install --upgrade pip
-          python -m pip install -r requirements.txt
-          # CI-only linter: not part of backend/requirements.txt on purpose
-          # (production image must not grow for a dev tool). Rule set used
-          # below is stable across ruff releases.
-          python -m pip install "ruff>=0.6,<1.0"
+          python -m pip install -r requirements-dev.txt
 
       - name: Lint - syntax check (compileall)
         run: python -m compileall -q app tests
