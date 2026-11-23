@@ -1,4 +1,4 @@
-from sqlalchemy import ForeignKey, Index, Integer, Numeric, String, Text
+from sqlalchemy import CheckConstraint, ForeignKey, Index, Integer, Numeric, String, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.core.database import Base
@@ -10,6 +10,10 @@ class Player(Base):
         Index("ix_players_element_type", "element_type"),
         Index("ix_players_now_cost", "now_cost"),
         Index("ix_players_total_points", "total_points"),
+        CheckConstraint(
+            "chance_of_playing_next_round BETWEEN 0 AND 100",
+            name="ck_players_chance_of_playing_next_round",
+        ),
     )
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
@@ -23,6 +27,7 @@ class Player(Base):
     now_cost: Mapped[float] = mapped_column(Numeric(4, 1), nullable=False)
     status: Mapped[str | None] = mapped_column(String(5), default="a")
     news: Mapped[str | None] = mapped_column(Text)
+    chance_of_playing_next_round: Mapped[int | None] = mapped_column(Integer)
 
     total_points: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
     form: Mapped[float] = mapped_column(Numeric(4, 1), nullable=False, default=0.0)

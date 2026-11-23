@@ -71,6 +71,7 @@ CREATE TABLE players (
     now_cost NUMERIC(4, 1) NOT NULL,    -- Giá (ví dụ: 15.2, 10.5)
     status VARCHAR(5) DEFAULT 'a',      -- 'a' (available), 'd' (doubtful), 'i' (injured), 's' (suspended)
     news TEXT,                          -- Chi tiết chấn thương nếu có
+    chance_of_playing_next_round INT CHECK (chance_of_playing_next_round BETWEEN 0 AND 100), -- NULL: chưa biết; migration 005 (P4-NH01)
     total_points INT DEFAULT 0,         -- Tổng điểm mùa giải
     form NUMERIC(4, 1) DEFAULT 0.0,     -- Điểm phong độ trung bình các trận gần nhất
     selected_by_percent NUMERIC(4, 1),  -- % sở hữu
