@@ -6,6 +6,53 @@ export const TOTAL_BUDGET = 100.0;
 export const MAX_SQUAD_SIZE = 15;
 export const MAX_PLAYERS_PER_CLUB = 3;
 
+export const MAX_FREE_TRANSFERS = 3;
+
+export interface TransferCalculationResult {
+  playersOut: LineupPlayer[];
+  playersIn: LineupPlayer[];
+  transfersCount: number; // Số lượt đang đổi trong phiên này
+  totalTransfers: number; // Tổng số lượt tuần này (đã dùng + đang đổi)
+  transfersMadeThisWeek: number; // Số lượt đã chốt tuần này
+  remainingTransfers: number; // Số lượt miễn phí còn lại
+  netCostDiff: number; // Chênh lệch ngân sách (inCost - outCost)
+}
+
+/**
+ * Thuật toán tính toán số lượt chuyển nhượng độc lập giữa Đội hình hiện tại, Đội hình gốc,
+ * và số lượt đã chốt trong Gameweek hiện tại.
+ */
+export function calculateTransfers(
+  currentSquad: LineupPlayer[],
+  baselineSquad: LineupPlayer[],
+  transfersMadeThisWeek: number = 0
+): TransferCalculationResult {
+  const currentIds = new Set(currentSquad.map((p) => p.id));
+  const baselineIds = new Set(baselineSquad.map((p) => p.id));
+
+  const playersOut = baselineSquad.filter((p) => !currentIds.has(p.id));
+  const playersIn = currentSquad.filter((p) => !baselineIds.has(p.id));
+
+  // Mỗi lượt thay người là 1 cặp (bán 1 cầu thủ cũ & mua 1 cầu thủ mới)
+  const transfersCount = Math.max(playersOut.length, playersIn.length);
+  const totalTransfers = transfersMadeThisWeek + transfersCount;
+  const remainingTransfers = Math.max(0, MAX_FREE_TRANSFERS - totalTransfers);
+
+  const outCost = playersOut.reduce((sum, p) => sum + p.now_cost, 0);
+  const inCost = playersIn.reduce((sum, p) => sum + p.now_cost, 0);
+  const netCostDiff = Math.round((inCost - outCost) * 10) / 10;
+
+  return {
+    playersOut,
+    playersIn,
+    transfersCount,
+    totalTransfers,
+    transfersMadeThisWeek,
+    remainingTransfers,
+    netCostDiff,
+  };
+}
+
 export interface TargetSlotInfo {
   position: PositionType;
   slotIndex?: number;
@@ -15,6 +62,8 @@ export interface TargetSlotInfo {
 export interface LineupStoreState {
   startingXI: LineupPlayer[];
   bench: LineupPlayer[];
+  baselineSquad: LineupPlayer[];
+  transfersMadeThisWeek: number;
   formation: FormationType;
   captainId: number | null;
   viceCaptainId: number | null;
@@ -32,12 +81,18 @@ export interface LineupStoreState {
   addPlayerToLineup: (player: Player) => boolean;
   loadSampleLineup: (startingXI: LineupPlayer[], bench: LineupPlayer[]) => void;
   resetLineup: () => void;
+  setBaselineSquad: (squad: LineupPlayer[]) => void;
+  commitTransfers: (deadline: number) => boolean;
+  resetToBaseline: () => void;
+  transferWeek: number | null;
+  syncTransferWeek: (deadline: number) => void;
 
   // Getters / Selectors
   getTotalCost: () => number;
   getRemainingBudget: () => number;
   getTotalPlayers: () => number;
   getSelectedPlayerIds: () => number[];
+  getTransferSummary: () => TransferCalculationResult;
   validateLineup: () => {
     isValid: boolean;
     errors: string[];
@@ -49,6 +104,9 @@ export const useLineupStore = create<LineupStoreState>()(
     (set, get) => ({
       startingXI: [],
       bench: [],
+      transferWeek: null,
+      baselineSquad: [],
+      transfersMadeThisWeek: 0,
       formation: '4-3-3',
       captainId: null,
       viceCaptainId: null,
@@ -371,20 +429,66 @@ export const useLineupStore = create<LineupStoreState>()(
       loadSampleLineup: (sampleStarting: LineupPlayer[], sampleBench: LineupPlayer[]) => {
         const captain = sampleStarting.find((p) => p.isCaptain);
         const viceCaptain = sampleStarting.find((p) => p.isViceCaptain);
+        const fullSquad = [...sampleStarting, ...sampleBench];
+        const existingBaseline = get().baselineSquad;
 
         set({
           startingXI: sampleStarting,
           bench: sampleBench,
+          baselineSquad: existingBaseline.length > 0 ? existingBaseline : fullSquad,
           captainId: captain ? captain.id : null,
           viceCaptainId: viceCaptain ? viceCaptain.id : null,
           targetSlot: null,
         });
       },
 
+      setBaselineSquad: (squad: LineupPlayer[]) => {
+        set({ baselineSquad: squad });
+      },
+
+      commitTransfers: (deadline) => {
+        const state = get();
+        const squad = [...state.startingXI, ...state.bench];
+        const summary = state.getTransferSummary();
+        if (!Number.isFinite(deadline) || deadline !== state.transferWeek || Date.now() >= deadline ||
+            squad.length !== MAX_SQUAD_SIZE || state.getRemainingBudget() < 0 ||
+            summary.transfersCount === 0 || summary.totalTransfers > MAX_FREE_TRANSFERS) return false;
+
+        set({ baselineSquad: squad, transfersMadeThisWeek: summary.totalTransfers });
+        state.showToast(`Đã chốt chuyển nhượng. Còn lại: ${summary.remainingTransfers} / 3 lượt.`);
+        return true;
+      },
+
+      syncTransferWeek: (deadline) => {
+        const { transferWeek } = get();
+        if (!Number.isFinite(deadline) || (transferWeek !== null && deadline <= transferWeek)) return;
+        // Older saved lineups have a counter but no week identifier.
+        set(transferWeek === null ? { transferWeek: deadline }
+          : { transferWeek: deadline, transfersMadeThisWeek: 0 });
+      },
+
+      resetToBaseline: () => {
+        const { baselineSquad, showToast } = get();
+        if (baselineSquad.length === 0) return;
+        const starting = baselineSquad.filter((p) => p.isStarting);
+        const bench = baselineSquad.filter((p) => !p.isStarting);
+        const captain = starting.find((p) => p.isCaptain) || null;
+        const viceCaptain = starting.find((p) => p.isViceCaptain) || null;
+        set({
+          startingXI: starting,
+          bench: bench,
+          captainId: captain ? captain.id : null,
+          viceCaptainId: viceCaptain ? viceCaptain.id : null,
+          targetSlot: null,
+        });
+        showToast('Đã khôi phục đội hình gốc trước khi chuyển nhượng!');
+      },
+
       resetLineup: () => {
         set({
           startingXI: [],
           bench: [],
+
           captainId: null,
           viceCaptainId: null,
           targetSlot: null,
@@ -393,6 +497,10 @@ export const useLineupStore = create<LineupStoreState>()(
       },
 
       // Selectors
+      getTransferSummary: () => {
+        const { startingXI, bench, baselineSquad, transfersMadeThisWeek } = get();
+        return calculateTransfers([...startingXI, ...bench], baselineSquad, transfersMadeThisWeek);
+      },
       getTotalCost: () => {
         const { startingXI, bench } = get();
         const cost = [...startingXI, ...bench].reduce((sum, p) => sum + p.now_cost, 0);
@@ -511,6 +619,9 @@ export const useLineupStore = create<LineupStoreState>()(
         formation: state.formation,
         captainId: state.captainId,
         viceCaptainId: state.viceCaptainId,
+        baselineSquad: state.baselineSquad,
+        transferWeek: state.transferWeek,
+        transfersMadeThisWeek: state.transfersMadeThisWeek,
       }),
     }
   )

@@ -46,6 +46,7 @@ const ShareModal = lazy(() => import('./components/share/ShareModal'));
 const SharedLineupPage = lazy(() => import('./pages/SharedLineupPage'));
 const MobilePlayerDrawer = lazy(() => import('./components/player-list/MobilePlayerDrawer'));
 import { MobilePitchControls } from './components/pitch/MobilePitchControls';
+import { TransferControl } from './components/transfers/TransferControl';
 
 export type TabType = 'pitch' | 'players' | 'optimizer' | 'compare' | 'fixtures' | 'leaderboard';
 
@@ -837,6 +838,9 @@ export function App() {
         {/* Tab Sân Bóng */}
         {activeTab === 'pitch' && (
           <section className="space-y-4">
+            {/* Thanh Quản Lý Luật Chuyển Nhượng Tuần (P4-NG04) */}
+            <TransferControl />
+
             <div className="bg-gradient-to-r from-brand-card/80 to-brand-darker/80 border border-brand-border rounded-2xl p-4 sm:p-6 backdrop-blur shadow-xl">
               <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-4">
                 <div>
@@ -962,6 +966,9 @@ export function App() {
         {/* Tab Thị Trường Cầu Thủ */}
         {activeTab === 'players' && (
           <section className="space-y-4">
+            {/* Thanh Quản Lý Luật Chuyển Nhượng Tuần (P4-NG04) */}
+            <TransferControl />
+
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
               <div>
                 <h2 className="text-xl font-bold text-white flex items-center gap-2">

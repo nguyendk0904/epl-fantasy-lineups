@@ -16,8 +16,8 @@
 | **Phase 1: Local Full-Stack Product** | **17 / 17** | `100%` |  Hoàn thành |
 | **Phase 2: AWS Services Integration** | **13 / 13** | `100%` |  Hoàn thành |
 | **Phase 3: Production Deploy & E2E Test** | **13 / 13** | `100%` | ✅ Theo checklist: NG 3/3, NH 3/3, V 3/3, Q 4/4 |
-| **Phase 4: Live Gamification & League Operations** | **3 / 14** | `21%` | 🟡 P4-V01, P4-V02 và P4-V03 hoàn thành; chờ các task Phase 4 tiếp theo |
-| **TỔNG CỘNG TOÀN DỰ ÁN** | **46 / 57** | `81%` | 🟡 Theo checklist; xem ghi chú nghiệm thu từng task |
+| **Phase 4: Live Gamification & League Operations** | **7 / 14** | `50%` | 🟡 Frontend 4/4, Data & Algo 3/3 |
+| **TỔNG CỘNG TOÀN DỰ ÁN** | **50 / 57** | `88%` | 🟡 Theo checklist; xem ghi chú nghiệm thu từng task |
 
 ---
 
@@ -353,7 +353,7 @@
 ---
 
 ## 🌐 PHASE 3: DEPLOY & TEST ĐẦU CUỐI (END-TO-END) (13/13)
-*Mục tiêu: Đưa toàn bộ sản phẩm lên Internet qua CloudFront HTTPS và AWS App Runner, xây dựng CI/CD tự động qua GitHub Actions, kiểm thử tải và chuẩn bị demo đồ án với chi phí $0.00.*
+*Mục tiêu: Đưa toàn bộ sản phẩm lên Internet qua CloudFront HTTPS và EC2 + Caddy, xây dựng CI/CD tự động qua GitHub Actions, kiểm thử tải và chuẩn bị demo đồ án với chi phí $0.00.*
 
 ### 🎨 Nguyên (Frontend & UI Lead) - [3/3]
 
@@ -477,17 +477,17 @@
   - *Tiêu chí chấp nhận (Acceptance Criteria):* Website truy cập công khai qua domain HTTPS của CloudFront, định tuyến SPA hoạt động (F5 trang không bị lỗi 404).
   - *Cách kiểm chứng (Verification):* Truy cập `https://xxxx.cloudfront.net` trên trình duyệt tải trang thành công, chứng chỉ SSL hợp lệ.
 
-- [x] **`P3-Q02`** *(Level 4)*: Đóng gói và triển khai Backend FastAPI lên AWS App Runner
-  - *Mô tả:* Triển khai container Backend FastAPI lên AWS App Runner (hoặc EC2 t4g.small Free Tier); cấu hình biến môi trường kết nối RDS an toàn, healthcheck endpoint `/health` và auto deployment.
+- [x] **`P3-Q02`** *(Level 4)*: Đóng gói và triển khai Backend FastAPI lên EC2 + Caddy
+  - *Mô tả:* Triển khai container Backend FastAPI lên EC2 sau Caddy; cấu hình biến môi trường kết nối RDS an toàn, healthcheck endpoint `/health` và auto deployment.
   - *Phụ thuộc:* `P1-Q01`, `P2-Q01`, `P2-Q02`
   - *Thư mục:* `infra/aws/`
-  - *File tạo mới (2 files):* `infra/aws/app_runner_setup.md`, `infra/aws/apprunner.yaml`.
+  - *Tài liệu triển khai:* [Runbook EC2](../infra/aws/app_runner_setup.md), [kiến trúc cloud](CLOUD_ARCHITECTURE.md).
   - *Branch:* `feature/P3-Q02-backend-aws-deploy`
   - *Tiêu chí chấp nhận (Acceptance Criteria):* Backend FastAPI online 24/7 trên AWS, kết nối thông suốt với RDS, endpoint `/health` trả về status 200.
-  - *Cách kiểm chứng (Verification):* `curl https://xxxx.awsapprunner.com/health` trả về HTTP 200 `{"status": "healthy"}`.
+  - *Cách kiểm chứng (Verification):* `curl https://<backend-domain>/health` trả về HTTP 200 `{"status": "healthy"}`.
 
 - [x] **`P3-Q03`** *(Level 4)*: Xây dựng pipeline GitHub Actions CI/CD tự động
-  - *Mô tả:* Viết workflow `.github/workflows/deploy.yml`: Mỗi khi commit/PR merge vào nhánh `main` $\rightarrow$ Tự động Lint & Test Frontend + Backend $\rightarrow$ Build Vite deploy lên S3 & invalidate CloudFront cache $\rightarrow$ Deploy Backend lên App Runner.
+  - *Mô tả:* Viết workflow `.github/workflows/ci_cd.yml`: Mỗi khi commit/PR merge vào nhánh `main` $\rightarrow$ Tự động Lint & Test Frontend + Backend $\rightarrow$ Build Vite deploy lên S3 & invalidate CloudFront cache $\rightarrow$ Deploy Backend lên EC2 qua AWS Systems Manager (SSM).
   - *Phụ thuộc:* `P3-Q01`, `P3-Q02`
   - *Thư mục:* `.github/workflows/`
   - *File tạo mới (2 files):* `.github/workflows/ci_cd.yml`, `.github/workflows/test_backend.yml`.
@@ -506,10 +506,10 @@
 
 ---
 
-## 🏆 PHASE 4: VẬN HÀNH MÙA GIẢI & GAMIFICATION (6/14)
+## 🏆 PHASE 4: VẬN HÀNH MÙA GIẢI & GAMIFICATION (7/14)
 *Mục tiêu: Vận hành trực tiếp với FPL thật: Lịch thi đấu 38 vòng, chấm điểm live, quản lý chấn thương, BXH và luật chuyển nhượng 3 người/tuần.*
 
-### 🎨 Nguyên (Frontend & UI Lead) - [3/4]
+### 🎨 Nguyên (Frontend & UI Lead) - [4/4]
 
 - [x] **`P4-NG01`** *(Level 2)*: Màn hình Lịch thi đấu các tuần & Độ khó trận đấu (`FixturesView`)
   - *Mô tả:* Giao diện xem lịch 38 vòng đấu Premier League, tỉ số thực tế các trận đã kết thúc, ngày giờ bóng lăn và huy hiệu độ khó trận đấu FDR (Fixture Difficulty Rating từ 1 đến 5).
@@ -541,14 +541,15 @@
   - *Cách kiểm chứng (Verification):* `npm --prefix frontend test -- LeaderboardView.test.tsx` pass 11/11 tests (100%).
   - *Ghi chú triển khai (20/11/2026):* Xây dựng `DreamTeamModal.tsx` (sân cỏ vinh danh 11 ngôi sao đạt điểm cao nhất vòng kèm MVP vương miện) và `LeaderboardView.tsx` (bục vinh danh Podium Top 3 vàng/bạc/đồng, bảng chi tiết phân trang, tìm kiếm manager/team, chuyển tab điểm tuần/toàn mùa). Tích hợp tab "Bảng Xếp Hạng (Leaderboard)" vào Navbar. 117/117 tests frontend pass 100%. Build Vite 7.01s không lỗi.
 
-- [ ] **`P4-NG04`** *(Level 2)*: Giao diện Luật Chuyển nhượng tuần (Tối đa 3 transfers/tuần)
+- [x] **`P4-NG04`** *(Level 2)*: Giao diện Luật Chuyển nhượng tuần (Tối đa 3 transfers/tuần)
   - *Mô tả:* Chế độ Chuyển nhượng (Transfer Mode): Bộ đếm hiển thị số lượt thay đổi cầu thủ còn lại `(Còn lại: X / 3)`, đếm ngược thời gian đóng cổng chuyển nhượng (Gameweek Deadline), modal xác nhận chốt đội hình tuần.
   - *Phụ thuộc:* `P4-NH04`, `P1-NG04`
   - *Thư mục:* `frontend/src/components/transfers/`
   - *File tạo mới (3 files):* `frontend/src/components/transfers/TransferControl.tsx`, `frontend/src/components/transfers/TransferSummaryModal.tsx`, `frontend/src/components/transfers/__tests__/TransferControl.test.tsx`.
   - *Branch:* `feature/P4-NG04-transfer-rules-ui`
   - *Tiêu chí chấp nhận (Acceptance Criteria):* Bộ đếm giảm khi đổi cầu thủ, vô hiệu hóa nút chuyển nhượng khi đã đổi đủ 3 người, modal tóm tắt các lượt đổi trước khi lưu.
-  - *Cách kiểm chứng (Verification):* `npm --prefix frontend test -- TransferControl.test.tsx` pass 100%.
+  - *Cách kiểm chứng (Verification):* `npm --prefix frontend test -- TransferControl.test.tsx` pass 17/17 tests (100%).
+  - *Ghi chú nghiệm thu frontend:* Modal tóm tắt cầu thủ ra/vào; store chặn lượt thứ 4 và chốt sau deadline. Giao diện dùng lịch demo, lưu cục bộ; xác nhận phía server thuộc P4-NH04. Nhóm transfer 17/17 test, toàn frontend 134/134, build thành công trên nhánh P4-NG04.
 
 ---
 
