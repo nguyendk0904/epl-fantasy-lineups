@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from sqlalchemy import Boolean, DateTime, ForeignKey, Index, Integer
+from sqlalchemy import Boolean, CheckConstraint, DateTime, ForeignKey, Index, Integer
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.core.database import Base
@@ -12,6 +12,8 @@ class Fixture(Base):
     __tablename__ = "fixtures"
     __table_args__ = (
         Index("ix_fixtures_gameweek", "gameweek"),
+        CheckConstraint("team_h_difficulty BETWEEN 1 AND 5", name="ck_fixtures_team_h_difficulty"),
+        CheckConstraint("team_a_difficulty BETWEEN 1 AND 5", name="ck_fixtures_team_a_difficulty"),
     )
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
@@ -20,6 +22,8 @@ class Fixture(Base):
     team_a: Mapped[int] = mapped_column(ForeignKey("teams.id"), nullable=False)
     team_h_score: Mapped[int | None] = mapped_column(Integer)
     team_a_score: Mapped[int | None] = mapped_column(Integer)
+    team_h_difficulty: Mapped[int | None] = mapped_column(Integer)
+    team_a_difficulty: Mapped[int | None] = mapped_column(Integer)
     kickoff_time: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     finished: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
 
