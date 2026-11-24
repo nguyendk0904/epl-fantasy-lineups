@@ -7,6 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import joinedload
 
 from app.core.database import get_db
+from app.core.redis_cache import cache_service
 from app.models import DreamTeam, Fixture, Player, PlayerGameweekStat, Team
 from app.schemas.fixture import (
     DreamTeamMVP, DreamTeamPlayer, DreamTeamResponse, FixtureItem, FixtureTeamInfo,
@@ -17,6 +18,16 @@ router = APIRouter(tags=["Fixtures"])
 
 @router.get("/fixtures", response_model=list[FixtureItem])
 async def list_fixtures(gameweek: int = Query(..., ge=1, le=38), db: AsyncSession = Depends(get_db)):
+    # P4-Q02: cache the serialized fixture list for REDIS_CACHE_TTL_SECONDS so
+    # thousands of concurrent requests never hammer RDS. The loader runs only on
+    # a cache miss; sync_fixtures() invalidates the namespace after each update.
+    return await cache_service.get_or_set(
+        cache_service.build_key("fixtures", gameweek=gameweek),
+        lambda: _load_fixture_items(db, gameweek),
+    )
+
+
+async def _load_fixture_items(db: AsyncSession, gameweek: int) -> list[dict]:
     query = (
         select(Fixture)
         .options(joinedload(Fixture.home_team), joinedload(Fixture.away_team))
@@ -37,7 +48,7 @@ async def list_fixtures(gameweek: int = Query(..., ge=1, le=38), db: AsyncSessio
             team_h_difficulty=row.team_h_difficulty, team_a_difficulty=row.team_a_difficulty,
             finished=row.finished,
         ))
-    return items
+    return [item.model_dump(mode="json") for item in items]
 
 
 def _incomplete_dream_team() -> HTTPException:

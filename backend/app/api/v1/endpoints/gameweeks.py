@@ -8,6 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db
 from app.core.gameweek_auth import get_demo_user_id
+from app.core.redis_cache import cache_service
 from app.schemas.gameweek import ConfirmTransfersRequest, ConfirmTransfersResponse, LeaderboardEntry
 from app.services.gameweek_service import confirm_transfers, get_gameweek_deadline, read_leaderboard
 
@@ -23,15 +24,28 @@ async def leaderboard(
     page: int = Query(1, ge=1), limit: int = Query(100, ge=1, le=100),
     db: AsyncSession = Depends(get_db),
 ):
-    try:
-        entries, total = await read_leaderboard(db, gameweek, sort_by, page, limit)
-    except SQLAlchemyError as exc:
-        raise HTTPException(503, detail="Leaderboard database unavailable") from exc
+    async def load() -> dict:
+        # Runs only on a cache miss; Redis errors already fell back to a miss,
+        # so a 503 here is a genuine database outage and is not cached.
+        try:
+            entries, total = await read_leaderboard(db, gameweek, sort_by, page, limit)
+        except SQLAlchemyError as exc:
+            raise HTTPException(503, detail="Leaderboard database unavailable") from exc
+        return {
+            "total": total,
+            "entries": [LeaderboardEntry.model_validate(entry).model_dump(mode="json") for entry in entries],
+        }
+
+    payload = await cache_service.get_or_set(
+        cache_service.build_key("leaderboard", gameweek=gameweek, sort_by=sort_by, page=page, limit=limit),
+        load,
+    )
+    total = payload["total"]
     response.headers["X-Total-Count"] = str(total)
     response.headers["X-Page"] = str(page)
     response.headers["X-Limit"] = str(limit)
     response.headers["X-Total-Pages"] = str((total + limit - 1) // limit)
-    return entries
+    return payload["entries"]
 
 
 @router.post("/transfers/confirm", response_model=ConfirmTransfersResponse)

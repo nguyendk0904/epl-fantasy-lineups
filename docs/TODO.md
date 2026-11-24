@@ -16,8 +16,8 @@
 | **Phase 1: Local Full-Stack Product** | **17 / 17** | `100%` |  Hoàn thành |
 | **Phase 2: AWS Services Integration** | **13 / 13** | `100%` |  Hoàn thành |
 | **Phase 3: Production Deploy & E2E Test** | **13 / 13** | `100%` | Hoàn thành |
-| **Phase 4: Live Gamification & League Operations** | **12 / 14** | `86%` | 🟡 Đang hoàn thành |
-| **TỔNG CỘNG TOÀN DỰ ÁN** | **55 / 57** | `95%` | 🟡 Đang hoàn thành |
+| **Phase 4: Live Gamification & League Operations** | **13 / 14** | `93%` | 🟡 Đang hoàn thành |
+| **TỔNG CỘNG TOÀN DỰ ÁN** | **56 / 57** | `98%` | 🟡 Đang hoàn thành |
 
 ---
 
@@ -655,7 +655,7 @@
 
 ---
 
-### 🐳 Quang (DevOps & Cloud Automation Lead) - [1/3]
+### 🐳 Quang (DevOps & Cloud Automation Lead) - [2/3]
 
 - [x] **`P4-Q01`** *(Level 3)*: Thiết lập AWS EventBridge Scheduler định kỳ chạy Live Sync
   - *Mô tả:* Cấu hình CloudWatch Events / EventBridge tự động kích hoạt `live_sync.py` trước mỗi vòng đấu và kích hoạt `gameweek_sync.py` sau khi các trận đấu kết thúc.
@@ -666,14 +666,14 @@
   - *Tiêu chí chấp nhận (Acceptance Criteria):* EventBridge Scheduler gửi signal tự động theo đúng lịch thi đấu Ngoại hạng Anh để trigger backend sync.
   - *Cách kiểm chứng (Verification):* Kiểm tra cron trigger event trên CloudWatch Metrics / EventBridge Console.
 
-- [ ] **`P4-Q02`** *(Level 3)*: Tích hợp Redis Caching cho Bảng xếp hạng & Lịch thi đấu
+- [x] **`P4-Q02`** *(Level 3)*: Tích hợp Redis Caching cho Bảng xếp hạng & Lịch thi đấu
   - *Mô tả:* Cấu hình In-Memory Redis Cache (hoặc ElastiCache Free Tier) lưu cache Leaderboard và Fixtures trong 5 phút để chịu tải hàng ngàn request cùng lúc mà không làm nghẽn RDS.
   - *Phụ thuộc:* `P4-NH03`, `P4-NH04`
   - *Thư mục:* `backend/app/core/`, `infra/`
   - *File tạo mới (2 files):* `backend/app/core/redis_cache.py`, `backend/tests/test_redis_cache.py`.
   - *Branch:* `feature/P4-Q02-redis-caching`
   - *Tiêu chí chấp nhận (Acceptance Criteria):* Response time cho BXH và Fixtures giảm xuống < 20ms khi cache hit; tự động invalidate cache khi có điểm mới.
-  - *Cách kiểm chứng (Verification):* `pytest backend/tests/test_redis_cache.py` pass 100%.
+  - *Cách kiểm chứng (Verification):* `pytest backend/tests/test_redis_cache.py` pass 15/15 tests (100%).
 
 - [ ] **`P4-Q03`** *(Level 2)*: Kịch bản Kiểm thử Vòng đời Tuần thi đấu (Gameweek Lifecycle Test)
   - *Mô tả:* Script tự động giả lập 1 tuần thi đấu hoàn chỉnh: Người dùng đổi 3 cầu thủ $\rightarrow$ Khóa deadline $\rightarrow$ Kéo kết quả trận $\rightarrow$ Engine tính điểm $\rightarrow$ Cập nhật BXH thành công.

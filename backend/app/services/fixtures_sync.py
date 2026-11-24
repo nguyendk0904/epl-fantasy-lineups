@@ -7,6 +7,7 @@ import httpx
 from pydantic import AwareDatetime, BaseModel, Field, StrictBool
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.redis_cache import cache_service
 from app.models import Fixture
 from app.services.fdr_service import FPL_FIXTURES_URL
 from app.services.fpl_sync import FPLSyncError, _upsert
@@ -74,4 +75,7 @@ async def sync_fixtures(session_factory: Callable[[], AsyncSession], client: htt
                 await _upsert(session, Fixture.__table__, rows)
     except Exception as exc:
         raise FPLSyncError("Fixture sync failed; transaction rolled back") from exc
+    # P4-Q02: scores/finished flags changed -> clear cached fixture lists so the
+    # endpoint rebuilds from the just-committed rows.
+    await cache_service.invalidate_fixtures()
     return {"fixtures_processed": len(rows)}
