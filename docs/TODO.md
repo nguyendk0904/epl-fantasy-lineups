@@ -506,7 +506,7 @@
 
 ---
 
-## 🏆 PHASE 4: VẬN HÀNH MÙA GIẢI & GAMIFICATION (11/14)
+## 🏆 PHASE 4: VẬN HÀNH MÙA GIẢI & GAMIFICATION (13/14)
 *Mục tiêu: Vận hành trực tiếp với FPL thật: Lịch thi đấu 38 vòng, chấm điểm live, quản lý chấn thương, BXH và luật chuyển nhượng 3 người/tuần.*
 
 ### 🎨 Nguyên (Frontend & UI Lead) - [4/4]
@@ -673,7 +673,7 @@
   - *File tạo mới (2 files):* `backend/app/core/redis_cache.py`, `backend/tests/test_redis_cache.py`.
   - *Branch:* `feature/P4-Q02-redis-caching`
   - *Tiêu chí chấp nhận (Acceptance Criteria):* Response time cho BXH và Fixtures giảm xuống < 20ms khi cache hit; tự động invalidate cache khi có điểm mới.
-  - *Cách kiểm chứng (Verification):* `pytest backend/tests/test_redis_cache.py` pass 15/15 tests (100%).
+  - *Cách kiểm chứng (Verification):* `pytest backend/tests/test_redis_cache.py` pass 100%.
 
 - [ ] **`P4-Q03`** *(Level 2)*: Kịch bản Kiểm thử Vòng đời Tuần thi đấu (Gameweek Lifecycle Test)
   - *Mô tả:* Script tự động giả lập 1 tuần thi đấu hoàn chỉnh: Người dùng đổi 3 cầu thủ $\rightarrow$ Khóa deadline $\rightarrow$ Kéo kết quả trận $\rightarrow$ Engine tính điểm $\rightarrow$ Cập nhật BXH thành công.
