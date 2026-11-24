@@ -16,8 +16,8 @@
 | **Phase 1: Local Full-Stack Product** | **17 / 17** | `100%` |  Hoàn thành |
 | **Phase 2: AWS Services Integration** | **13 / 13** | `100%` |  Hoàn thành |
 | **Phase 3: Production Deploy & E2E Test** | **13 / 13** | `100%` | Hoàn thành |
-| **Phase 4: Live Gamification & League Operations** | **13 / 14** | `93%` | 🟡 Đang hoàn thành |
-| **TỔNG CỘNG TOÀN DỰ ÁN** | **56 / 57** | `98%` | 🟡 Đang hoàn thành |
+| **Phase 4: Live Gamification & League Operations** | **14 / 14** | `100%` | Hoàn thành |
+| **TỔNG CỘNG TOÀN DỰ ÁN** | **57 / 57** | `100%` | Hoàn thành |
 
 ---
 
@@ -506,7 +506,7 @@
 
 ---
 
-## 🏆 PHASE 4: VẬN HÀNH MÙA GIẢI & GAMIFICATION (13/14)
+## 🏆 PHASE 4: VẬN HÀNH MÙA GIẢI & GAMIFICATION (14/14)
 *Mục tiêu: Vận hành trực tiếp với FPL thật: Lịch thi đấu 38 vòng, chấm điểm live, quản lý chấn thương, BXH và luật chuyển nhượng 3 người/tuần.*
 
 ### 🎨 Nguyên (Frontend & UI Lead) - [4/4]
@@ -655,7 +655,7 @@
 
 ---
 
-### 🐳 Quang (DevOps & Cloud Automation Lead) - [2/3]
+### 🐳 Quang (DevOps & Cloud Automation Lead) - [3/3]
 
 - [x] **`P4-Q01`** *(Level 3)*: Thiết lập AWS EventBridge Scheduler định kỳ chạy Live Sync
   - *Mô tả:* Cấu hình CloudWatch Events / EventBridge tự động kích hoạt `live_sync.py` trước mỗi vòng đấu và kích hoạt `gameweek_sync.py` sau khi các trận đấu kết thúc.
@@ -675,7 +675,7 @@
   - *Tiêu chí chấp nhận (Acceptance Criteria):* Response time cho BXH và Fixtures giảm xuống < 20ms khi cache hit; tự động invalidate cache khi có điểm mới.
   - *Cách kiểm chứng (Verification):* `pytest backend/tests/test_redis_cache.py` pass 100%.
 
-- [ ] **`P4-Q03`** *(Level 2)*: Kịch bản Kiểm thử Vòng đời Tuần thi đấu (Gameweek Lifecycle Test)
+- [x] **`P4-Q03`** *(Level 2)*: Kịch bản Kiểm thử Vòng đời Tuần thi đấu (Gameweek Lifecycle Test)
   - *Mô tả:* Script tự động giả lập 1 tuần thi đấu hoàn chỉnh: Người dùng đổi 3 cầu thủ $\rightarrow$ Khóa deadline $\rightarrow$ Kéo kết quả trận $\rightarrow$ Engine tính điểm $\rightarrow$ Cập nhật BXH thành công.
   - *Phụ thuộc:* `P4-NH04`, `P4-V02`
   - *Thư mục:* `scripts/`
