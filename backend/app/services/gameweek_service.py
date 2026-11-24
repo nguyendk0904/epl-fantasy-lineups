@@ -18,6 +18,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import settings
 from app.core.database import AsyncSessionLocal, engine
+from app.core.redis_cache import cache_service
 from app.models import Fixture, Player, PlayerGameweekStat, Team, UserGameweekLineup
 from app.schemas.gameweek import ConfirmTransfersRequest, ConfirmTransfersResponse, LeaderboardEntry
 from app.services.scoring_engine import score_and_persist_gameweek_lineup
@@ -146,6 +147,8 @@ async def confirm_transfers(db: AsyncSession, user_id: int, request: ConfirmTran
             formation=request.formation, total_cost=float(cost), transfers_count=count,
             transfers_used=used, remaining_transfers=3 - used, deadline=deadline, is_locked=False,
         )
+    # P4-Q02: confirming a lineup resets gameweek_points -> leaderboard changed.
+    await cache_service.invalidate_leaderboard()
     return response
 
 
@@ -222,6 +225,9 @@ async def score_completed_gameweek(gameweek: int, session_factory=AsyncSessionLo
             for lineup in lineups:
                 await score_and_persist_gameweek_lineup(db, lineup.id)
                 lineup.is_locked = True
+    # P4-Q02: new points are persisted -> drop every cached leaderboard page so
+    # the next request rebuilds from the just-committed scores.
+    await cache_service.invalidate_leaderboard()
     return len(lineups)
 
 

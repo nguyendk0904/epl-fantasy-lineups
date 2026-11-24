@@ -16,8 +16,8 @@
 | **Phase 1: Local Full-Stack Product** | **17 / 17** | `100%` |  Hoàn thành |
 | **Phase 2: AWS Services Integration** | **13 / 13** | `100%` |  Hoàn thành |
 | **Phase 3: Production Deploy & E2E Test** | **13 / 13** | `100%` | Hoàn thành |
-| **Phase 4: Live Gamification & League Operations** | **12 / 14** | `86%` | 🟡 Đang hoàn thành |
-| **TỔNG CỘNG TOÀN DỰ ÁN** | **55 / 57** | `95%` | 🟡 Đang hoàn thành |
+| **Phase 4: Live Gamification & League Operations** | **13 / 14** | `93%` | 🟡 Đang hoàn thành |
+| **TỔNG CỘNG TOÀN DỰ ÁN** | **56 / 57** | `98%` | 🟡 Đang hoàn thành |
 
 ---
 
@@ -506,7 +506,7 @@
 
 ---
 
-## 🏆 PHASE 4: VẬN HÀNH MÙA GIẢI & GAMIFICATION (11/14)
+## 🏆 PHASE 4: VẬN HÀNH MÙA GIẢI & GAMIFICATION (13/14)
 *Mục tiêu: Vận hành trực tiếp với FPL thật: Lịch thi đấu 38 vòng, chấm điểm live, quản lý chấn thương, BXH và luật chuyển nhượng 3 người/tuần.*
 
 ### 🎨 Nguyên (Frontend & UI Lead) - [4/4]
@@ -655,7 +655,7 @@
 
 ---
 
-### 🐳 Quang (DevOps & Cloud Automation Lead) - [1/3]
+### 🐳 Quang (DevOps & Cloud Automation Lead) - [2/3]
 
 - [x] **`P4-Q01`** *(Level 3)*: Thiết lập AWS EventBridge Scheduler định kỳ chạy Live Sync
   - *Mô tả:* Cấu hình CloudWatch Events / EventBridge tự động kích hoạt `live_sync.py` trước mỗi vòng đấu và kích hoạt `gameweek_sync.py` sau khi các trận đấu kết thúc.
@@ -666,7 +666,7 @@
   - *Tiêu chí chấp nhận (Acceptance Criteria):* EventBridge Scheduler gửi signal tự động theo đúng lịch thi đấu Ngoại hạng Anh để trigger backend sync.
   - *Cách kiểm chứng (Verification):* Kiểm tra cron trigger event trên CloudWatch Metrics / EventBridge Console.
 
-- [ ] **`P4-Q02`** *(Level 3)*: Tích hợp Redis Caching cho Bảng xếp hạng & Lịch thi đấu
+- [x] **`P4-Q02`** *(Level 3)*: Tích hợp Redis Caching cho Bảng xếp hạng & Lịch thi đấu
   - *Mô tả:* Cấu hình In-Memory Redis Cache (hoặc ElastiCache Free Tier) lưu cache Leaderboard và Fixtures trong 5 phút để chịu tải hàng ngàn request cùng lúc mà không làm nghẽn RDS.
   - *Phụ thuộc:* `P4-NH03`, `P4-NH04`
   - *Thư mục:* `backend/app/core/`, `infra/`

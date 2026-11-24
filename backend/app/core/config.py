@@ -50,6 +50,12 @@ class Settings(BaseSettings):
     CLOUDWATCH_SEND_INTERVAL_SECONDS: int = Field(default=5, ge=1, le=60)
     RATE_LIMIT_ENABLED: bool = True
     RATE_LIMIT_STORAGE_URI: SecretStr = Field(default=SecretStr("memory://"), repr=False, exclude=True)
+    # P4-Q02: Redis cache for Leaderboard & Fixtures (TTL 5 minutes on hits).
+    # memory:// keeps local/dev/tests on the $0 in-process backend; production
+    # sets REDIS_CACHE_ENABLED=true with a shared redis:// or rediss:// URL.
+    REDIS_CACHE_ENABLED: bool = False
+    REDIS_CACHE_URL: str = "memory://"
+    REDIS_CACHE_TTL_SECONDS: int = Field(default=300, ge=1, le=86400)
 
     @field_validator("RATE_LIMIT_STORAGE_URI")
     @classmethod
@@ -64,6 +70,19 @@ class Settings(BaseSettings):
         except ValueError:
             pass
         raise ValueError("Rate-limit storage must be memory:// or a valid redis:// or rediss:// URL")
+
+    @field_validator("REDIS_CACHE_URL")
+    @classmethod
+    def validate_redis_cache_url(cls, value: str) -> str:
+        if value.startswith("memory://"):
+            return value
+        try:
+            parsed = urlsplit(value)
+            if parsed.scheme in {"redis", "rediss"} and parsed.hostname:
+                return value
+        except ValueError:
+            pass
+        raise ValueError("REDIS_CACHE_URL must be memory:// or a valid redis:// or rediss:// URL")
 
     @field_validator("CORS_ORIGINS", mode="before")
     @classmethod

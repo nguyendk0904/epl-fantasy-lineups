@@ -46,6 +46,25 @@ services:
     networks:
       - fpl-network
 
+  # P4-Q02: in-memory cache for Leaderboard & Fixtures. Pure cache (--save ""),
+  # no persistence, $0. The backend defaults to its own in-process cache, so this
+  # service is optional for local dev; enable it for realistic cache-hit load tests.
+  redis:
+    image: redis:7-alpine
+    container_name: fpl-redis
+    restart: unless-stopped
+    command: ["redis-server", "--save", ""]
+    ports:
+      - "${REDIS_PORT:-6379}:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 5s
+    networks:
+      - fpl-network
+
   backend:
     build:
       context: ../backend
@@ -59,11 +78,18 @@ services:
       DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:5432/${POSTGRES_DB:-fantasy_fpl}
       CORS_ORIGINS: '${CORS_ORIGINS:-["http://localhost:5173", "http://localhost:3000"]}'
       FPL_BOOTSTRAP_URL: ${FPL_BOOTSTRAP_URL:-https://fantasy.premierleague.com/api/bootstrap-static/}
+      # P4-Q02: set REDIS_CACHE_ENABLED=true to route Leaderboard/Fixtures cache
+      # through the redis service above instead of the in-process memory backend.
+      REDIS_CACHE_ENABLED: ${REDIS_CACHE_ENABLED:-false}
+      REDIS_CACHE_URL: ${REDIS_CACHE_URL:-redis://redis:6379/0}
+      REDIS_CACHE_TTL_SECONDS: ${REDIS_CACHE_TTL_SECONDS:-300}
     ports:
       - "8000:8000"
     depends_on:
       postgres:
         condition: service_healthy
+      redis:
+        condition: service_started
     healthcheck:
       test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health')"]
       interval: 15s
