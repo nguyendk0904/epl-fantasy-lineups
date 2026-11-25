@@ -16,6 +16,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import settings
 from app.core.database import AsyncSessionLocal, engine
+from app.core.redis_cache import cache_service
 from app.models import Fixture, Player, Team
 from app.services.fdr_service import FPL_FIXTURES_URL, clear_fdr_cache
 from app.services.fixtures_sync import _parse_fixture_payload
@@ -71,6 +72,8 @@ async def sync_fixtures_and_injuries(
         raise FPLSyncError("Fixture/availability sync failed; transaction rolled back") from exc
     optimizer_response_cache.clear()
     clear_fdr_cache()
+    # P4-Q02: invalidate shared Redis fixture cache across backend/worker processes.
+    await cache_service.invalidate_fixtures()
     result = {
         "teams_processed": len(teams), "players_processed": len(players),
         "fixtures_processed": len(rows), "fixtures_unassigned": unassigned,
