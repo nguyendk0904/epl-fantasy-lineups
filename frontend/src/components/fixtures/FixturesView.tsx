@@ -1,5 +1,4 @@
 import { apiClient } from '../../services/apiClient';
-import { MockDataBanner } from '../common/MockDataBanner';
 import React, { useState, useEffect, useMemo } from 'react';
 import {
   Calendar,
@@ -138,13 +137,9 @@ export function generate38GameweekFixtures(): Record<number, FixtureItem[]> {
 export const ALL_38_GAMEWEEK_FIXTURES = generate38GameweekFixtures();
 
 export async function loadFixtures(gameweek: number) {
-  try {
-    const data = await apiClient.get<FixtureItem[]>('/fixtures', { params: { gameweek } });
-    if (Array.isArray(data) && data.length > 0) return { data, isMock: false };
-  } catch {
-    // Keep the demo available when the API request fails.
-  }
-  return { data: ALL_38_GAMEWEEK_FIXTURES[gameweek] || [], isMock: true };
+  const data = await apiClient.get<FixtureItem[]>('/fixtures', { params: { gameweek } });
+  if (!Array.isArray(data)) throw new Error('Invalid fixtures response');
+  return { data, isMock: false };
 }
 
 export interface FixturesViewProps {
@@ -161,8 +156,9 @@ export const FixturesView: React.FC<FixturesViewProps> = ({
   const [gameweek, setGameweek] = useState<number>(initialGameweek);
   const [selectedTeamFilter, setSelectedTeamFilter] = useState<number | 'ALL'>('ALL');
   const [fixtures, setFixtures] = useState<FixtureItem[]>([]);
-  const [isMock, setIsMock] = useState(false);
-  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [error, setError] = useState('');
+  const [retry, setRetry] = useState(0);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
   const [showFdrLegend, setShowFdrLegend] = useState<boolean>(false);
 
   // Kéo dữ liệu vòng đấu từ API hoặc nạp từ dataset 38 vòng chuẩn
@@ -170,11 +166,15 @@ export const FixturesView: React.FC<FixturesViewProps> = ({
     let isMounted = true;
     const fetchFixtures = async () => {
       setIsLoading(true);
-      const result = await loadFixtures(gameweek);
-      if (isMounted) {
-        setFixtures(result.data);
-        setIsMock(result.isMock);
-        setIsLoading(false);
+      setFixtures([]);
+      setError('');
+      try {
+        const result = await loadFixtures(gameweek);
+        if (isMounted) setFixtures(result.data);
+      } catch {
+        if (isMounted) setError('Không tải được lịch thi đấu.');
+      } finally {
+        if (isMounted) setIsLoading(false);
       }
     };
 
@@ -182,7 +182,7 @@ export const FixturesView: React.FC<FixturesViewProps> = ({
     return () => {
       isMounted = false;
     };
-  }, [gameweek]);
+  }, [gameweek, retry]);
 
   // Lọc theo CLB nếu người dùng chọn
   const filteredFixtures = useMemo(() => {
@@ -209,14 +209,14 @@ export const FixturesView: React.FC<FixturesViewProps> = ({
   }, [filteredFixtures]);
 
   const isCurrentGW = gameweek === CURRENT_GAMEWEEK;
-  const isPastGW = gameweek < CURRENT_GAMEWEEK;
+  const isPastGW = fixtures.length > 0 && fixtures.every((fixture) => fixture.finished);
 
   return (
     <div
       className={`bg-brand-card/90 border border-brand-border rounded-2xl p-4 sm:p-6 shadow-2xl backdrop-blur-xl space-y-6 ${className}`}
       data-testid="fixtures-view"
     >
-      {isMock && <MockDataBanner />}
+      {error && <div role="alert">{error} <button className="underline" onClick={() => setRetry((value) => value + 1)}>Thử lại</button></div>}
       {/* 1. Header & Điều hướng Gameweek */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-brand-border/60 pb-5">
         <div>
@@ -247,9 +247,9 @@ export const FixturesView: React.FC<FixturesViewProps> = ({
                 ? 'bg-brand-skyblue/20 text-brand-skyblue-light border-brand-skyblue/50'
                 : 'bg-brand-darker hover:bg-brand-card text-brand-muted hover:text-white border-brand-border'
             }`}
-            title="Nhảy đến vòng đấu hiện tại"
+            title="Quay về vòng mặc định"
           >
-            Vòng hiện tại (GW {CURRENT_GAMEWEEK})
+            Vòng mặc định (GW {CURRENT_GAMEWEEK})
           </button>
 
           <div className="flex items-center gap-1 bg-brand-darker/90 p-1 rounded-xl border border-brand-border shadow-inner">
@@ -288,15 +288,15 @@ export const FixturesView: React.FC<FixturesViewProps> = ({
             Chọn nhanh vòng đấu (1 - 38):
           </span>
           <span className="font-bold text-brand-skyblue-light">
-            {isPastGW ? '✓ Đã kết thúc' : isCurrentGW ? '⚡ Đang diễn ra' : '⏳ Sắp diễn ra'}
+            {isLoading ? 'Đang tải...' : isPastGW ? '✓ Đã kết thúc' : 'Theo lịch đã đồng bộ'}
           </span>
         </div>
 
         <div className="flex items-center gap-1.5 overflow-x-auto pb-2 pt-1 scrollbar-thin scrollbar-thumb-brand-border scrollbar-track-transparent">
           {Array.from({ length: TOTAL_GAMEWEEKS }, (_, i) => i + 1).map((gwNum) => {
             const isSelected = gwNum === gameweek;
-            const isCurrent = gwNum === CURRENT_GAMEWEEK;
-            const isFinished = gwNum < CURRENT_GAMEWEEK;
+            const isCurrent = false; // No current-event endpoint: do not infer a live round from the default.
+            const isFinished = gwNum === gameweek && isPastGW;
 
             return (
               <button
@@ -399,9 +399,9 @@ export const FixturesView: React.FC<FixturesViewProps> = ({
           <div className="w-8 h-8 rounded-full border-2 border-brand-skyblue border-t-transparent animate-spin" />
           <p className="text-xs font-bold">Đang tải lịch thi đấu Gameweek {gameweek}...</p>
         </div>
-      ) : Object.keys(groupedMatches).length === 0 ? (
+      ) : error ? null : Object.keys(groupedMatches).length === 0 ? (
         <div className="py-12 text-center text-brand-muted space-y-2">
-          <p className="text-sm font-bold">Không tìm thấy trận đấu nào cho bộ lọc này.</p>
+          <p className="text-sm font-bold">{fixtures.length === 0 ? 'Vòng này chưa có lịch thi đấu đủ dữ liệu.' : 'Không tìm thấy trận đấu nào cho bộ lọc này.'}</p>
           <button
             onClick={() => setSelectedTeamFilter('ALL')}
             className="text-xs font-bold text-brand-skyblue-light underline"

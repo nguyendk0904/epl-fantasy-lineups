@@ -168,14 +168,10 @@ describe('TransferControl & TransferSummaryModal Unit Tests (P4-NG04)', () => {
     it('renders prominent Gameweek Deadline spotlight banner with digital countdown units', () => {
       const html = renderToStaticMarkup(<TransferControl />);
       expect(html).toContain('HẠN CHỐT GAMEWEEK (DEADLINE)');
-      expect(html).toContain('LỊCH DEMO');
-      expect(html).toContain('Ngày');
-      expect(html).toContain('Giờ');
-      expect(html).toContain('Phút');
-      expect(html).toContain('Giây');
+      expect(html).not.toContain('LỊCH DEMO');
+      expect(html).toContain('Chưa nhận deadline từ server');
       expect(html).toContain('Lượt chuyển nhượng tuần:');
-      expect(html).toContain('Còn lại:');
-      expect(html).toContain('/ 3 lượt');
+      expect(html).toContain('Số lượt: chưa xác minh');
     });
 
     it('renders disabled confirm button when 0 transfers have been made', () => {

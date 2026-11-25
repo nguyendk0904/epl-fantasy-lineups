@@ -141,6 +141,7 @@ export const FixtureCard: React.FC<FixtureCardProps> = ({
           hour: '2-digit',
           minute: '2-digit',
           hour12: false,
+          timeZone: 'UTC',
         });
       } catch {
         return timeStr;
@@ -161,6 +162,7 @@ export const FixtureCard: React.FC<FixtureCardProps> = ({
           <span className="truncate">
             {fixture.kickoff_date ? `${fixture.kickoff_date} • ` : ''}
             {formatKickoff(fixture.kickoff_time)}
+            {' UTC'}
           </span>
         </div>
 

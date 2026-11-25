@@ -218,6 +218,8 @@ export function App() {
             total_points: number;
             form?: number | null;
             status?: string | null;
+            news?: string | null;
+            chance_of_playing_next_round?: number | null;
             expected_points_next?: number | null;
           }>;
         }>('/players', {
@@ -245,6 +247,8 @@ export function App() {
                 total_points: number;
                 form?: number | null;
                 status?: string | null;
+                news?: string | null;
+                chance_of_playing_next_round?: number | null;
                 expected_points_next?: number | null;
               }> }>('/players', { params: { page: p, limit: 100 } })
               .catch(() => null)
@@ -308,6 +312,8 @@ export function App() {
             total_points: points,
             form: formVal,
             status: raw.status || 'a',
+            news: raw.news ?? undefined,
+            chance_of_playing_next_round: raw.chance_of_playing_next_round ?? null,
             expected_points_next: xpVal,
           };
         });
@@ -334,21 +340,11 @@ export function App() {
             return p;
           };
 
-          // Nếu đội hình trống, có cầu thủ điểm = 0, hoặc đang chứa mock data
-          const hasZeroPointsOrMock =
-            storeState.startingXI.length === 0 ||
-            storeState.startingXI.some(
-              (p) => p.total_points === 0 || (p.id <= 15 && !mappedPlayers.some((m) => m.id === p.id && m.web_name === p.web_name))
-            );
-
-          if (hasZeroPointsOrMock) {
-            storeState.loadSampleLineup(INITIAL_STARTING_XI, INITIAL_BENCH);
-          } else {
-            useLineupStore.setState({
-              startingXI: storeState.startingXI.map(syncPlayer),
-              bench: storeState.bench.map(syncPlayer),
-            });
-          }
+          // Refresh metadata without replacing the user's draft with a sample squad.
+          useLineupStore.setState({
+            startingXI: storeState.startingXI.map(syncPlayer),
+            bench: storeState.bench.map(syncPlayer),
+          });
         }
       } catch (err) {
         console.warn('Could not fetch market players from API, falling back to offline sample squad:', err);

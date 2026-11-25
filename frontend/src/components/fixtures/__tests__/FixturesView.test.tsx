@@ -19,9 +19,13 @@ describe('FixturesView data source', () => {
     const live = sample.slice(0, 1);
     if (source === 'error') vi.mocked(apiClient.get).mockRejectedValueOnce(new Error('404'));
     else vi.mocked(apiClient.get).mockResolvedValueOnce(source === 'live' ? live : []);
+    if (source === 'error') {
+      await expect(loadFixtures(11)).rejects.toThrow('404');
+      return;
+    }
     const result = await loadFixtures(11);
     expect(apiClient.get).toHaveBeenCalledWith('/fixtures', { params: { gameweek: 11 } });
-    expect(result).toEqual({ data: source === 'live' ? live : sample, isMock: source !== 'live' });
+    expect(result).toEqual({ data: source === 'live' ? live : [], isMock: false });
   });
 });
 

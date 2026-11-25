@@ -38,6 +38,7 @@ export function getApiBaseUrl(): string {
 export interface RequestOptions extends Omit<RequestInit, 'body'> {
   params?: Record<string, string | number | boolean | undefined | null>;
   body?: unknown;
+  onResponse?: (response: Response) => void;
 }
 
 export class ApiError extends Error {
@@ -77,7 +78,7 @@ export function buildUrl(endpoint: string, params?: Record<string, string | numb
  * Core apiClient wrapper with json parsing and error normalization
  */
 export async function apiRequest<T>(endpoint: string, options: RequestOptions = {}): Promise<T> {
-  const { params, body, headers, ...customConfig } = options;
+  const { params, body, headers, onResponse, ...customConfig } = options;
 
   const url = buildUrl(endpoint, params);
 
@@ -125,6 +126,7 @@ export async function apiRequest<T>(endpoint: string, options: RequestOptions = 
     throw new ApiError(errorMessage, response.status, responseData);
   }
 
+  onResponse?.(response);
   return responseData as T;
 }
 

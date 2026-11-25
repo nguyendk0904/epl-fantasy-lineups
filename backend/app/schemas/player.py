@@ -12,6 +12,8 @@ class PlayerItemResponse(BaseModel):
     total_points: int
     form: float
     status: str | None = "a"
+    news: str | None = None
+    chance_of_playing_next_round: int | None = None
     expected_points_next: float | None = None
 
 
