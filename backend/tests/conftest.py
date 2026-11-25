@@ -99,6 +99,10 @@ async def e2e_api(monkeypatch, e2e_solver):
                 schema_created = True
             isolated = engine.execution_options(schema_translate_map={None: schema})
             async with isolated.begin() as connection:
+                # Alembic ALTER TABLE/ADD COLUMN operations do not consistently
+                # use SQLAlchemy's schema_translate_map. Keep unqualified DDL
+                # in this test schema for this transaction, never public.
+                await connection.execute(text(f'SET LOCAL search_path TO "{schema}"'))
                 await connection.run_sync(_migrate_isolated_schema)
         else:
             isolated = engine
