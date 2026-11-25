@@ -13,7 +13,7 @@ from decimal import Decimal
 import re
 
 import pytest
-from sqlalchemy import func, select
+from sqlalchemy import func, select, text
 
 from app.models import Player, SharedLineup
 
@@ -92,6 +92,23 @@ async def test_full_api_journey_real_solver_and_persisted_snapshot(e2e_api):
         stored = await session.scalar(select(SharedLineup).where(SharedLineup.share_code == snapshot["share_code"]))
         assert stored.player_data["captain_id"] == snapshot["player_data"]["captain_id"]
         assert stored.total_cost == Decimal(str(snapshot["total_cost"]))
+
+
+@pytest.mark.asyncio
+async def test_postgres_e2e_migrations_include_altered_columns_in_isolated_schema(e2e_api):
+    """P4 acceptance regression: migrations 004/005 must target the test schema."""
+    if e2e_api.backend != "postgresql":
+        pytest.skip("Set isolated E2E_TEST_DATABASE_URL to verify PostgreSQL DDL")
+    schema = e2e_api.sessions.kw["bind"].get_execution_options()["schema_translate_map"][None]
+    async with e2e_api.sessions() as session:
+        columns = (await session.execute(text(
+            "SELECT table_name, column_name FROM information_schema.columns "
+            "WHERE table_schema = :schema AND table_name IN ('fixtures', 'players')"
+        ), {"schema": schema})).all()
+    assert {
+        ("fixtures", "team_h_difficulty"), ("fixtures", "team_a_difficulty"),
+        ("players", "chance_of_playing_next_round"),
+    }.issubset(set(columns))
 
 
 @pytest.mark.asyncio
