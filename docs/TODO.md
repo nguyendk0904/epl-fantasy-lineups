@@ -511,6 +511,15 @@
 
 ### 🎨 Nguyên (Frontend & UI Lead) - [4/4]
 
+> **Tích hợp API 25/11/2026 — P4-NG01–NG04 / P4-NH01:** NH thực hiện sau khi Nguyên đồng ý; nhánh `feature/P4-NG01-P4-NG02-P4-NG03-P4-NG04-api-acceptance`. Các checkbox ghi nhận triển khai; chưa thay cho nghiệm thu UI/cloud trên image mới.
+>
+> - NG01: lịch API giữ `200 []`, lỗi có thông báo/thử lại; không tự thay bằng lịch giả. Mốc GW11 chỉ là vòng mặc định, không xác định vòng hiện tại; giờ trận hiển thị UTC.
+> - NG02/NH01: được phép bổ sung response `/players` với `news` và `chance_of_playing_next_round`; App truyền metadata tới badge, giữ khác biệt `null`/`0`, không tự gán phần trăm khi chưa biết.
+> - NG03: Dream Team từ `/dream-team/{gw}`, xử lý 404/503 và request cũ khi đổi vòng. BXH đọc hết trang API trước khi lọc/phân trang, gửi `sort_by` tới server; giữ đồng hạng 1,1,3 và `previous_rank=0` là mới.
+> - NG04: chốt qua `/transfers/confirm`, token cá nhân chỉ trong bộ nhớ, số lượt/deadline lấy từ response server; chặn gửi lặp khi đang lưu, hỗ trợ lần đầu/đổi C/V không mua thêm người. Request thất bại giữ nguyên xác nhận trước đó. Đổi token/vòng xóa trạng thái xác nhận; bản nháp trên sân không tự gửi. API chưa có GET lineup/deadline nên trước lần lưu thành công hiển thị chưa xác minh.
+> - Kiểm thử local: frontend **164 passed**, có 10 test React/jsdom qua API client thực với HTTP được mô phỏng; backend **536 passed, 13 skipped** (thiếu môi trường opt-in PostgreSQL/deployed API); TypeScript, Vite build và Ruff pass. Thêm jsdom làm dependency kiểm thử. Các số test cũ bên dưới là lịch sử triển khai.
+> - Còn nghiệm thu: deploy đúng SHA frontend/backend; kiểm tra trên CloudFront với dữ liệu RDS thật, token cấp riêng, vòng còn hạn; chốt ban đầu → đổi người → thử vượt 3 lượt → đối chiếu RDS/BXH sau scoring. Không dùng token/DB production cho test dữ liệu giả; phối hợp Quang để chọn môi trường và tài khoản nghiệm thu.
+
 - [x] **`P4-NG01`** *(Level 2)*: Màn hình Lịch thi đấu các tuần & Độ khó trận đấu (`FixturesView`)
   - *Mô tả:* Giao diện xem lịch 38 vòng đấu Premier League, tỉ số thực tế các trận đã kết thúc, ngày giờ bóng lăn và huy hiệu độ khó trận đấu FDR (Fixture Difficulty Rating từ 1 đến 5).
   - *Phụ thuộc:* `P4-NH03`

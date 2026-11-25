@@ -100,6 +100,8 @@ CREATE TABLE shared_lineups (
 Tất cả các endpoint đều có tiền tố `/api/v1`.
 
 ### 4.1. Players & Teams
+
+**Bổ sung được NH phê duyệt 25/11/2026 (P4-NH01 / P4-NG02):** mỗi item của `GET /players` thêm `news: string | null` và `chance_of_playing_next_round: integer | null` (0–100 theo DB). Trường `null` nghĩa chưa biết, phân biệt với `0`. Giữ nguyên các field, query và kiểu phân trang cũ; không cần migration mới.
 - **`GET /api/v1/teams`**
   - Response: `Array<Team>`
 - **`GET /api/v1/players`**
@@ -208,7 +210,7 @@ Tất cả các endpoint đều có tiền tố `/api/v1`.
 - PostgreSQL dùng advisory transaction lock theo user để bảo vệ cả lần tạo đầu tiên; đọc row hiện có FOR UPDATE. SQLite file dùng BEGIN IMMEDIATE cho test đồng thời. Lịch sử, lượt và đội hình nằm trong một transaction; không dựa trên lock trong bộ nhớ process.
 - **Token demo, chưa phải hệ thống tài khoản/login:** `GAMEWEEK_DEMO_AUTH_ENABLED=false` mặc định. Khi bật phải đặt `GAMEWEEK_DEMO_TOKEN_SECRET` ngẫu nhiên >=32 ký tự, giữ riêng phía server. Token HMAC-SHA256 có user ID, thời hạn và audience cố định; hết hạn trả 401, đổi secret thu hồi mọi token cũ. Operator cấp token riêng từng người qua `python -m app.core.gameweek_auth --user-id 1 --hours 24` (1–168 giờ). Không có endpoint cấp token public; không gửi secret sang frontend hoặc đưa token/secret vào Git/chat/log. Chỉ chạy lệnh cấp token tại terminal riêng không bị thu thập output làm log.
 - **Chấm điểm và bàn giao Q:** Sau khi deadline qua, NH01 cập nhật các fixture đã finished và NH02 cập nhật stats, chạy `python -m app.services.gameweek_service --score-gameweek 2` để gọi scoring engine hiện có của Vũ. Chỉ chấm khi có lịch, tất cả trận vòng đã kết thúc và mỗi trận có stats; ghi điểm/khóa lineup trong một transaction, chạy lại không cộng điểm lặp. BXH đọc điểm này; chưa có chấm điểm live tự động hoặc lịch chạy mới trong P4-NH04.
-- NG cần nối token, payload và số lượt từ server vào TransferControl; màn hình hiện còn lưu cục bộ. Chưa tự thay frontend, schema DB, IAM, Docker hoặc CI/CD. Nghiệm thu PostgreSQL/RDS và tích hợp UI thực hiện riêng.
+- Tích hợp P4-NG03/NG04 ngày 25/11/2026 (NH thực hiện sau khi NG đồng ý): Dream Team/BXH đọc API; TransferControl gửi bearer demo và đúng payload ở trên, nhận deadline/số lượt từ server. Token và trạng thái xác nhận chỉ giữ trong bộ nhớ, tách theo token/Gameweek; đội hình trên sân vẫn là bản nháp local cần người dùng kiểm tra trước khi gửi. API chưa có GET đội hình cá nhân/deadline, nên sau refresh/đổi token hoặc vòng, giao diện ghi rõ chưa xác minh cho đến lần POST thành công; không suy ra còn 3 lượt và không dùng lịch thứ Bảy giả. Đây là phạm vi demo, chưa có hệ thống đăng nhập/profile. Nghiệm thu cloud/UI thật thực hiện riêng sau deploy.
 
 ---
 

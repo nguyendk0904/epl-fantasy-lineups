@@ -201,6 +201,25 @@ async def test_get_all_players_default(test_session):
 
 
 @pytest.mark.asyncio
+@pytest.mark.parametrize("chance", [None, 0, 25, 75, 100])
+async def test_player_availability_roundtrip(test_session, chance):
+    # P4-NH01 / P4-NG02: optional fields preserve unknown and zero distinctly.
+    async for session in app.dependency_overrides[get_db]():
+        player = await session.get(Player, 1)
+        player.status = "d"
+        player.news = "Ankle injury — awaiting assessment"
+        player.chance_of_playing_next_round = chance
+        await session.commit()
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
+        response = await client.get("/api/v1/players", params={"search": "Raya"})
+    assert response.status_code == 200
+    item = response.json()["items"][0]
+    assert item["status"] == "d"
+    assert item["news"] == "Ankle injury — awaiting assessment"
+    assert item["chance_of_playing_next_round"] == chance
+
+
+@pytest.mark.asyncio
 async def test_filter_by_position(test_session):
     transport = ASGITransport(app=app)
     async with AsyncClient(transport=transport, base_url="http://test") as client:

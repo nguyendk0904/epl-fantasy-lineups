@@ -1,60 +1,49 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import {
   ArrowLeftRight,
-  Clock,
   RotateCcw,
+  Clock,
   AlertTriangle,
   ArrowRight,
   ShieldAlert,
-  Flame,
-  CheckCircle2,
 } from 'lucide-react';
 import { calculateTransfers, MAX_FREE_TRANSFERS, useLineupStore } from '../../stores/lineupStore';
 import { TransferSummaryModal } from './TransferSummaryModal';
+import { confirmGameweekTransfers, useTransferSession } from '../../services/gameweekApi';
 
 export { calculateTransfers, MAX_FREE_TRANSFERS } from '../../stores/lineupStore';
 
 export interface TransferControlProps {
   className?: string;
-  deadlineTarget?: Date | string;
   onConfirmSuccess?: () => void;
 }
 
 export const TransferControl: React.FC<TransferControlProps> = ({
   className = '',
-  deadlineTarget,
   onConfirmSuccess,
 }) => {
   const {
     startingXI,
     bench,
-    baselineSquad,
-    transfersMadeThisWeek,
-    resetToBaseline,
-    commitTransfers,
-    syncTransferWeek,
-    setBaselineSquad,
+    formation,
+    captainId,
+    viceCaptainId,
     getRemainingBudget,
   } = useLineupStore();
 
   const [isSummaryModalOpen, setIsSummaryModalOpen] = useState(false);
+  const { token, gameweek, pending, error, confirmation, baseline: baselineSquad, setIdentity } = useTransferSession();
+  const transfersMadeThisWeek = confirmation?.transfers_used ?? 0;
 
 
   // Tính toán thời gian đếm ngược đến Deadline Gameweek
-  const [today, setToday] = useState(() => new Date().toDateString());
   const targetDeadline = useMemo(() => {
-    if (deadlineTarget !== undefined) return new Date(deadlineTarget instanceof Date ? deadlineTarget.getTime() : deadlineTarget).getTime();
-    // Demo weeks run Sunday to Saturday; Saturday stays closed after 11:30.
-    const saturday = new Date(today);
-    saturday.setDate(saturday.getDate() + 6 - saturday.getDay());
-    saturday.setHours(11, 30, 0, 0);
-    return saturday.getTime();
-  }, [today, deadlineTarget]);
+    return confirmation ? Date.parse(confirmation.deadline) : NaN;
+  }, [confirmation]);
 
   useEffect(() => {
-    syncTransferWeek(targetDeadline);
     setIsSummaryModalOpen(false);
-  }, [targetDeadline, syncTransferWeek]);
+  }, [token, gameweek]);
 
   const [timeLeft, setTimeLeft] = useState<{
     days: number;
@@ -67,7 +56,6 @@ export const TransferControl: React.FC<TransferControlProps> = ({
   useEffect(() => {
     const updateCountdown = () => {
       const now = Date.now();
-      setToday(new Date(now).toDateString());
       const diff = targetDeadline - now;
 
       if (!Number.isFinite(diff) || diff <= 0) {
@@ -91,23 +79,24 @@ export const TransferControl: React.FC<TransferControlProps> = ({
   // Tính toán số lượt chuyển nhượng giữa đội hình hiện tại và baseline
   const currentSquad = useMemo(() => [...startingXI, ...bench], [startingXI, bench]);
   const totalPlayers = currentSquad.length;
-  useEffect(() => {
-    if (!baselineSquad.length && currentSquad.length === 15) setBaselineSquad(currentSquad);
-  }, [baselineSquad.length, currentSquad, setBaselineSquad]);
-  const isSquadComplete = totalPlayers === 15;
+  const isSquadComplete = startingXI.length === 11 && bench.length === 4 && new Set(currentSquad.map((player) => player.id)).size === 15;
 
   const transferStats = useMemo(() => {
-    return calculateTransfers(currentSquad, baselineSquad, transfersMadeThisWeek);
-  }, [currentSquad, baselineSquad, transfersMadeThisWeek]);
+    return calculateTransfers(currentSquad, confirmation ? baselineSquad : currentSquad, transfersMadeThisWeek);
+  }, [currentSquad, baselineSquad, transfersMadeThisWeek, confirmation]);
 
   const remainingBudget = getRemainingBudget();
   const hasTransfers = transferStats.transfersCount > 0;
 
   // Xác nhận chuyển nhượng
-  const closed = timeLeft.isPassed || !Number.isFinite(targetDeadline) || Date.now() >= targetDeadline;
-  const overLimit = transferStats.totalTransfers > MAX_FREE_TRANSFERS;
-  const handleConfirmTransfers = () => {
-    if (commitTransfers(targetDeadline)) {
+  const closed = !!confirmation && (confirmation.is_locked || Date.now() >= targetDeadline);
+  const overLimit = !!confirmation && transferStats.totalTransfers > MAX_FREE_TRANSFERS;
+  const handleConfirmTransfers = async () => {
+    if (pending || closed || overLimit || !isSquadComplete || !captainId || !viceCaptainId) return;
+    const snapshot = currentSquad.map((player) => ({ ...player }));
+    if (await confirmGameweekTransfers({ gameweek, starting_player_ids: startingXI.map((player) => player.id),
+      bench_player_ids: bench.map((player) => player.id), formation, captain_id: captainId,
+      vice_captain_id: viceCaptainId }, snapshot)) {
       setIsSummaryModalOpen(false);
       onConfirmSuccess?.();
     }
@@ -118,6 +107,24 @@ export const TransferControl: React.FC<TransferControlProps> = ({
       className={`rounded-2xl border border-brand-border/90 shadow-2xl overflow-hidden bg-gradient-to-b from-brand-card/95 via-brand-dark/95 to-brand-darker/95 backdrop-blur-md ${className}`}
       data-testid="transfer-control"
     >
+      <div className="p-4 space-y-3 border-b border-brand-border text-sm">
+        <label className="block text-brand-muted">Token demo cá nhân (giữ trong phiên hiện tại)
+          <input type="password" autoComplete="off" value={token} disabled={pending}
+            onChange={(event) => setIdentity(event.target.value, gameweek)} aria-label="Token demo cá nhân"
+            className="block w-full rounded-lg bg-brand-darker border border-brand-border p-2 text-white" />
+        </label>
+        <label className="block text-brand-muted">Vòng cần lưu
+          <select aria-label="Vòng chuyển nhượng" value={gameweek} disabled={pending}
+            onChange={(event) => setIdentity(token, Number(event.target.value))}
+            className="ml-3 rounded bg-brand-darker p-2 text-white">
+            {Array.from({ length: 38 }, (_, i) => <option key={i + 1} value={i + 1}>GW {i + 1}</option>)}
+          </select>
+        </label>
+        <p className="text-xs text-brand-muted">Đội hình trên sân là bản nháp của máy này. Kiểm tra đủ 15 người và C/V trước khi lưu cho token đã chọn.</p>
+        {confirmation ? <p role="status" className="text-emerald-300">Server đã lưu cho Player #{confirmation.user_id}, GW {confirmation.gameweek}. Còn lại: {confirmation.remaining_transfers} / 3 lượt.</p>
+          : <p role="status" className="text-amber-300">Chưa đồng bộ đội hình và số lượt với server. Server kiểm tra deadline khi xác nhận.</p>}
+        {error && <p role="alert" className="text-rose-300">{error}</p>}
+      </div>
       {/* 1. TOP SPOTLIGHT: GAMEWEEK DEADLINE COUNTDOWN TICKER (Làm nổi bật Gameweek Deadline) */}
       <div
         className="px-4 py-3 sm:px-6 sm:py-3.5 bg-gradient-to-r from-amber-500/15 via-brand-darker to-brand-skyblue/15 border-b border-amber-500/30 flex flex-col md:flex-row items-center justify-between gap-3 shadow-inner"
@@ -139,18 +146,18 @@ export const TransferControl: React.FC<TransferControlProps> = ({
                 HẠN CHỐT GAMEWEEK (DEADLINE)
               </span>
               <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-500/20 border border-amber-500/40 text-amber-200 uppercase">
-                {deadlineTarget === undefined ? 'LỊCH DEMO' : 'GAMEWEEK'}
+                GW {gameweek}
               </span>
             </div>
             <p className="text-[11px] text-brand-muted hidden sm:block">
-              Khóa sổ chuyển nhượng 90 phút trước trận đấu mở màn của vòng
+              Deadline chính thức do server xác nhận
             </p>
           </div>
         </div>
 
         {/* Đồng hồ LED kỹ thuật số (Digital Countdown Blocks) */}
         <div className="flex items-center gap-1.5 sm:gap-2 self-center">
-          {timeLeft.isPassed ? (
+          {!confirmation ? <span className="text-xs text-amber-300">Chưa nhận deadline từ server</span> : closed ? (
             <div className="px-3.5 py-1.5 rounded-xl bg-rose-500/20 border border-rose-500/50 text-rose-300 font-black text-xs sm:text-sm uppercase flex items-center gap-2 animate-pulse">
               <ShieldAlert className="w-4 h-4" />
               <span>ĐÃ KHÓA SỔ GAMEWEEK</span>
@@ -230,7 +237,7 @@ export const TransferControl: React.FC<TransferControlProps> = ({
                 Lượt chuyển nhượng tuần:
               </span>
               <span className="font-black text-sm">
-                Còn lại: {transferStats.remainingTransfers} / {MAX_FREE_TRANSFERS} lượt
+                {confirmation ? `Dự kiến còn: ${transferStats.remainingTransfers} / ${MAX_FREE_TRANSFERS} lượt` : 'Số lượt: chưa xác minh'}
               </span>
             </div>
           </div>
@@ -278,31 +285,26 @@ export const TransferControl: React.FC<TransferControlProps> = ({
 
         {/* Nút hành động Chốt & Khôi phục */}
         <div className="flex items-center gap-2 self-end md:self-auto">
-          {hasTransfers && (
-            <button
-              onClick={resetToBaseline}
-              className="px-3.5 py-2 rounded-xl bg-brand-darker hover:bg-brand-card border border-brand-border text-xs font-bold text-brand-muted hover:text-white transition-all flex items-center gap-1.5"
-              title="Khôi phục đội hình trước khi chuyển nhượng"
-            >
-              <RotateCcw className="w-3.5 h-3.5" />
-              <span className="hidden sm:inline">Khôi phục</span>
-            </button>
-          )}
-
+          {confirmation && hasTransfers && <button disabled={pending} className="px-3 py-2 rounded-xl border border-brand-border text-brand-muted text-xs"
+            onClick={() => useLineupStore.setState({ startingXI: baselineSquad.filter((player) => player.isStarting),
+              bench: baselineSquad.filter((player) => !player.isStarting), formation: confirmation.formation,
+              captainId: confirmation.captain_id, viceCaptainId: confirmation.vice_captain_id })}>
+            <RotateCcw className="inline w-4 h-4 mr-1" />Khôi phục đội hình đã lưu
+          </button>}
           <button
             onClick={() => setIsSummaryModalOpen(true)}
-            disabled={!hasTransfers || overLimit || closed}
+            disabled={!token || !isSquadComplete || !captainId || !viceCaptainId || overLimit || closed || pending}
             title={
               !hasTransfers
-                ? 'Chưa có thay đổi cầu thủ nào'
+                ? 'Lưu đội hình ban đầu hoặc cập nhật XI, đội trưởng'
                 : 'Mở màn hình trung tâm chuyển nhượng'
             }
             className="px-4 py-2 sm:px-5 sm:py-2.5 rounded-xl bg-gradient-to-r from-brand-skyblue to-brand-skyblue-light hover:brightness-110 text-brand-darker font-black text-xs sm:text-sm flex items-center gap-2 shadow-lg shadow-brand-skyblue/25 active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:brightness-100 transition-all"
           >
             <span>
-              {!isSquadComplete && hasTransfers
+              {pending ? 'Đang xác nhận...' : !isSquadComplete && hasTransfers
                 ? `Xem Chuyển Nhượng (${totalPlayers}/15)`
-                : `Chốt Chuyển Nhượng${hasTransfers ? ` (${transferStats.transfersCount})` : ''}`}
+                : `Lưu Đội Hình / Chốt Chuyển Nhượng${hasTransfers ? ` (${transferStats.transfersCount})` : ''}`}
             </span>
             <ArrowRight className="w-4 h-4" />
           </button>
@@ -312,7 +314,7 @@ export const TransferControl: React.FC<TransferControlProps> = ({
       {/* Modal Tóm Tắt & Xác Nhận Chuyển Nhượng */}
       <TransferSummaryModal
         isOpen={isSummaryModalOpen}
-        onClose={() => setIsSummaryModalOpen(false)}
+        onClose={() => { if (!pending) setIsSummaryModalOpen(false); }}
         onConfirm={handleConfirmTransfers}
         playersOut={transferStats.playersOut}
         playersIn={transferStats.playersIn}
@@ -324,6 +326,10 @@ export const TransferControl: React.FC<TransferControlProps> = ({
         isSquadComplete={isSquadComplete}
         totalSquadPlayers={totalPlayers}
         deadlinePassed={closed}
+        allowUnchanged
+        isLoading={pending}
+        error={error}
+        countersVerified={!!confirmation}
       />
     </div>
   );

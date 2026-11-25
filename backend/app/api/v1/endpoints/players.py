@@ -99,6 +99,8 @@ async def get_players(
             total_points=player.total_points,
             form=float(player.form),
             status=player.status,
+            news=player.news,
+            chance_of_playing_next_round=player.chance_of_playing_next_round,
             expected_points_next=(
                 float(player.expected_points_next)
                 if player.expected_points_next is not None

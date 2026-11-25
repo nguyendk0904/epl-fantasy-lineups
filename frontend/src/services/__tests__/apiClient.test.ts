@@ -141,6 +141,15 @@ describe('apiClient service', () => {
         expect.objectContaining({ method: 'DELETE' })
       );
     });
+    it('exposes pagination headers without sending the callback to fetch (P4-NG03)', async () => {
+      const response = new Response('[]', { headers: { 'content-type': 'application/json', 'X-Total-Pages': '2' } });
+      const fetchSpy = vi.fn().mockResolvedValue(response);
+      global.fetch = fetchSpy;
+      const onResponse = vi.fn();
+      expect(await apiClient.get('/leaderboard', { onResponse })).toEqual([]);
+      expect(onResponse).toHaveBeenCalledWith(response);
+      expect(fetchSpy.mock.calls[0][1]).not.toHaveProperty('onResponse');
+    });
   });
 });
 

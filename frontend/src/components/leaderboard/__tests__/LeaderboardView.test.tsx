@@ -20,9 +20,13 @@ describe('LeaderboardView data source', () => {
     const live = sample.slice(0, 1);
     if (source === 'error') vi.mocked(apiClient.get).mockRejectedValueOnce(new Error('404'));
     else vi.mocked(apiClient.get).mockResolvedValueOnce(source === 'live' ? live : []);
+    if (source === 'error') {
+      await expect(loadLeaderboard(11)).rejects.toThrow('404');
+      return;
+    }
     const result = await loadLeaderboard(11);
-    expect(apiClient.get).toHaveBeenCalledWith('/leaderboard', { params: { gameweek: 11 } });
-    expect(result).toEqual({ data: source === 'live' ? live : sample, isMock: source !== 'live' });
+    expect(apiClient.get).toHaveBeenCalledWith('/leaderboard', expect.objectContaining({ params: { gameweek: 11, sort_by: 'overall', page: 1, limit: 100 } }));
+    expect(result).toEqual({ data: source === 'live' ? live : [], isMock: false });
   });
 });
 
@@ -86,16 +90,15 @@ describe('LeaderboardView & DreamTeamModal Unit Tests (P4-NG03)', () => {
     it('renders header, title, and Dream Team action button', () => {
       const html = renderToStaticMarkup(<LeaderboardView initialGameweek={11} />);
       expect(html).toContain('Bảng Xếp Hạng FPL');
-      expect(html).toContain('Đang hiển thị dữ liệu mẫu (API chưa sẵn sàng)');
+      expect(html).not.toContain('Đang hiển thị dữ liệu mẫu (API chưa sẵn sàng)');
       expect(html).toContain('Mùa Giải 2026/27');
       expect(html).toContain('Đội Hình Tiêu Biểu (Dream Team)');
     });
 
-    it('renders Podium Top 3 cards (Gold, Silver, Bronze)', () => {
+    it('does not invent podium winners before the API responds', () => {
       const html = renderToStaticMarkup(<LeaderboardView initialGameweek={11} />);
-      expect(html).toContain('🥇 QUÁN QUÂN');
-      expect(html).toContain('🥈 Á QUÂN');
-      expect(html).toContain('🥉 HẠNG BA');
+      expect(html).not.toContain('🥇 QUÁN QUÂN');
+      expect(html).toContain('Đang tải bảng xếp hạng');
     });
 
     it('renders search input for managers and clubs', () => {
@@ -105,12 +108,8 @@ describe('LeaderboardView & DreamTeamModal Unit Tests (P4-NG03)', () => {
 
     it('renders table headers and pagination controls', () => {
       const html = renderToStaticMarkup(<LeaderboardView initialGameweek={11} />);
-      expect(html).toContain('Thứ Hạng');
-      expect(html).toContain('Huấn Luyện Viên &amp; Đội Bóng');
-      expect(html).toContain('Đội Trưởng (C)');
-      expect(html).toContain('Điểm Vòng');
-      expect(html).toContain('Tổng Điểm');
-      expect(html).toContain('Trang 1 /');
+      expect(html).toContain('Tổng Điểm Mùa Giải');
+      expect(html).toContain('Đang tải bảng xếp hạng');
     });
   });
 
@@ -129,9 +128,8 @@ describe('LeaderboardView & DreamTeamModal Unit Tests (P4-NG03)', () => {
       expect(html).toContain('role="dialog"');
       expect(html).toContain('Đội Hình Tiêu Biểu (Dream Team)');
       expect(html).toContain('Gameweek 11');
-      expect(html).toContain('Tổng điểm Dream Team');
-      expect(html).toContain('Cầu thủ xuất sắc nhất (MVP)');
-      expect(html).toContain('MVP');
+      expect(html).toContain('Đang tải Dream Team');
+      expect(html).not.toContain('Cầu thủ xuất sắc nhất (MVP)');
     });
   });
 });

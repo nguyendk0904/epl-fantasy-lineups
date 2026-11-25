@@ -29,14 +29,14 @@ export function getPlayerStatusConfig(
       return {
         type: 'injured',
         icon: '🚑',
-        label: 'Chấn thương (0%)',
+        label: chance == null ? 'Chấn thương' : `Chấn thương (${chance}%)`,
         shortLabel: 'Injured',
         badgeClass:
           'bg-brand-hotpink/20 text-brand-hotpink-light border-brand-hotpink/50 shadow-brand-hotpink/20',
         pinClass:
           'bg-brand-hotpink-dark/90 text-brand-white border-brand-hotpink shadow-brand-hotpink/50',
         dotClass: 'bg-brand-hotpink',
-        description: news || 'Nghỉ thi đấu do chấn thương (Khả năng ra sân 0%)',
+        description: news || (chance == null ? 'Chấn thương, chưa rõ khả năng ra sân' : `Khả năng ra sân dự kiến: ${chance}%`),
       };
 
     case 'd': {
@@ -44,7 +44,7 @@ export function getPlayerStatusConfig(
       return {
         type: 'doubtful',
         icon: '⚠️',
-        label: chance !== null && chance !== undefined ? `Nghi ngờ (${chance}%)` : 'Nghi ngờ (25%-75%)',
+        label: chance !== null && chance !== undefined ? `Nghi ngờ (${chance}%)` : 'Nghi ngờ',
         shortLabel: chanceText,
         badgeClass:
           'bg-amber-500/20 text-amber-300 border-amber-500/50 shadow-amber-500/20',

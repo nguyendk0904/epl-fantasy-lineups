@@ -1,4 +1,5 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
+import { apiClient, ApiError } from '../../services/apiClient';
 import { X, Trophy, Crown, Sparkles, Star, Shield, Flame } from 'lucide-react';
 import { getPlayerKitUrl } from '../pitch/PlayerPitchSlot';
 
@@ -116,7 +117,20 @@ export const DreamTeamModal: React.FC<DreamTeamModalProps> = ({
   onClose,
   gameweek = 11,
 }) => {
-  const dreamTeam = getDreamTeamForGameweek(gameweek);
+  const [result, setResult] = useState<{ gameweek: number; data?: DreamTeamData; error?: string }>();
+  useEffect(() => {
+    if (!isOpen) return;
+    let active = true;
+    setResult(undefined);
+    apiClient.get<DreamTeamData>(`/dream-team/${gameweek}`).then((data) => {
+      if (active) setResult({ gameweek, data });
+    }).catch((error: unknown) => {
+      if (active) setResult({ gameweek, error: error instanceof ApiError && error.status === 404
+        ? 'Vòng này chưa có Dream Team.' : 'Không tải được Dream Team. Hãy đóng và mở lại để thử lại.' });
+    });
+    return () => { active = false; };
+  }, [isOpen, gameweek]);
+  const dreamTeam = result?.gameweek === gameweek ? result.data : undefined;
 
   // Lắng nghe phím Escape để đóng modal
   useEffect(() => {
@@ -130,6 +144,18 @@ export const DreamTeamModal: React.FC<DreamTeamModalProps> = ({
   }, [isOpen, onClose]);
 
   if (!isOpen) return null;
+
+  if (!dreamTeam) return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-brand-darker/95 p-6"
+      role="dialog" aria-modal="true" aria-label={`Dream Team Gameweek ${gameweek}`}>
+      <div className="bg-brand-card rounded-2xl p-6 text-white">
+        <h2>Đội Hình Tiêu Biểu (Dream Team) — Gameweek {gameweek}</h2>
+        <p role={result?.error ? 'alert' : 'status'}>{result?.gameweek === gameweek && result.error
+          ? result.error : 'Đang tải Dream Team...'}</p>
+        <button onClick={onClose} className="mt-4 underline">Đóng</button>
+      </div>
+    </div>
+  );
 
   const gkp = dreamTeam.players.filter((p) => p.element_type === 'GKP');
   const defs = dreamTeam.players.filter((p) => p.element_type === 'DEF');

@@ -30,6 +30,9 @@ export interface TransferSummaryModalProps {
   isSquadComplete?: boolean;
   totalSquadPlayers?: number;
   isLoading?: boolean;
+  allowUnchanged?: boolean;
+  error?: string;
+  countersVerified?: boolean;
 }
 
 export const TransferSummaryModal: React.FC<TransferSummaryModalProps> = ({
@@ -47,6 +50,9 @@ export const TransferSummaryModal: React.FC<TransferSummaryModalProps> = ({
   isSquadComplete = true,
   totalSquadPlayers = 15,
   isLoading = false,
+  allowUnchanged = false,
+  error = '',
+  countersVerified = true,
 }) => {
   const [mounted, setMounted] = useState<boolean>(false);
 
@@ -338,10 +344,10 @@ export const TransferSummaryModal: React.FC<TransferSummaryModalProps> = ({
               <div className="bg-brand-card/70 p-3 rounded-2xl border border-brand-border/70 shadow-sm">
                 <span className="text-brand-muted text-[11px] block">Lượt đổi lần này</span>
                 <span className="text-base font-black text-white block mt-0.5">
-                  {transfersCount} cầu thủ
+                  {countersVerified ? `${transfersCount} cầu thủ` : 'Chưa xác minh'}
                 </span>
                 <span className="text-[10px] text-brand-muted block mt-1">
-                  Tổng tuần: {totalTransfers}/3 lượt
+                  {countersVerified ? `Tổng tuần dự kiến: ${totalTransfers}/3 lượt` : 'Số lượt và deadline sẽ được server kiểm tra'}
                 </span>
               </div>
 
@@ -353,10 +359,10 @@ export const TransferSummaryModal: React.FC<TransferSummaryModalProps> = ({
                     remainingFreeTransfers > 0 ? 'text-emerald-400' : 'text-rose-400'
                   }`}
                 >
-                  {remainingFreeTransfers} / 3 lượt
+                  {countersVerified ? `${remainingFreeTransfers} / 3 lượt` : 'Chưa xác minh'}
                 </span>
                 <span className="text-[10px] text-brand-muted block mt-1">
-                  {isFree ? 'Miễn phí' : 'Vượt hạn mức'}
+                  {countersVerified ? (isFree ? 'Miễn phí' : 'Vượt hạn mức') : 'Server quyết định'}
                 </span>
               </div>
 
@@ -384,6 +390,7 @@ export const TransferSummaryModal: React.FC<TransferSummaryModalProps> = ({
           </div>
         </div>
 
+        {error && <p role="alert" className="px-6 py-2 text-rose-300">{error}</p>}
         {/* 4. Footer Màn Hình: Nút Hành Động */}
         <div className="px-6 py-4 border-t border-brand-border bg-brand-darker flex items-center justify-between shrink-0">
           <button
@@ -395,7 +402,7 @@ export const TransferSummaryModal: React.FC<TransferSummaryModalProps> = ({
 
           <button
             onClick={onConfirm}
-            disabled={deadlinePassed || !isFree || !isBudgetValid || !isSquadComplete || transfersCount === 0 || isLoading}
+            disabled={deadlinePassed || !isFree || !isBudgetValid || !isSquadComplete || (!allowUnchanged && transfersCount === 0) || isLoading}
             className="px-6 py-3 rounded-2xl bg-gradient-to-r from-emerald-500 to-emerald-400 hover:from-emerald-400 hover:to-emerald-300 text-brand-darker font-black text-xs sm:text-sm flex items-center gap-2 shadow-xl shadow-emerald-500/25 hover:scale-105 active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:scale-100 transition-all"
           >
             {isLoading ? (

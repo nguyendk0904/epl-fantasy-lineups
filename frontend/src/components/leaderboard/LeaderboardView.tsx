@@ -1,5 +1,4 @@
-import { apiClient } from '../../services/apiClient';
-import { MockDataBanner } from '../common/MockDataBanner';
+import { fetchLeaderboard } from '../../services/gameweekApi';
 import React, { useState, useEffect, useMemo } from 'react';
 import {
   Trophy,
@@ -19,6 +18,7 @@ import {
 import { DreamTeamModal } from './DreamTeamModal';
 
 export interface LeaderboardEntry {
+  user_id?: number;
   rank: number;
   previous_rank: number;
   manager_name: string;
@@ -82,14 +82,8 @@ export function generateLeaderboardData(gameweek: number): LeaderboardEntry[] {
   });
 }
 
-export async function loadLeaderboard(gameweek: number) {
-  try {
-    const data = await apiClient.get<LeaderboardEntry[]>('/leaderboard', { params: { gameweek } });
-    if (Array.isArray(data) && data.length > 0) return { data, isMock: false };
-  } catch {
-    // Keep the demo available when the API request fails.
-  }
-  return { data: generateLeaderboardData(gameweek), isMock: true };
+export async function loadLeaderboard(gameweek: number, sortBy: 'overall' | 'gameweek' = 'overall') {
+  return { data: await fetchLeaderboard(gameweek, sortBy), isMock: false };
 }
 
 export interface LeaderboardViewProps {
@@ -106,11 +100,10 @@ export const LeaderboardView: React.FC<LeaderboardViewProps> = ({
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [isDreamTeamOpen, setIsDreamTeamOpen] = useState<boolean>(false);
-  const [leaderboardData, setLeaderboardData] = useState<LeaderboardEntry[]>(() =>
-    generateLeaderboardData(initialGameweek)
-  );
-  const [isMock, setIsMock] = useState(true);
-  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [leaderboardData, setLeaderboardData] = useState<LeaderboardEntry[]>([]);
+  const [error, setError] = useState('');
+  const [retry, setRetry] = useState(0);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
 
   const pageSize = 10;
 
@@ -119,11 +112,16 @@ export const LeaderboardView: React.FC<LeaderboardViewProps> = ({
     let isMounted = true;
     const fetchLeaderboard = async () => {
       setIsLoading(true);
-      const result = await loadLeaderboard(gameweek);
-      if (isMounted) {
-        setLeaderboardData(result.data);
-        setIsMock(result.isMock);
-        setIsLoading(false);
+      setLeaderboardData([]);
+      setError('');
+      setCurrentPage(1);
+      try {
+        const result = await loadLeaderboard(gameweek, activeTab);
+        if (isMounted) setLeaderboardData(result.data);
+      } catch {
+        if (isMounted) setError('Không tải được bảng xếp hạng.');
+      } finally {
+        if (isMounted) setIsLoading(false);
       }
     };
 
@@ -131,19 +129,12 @@ export const LeaderboardView: React.FC<LeaderboardViewProps> = ({
     return () => {
       isMounted = false;
     };
-  }, [gameweek]);
+  }, [gameweek, activeTab, retry]);
 
   // Sắp xếp theo tab đang chọn (Điểm vòng hoặc Tổng điểm mùa giải)
   const sortedData = useMemo(() => {
-    const list = [...leaderboardData];
-    if (activeTab === 'gameweek') {
-      list.sort((a, b) => b.gameweek_points - a.gameweek_points);
-    } else {
-      list.sort((a, b) => b.total_points - a.total_points);
-    }
-    // Gán lại rank sau khi sort
-    return list.map((item, idx) => ({ ...item, rank: idx + 1 }));
-  }, [leaderboardData, activeTab]);
+    return leaderboardData;
+  }, [leaderboardData]);
 
   // Lọc theo tìm kiếm tên hoặc tên đội
   const filteredData = useMemo(() => {
@@ -171,7 +162,7 @@ export const LeaderboardView: React.FC<LeaderboardViewProps> = ({
       className={`bg-brand-card/90 border border-brand-border rounded-3xl p-4 sm:p-6 shadow-2xl backdrop-blur-xl space-y-6 ${className}`}
       data-testid="leaderboard-view"
     >
-      {isMock && <MockDataBanner />}
+      {error && <div role="alert">{error} <button className="underline" onClick={() => setRetry((value) => value + 1)}>Thử lại</button></div>}
       {/* 1. Header Bảng Xếp Hạng & Nút Mở Dream Team */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-brand-border/60 pb-5">
         <div className="flex items-center gap-3">
@@ -210,9 +201,8 @@ export const LeaderboardView: React.FC<LeaderboardViewProps> = ({
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-3 sm:gap-4 pt-1">
           {top3.map((entry, idx) => {
-            const isFirst = idx === 0;
-            const isSecond = idx === 1;
-            const isThird = idx === 2;
+            const isFirst = entry.rank === 1;
+            const isSecond = entry.rank === 2;
 
             const podiumConfig = isFirst
               ? {
@@ -240,7 +230,7 @@ export const LeaderboardView: React.FC<LeaderboardViewProps> = ({
 
             return (
               <div
-                key={entry.rank}
+                key={entry.user_id ?? idx}
                 className={`relative rounded-3xl p-4 sm:p-5 border backdrop-blur-md shadow-2xl flex flex-col justify-between transition-all duration-300 hover:scale-[1.02] ${podiumConfig.cardClass}`}
               >
                 {/* Header Card */}
@@ -249,7 +239,7 @@ export const LeaderboardView: React.FC<LeaderboardViewProps> = ({
                     {podiumConfig.badge}
                   </span>
                   <span className="text-xs font-bold text-brand-muted px-2 py-0.5 rounded-md bg-brand-darker border border-brand-border">
-                    CLB: {entry.favorite_club}
+                    Hạng {entry.rank}{entry.favorite_club && ` · ${entry.favorite_club}`}
                   </span>
                 </div>
 
@@ -361,9 +351,9 @@ export const LeaderboardView: React.FC<LeaderboardViewProps> = ({
           <div className="w-8 h-8 rounded-full border-2 border-brand-skyblue border-t-transparent animate-spin" />
           <p className="text-xs font-bold">Đang tải bảng xếp hạng...</p>
         </div>
-      ) : filteredData.length === 0 ? (
+      ) : error ? null : filteredData.length === 0 ? (
         <div className="py-12 text-center text-brand-muted space-y-2">
-          <p className="text-sm font-bold">Không tìm thấy người chơi nào khớp với từ khóa "{searchQuery}".</p>
+          <p className="text-sm font-bold">{searchQuery ? `Không tìm thấy người chơi khớp với "${searchQuery}".` : 'Chưa có điểm xếp hạng cho vòng này.'}</p>
           <button
             onClick={() => setSearchQuery('')}
             className="text-xs font-bold text-brand-skyblue-light underline"
@@ -384,7 +374,7 @@ export const LeaderboardView: React.FC<LeaderboardViewProps> = ({
               </tr>
             </thead>
             <tbody className="divide-y divide-brand-border/40">
-              {paginatedData.map((entry) => {
+              {paginatedData.map((entry, idx) => {
                 const rankDelta = entry.previous_rank - entry.rank;
                 const isTop1 = entry.rank === 1;
                 const isTop2 = entry.rank === 2;
@@ -392,7 +382,7 @@ export const LeaderboardView: React.FC<LeaderboardViewProps> = ({
 
                 return (
                   <tr
-                    key={entry.rank}
+                    key={entry.user_id ?? idx}
                     className="hover:bg-brand-card/50 transition-colors group"
                   >
                     {/* 1. Rank & Rank Change Delta */}
@@ -414,7 +404,7 @@ export const LeaderboardView: React.FC<LeaderboardViewProps> = ({
 
                         {/* Delta Rank Arrow */}
                         <div className="text-[10px] font-bold min-w-[20px]">
-                          {rankDelta > 0 ? (
+                          {entry.previous_rank === 0 ? <span title="Chưa có thứ hạng vòng trước">Mới</span> : rankDelta > 0 ? (
                             <span className="text-emerald-400 flex items-center" title={`Tăng ${rankDelta} bậc`}>
                               <ArrowUp className="w-2.5 h-2.5" />
                               {rankDelta}

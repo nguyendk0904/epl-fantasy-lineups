@@ -148,8 +148,8 @@ describe('PlayerStatusBadge Component Unit Tests', () => {
       );
       expect(html).toContain('role="status"');
       expect(html).toContain('role="tooltip"');
-      expect(html).toContain('title="Chấn thương (0%) - Hamstring strain"');
-      expect(html).toContain('aria-label="Chấn thương (0%): Hamstring strain"');
+      expect(html).toContain('title="Chấn thương - Hamstring strain"');
+      expect(html).toContain('aria-label="Chấn thương: Hamstring strain"');
     });
   });
 });
