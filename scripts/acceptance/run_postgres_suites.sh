@@ -24,6 +24,7 @@ chmod 700 "$EVIDENCE"
 
 IMAGE="$(docker inspect fpl-backend --format '{{.Config.Image}}')"
 REV="${IMAGE##*:}"
+TEST_DEPS=/opt/fpl/test-deps
 echo "image   = $IMAGE"
 echo "revision= $REV"
 
@@ -38,22 +39,38 @@ if [ ! -f "$SRC/backend/tests/conftest.py" ] || [ "$(cat "$SRC/.revision" 2>/dev
   printf '%s\n' "$REV" > "$SRC/.revision"
 fi
 
+if [ ! -d "$TEST_DEPS/pytest" ]; then
+  echo "--- installing dev test dependencies (pytest, pytest-asyncio, aiosqlite) into $TEST_DEPS"
+  mkdir -p "$TEST_DEPS"
+  docker run --rm -u 0 \
+    -v "$TEST_DEPS:/test-deps" \
+    "$IMAGE" \
+    pip install --no-cache-dir --quiet --target /test-deps \
+      "pytest>=8.0.0,<9.0.0" "pytest-asyncio>=0.23.0,<1.0.0" "aiosqlite>=0.20.0"
+fi
+
 cat > "$DRIVER" <<'PY'
 """Derive the *_TEST_DATABASE_URL variables from RDS_* and run pytest.
 
 Written by scripts/acceptance/run_postgres_suites.sh; runs inside the backend
 image so the password never appears in argv or shell history. The three suites
 only create/drop their own schema inside the `_test` database:
-    E2E_TEST_DATABASE_URL      -> tests/test_e2e_api_suite.py   (P3-NH03)
-    SHARE_TEST_DATABASE_URL    -> tests/test_share_api.py       (P2-NH02)
-    FPL_SYNC_TEST_DATABASE_URL -> tests/test_fpl_sync.py        (P1-NH02/P2-NH03)
+    E2E_TEST_DATABASE_URL           -> tests/test_e2e_api_suite.py   (P3-NH03)
+    SHARE_TEST_DATABASE_URL         -> tests/test_share_api.py       (P2-NH02)
+    FPL_SYNC_TEST_DATABASE_URL      -> tests/test_fpl_sync.py        (P1-NH02/P2-NH03)
+    FIXTURE_SYNC_TEST_DATABASE_URL  -> tests/test_fixture_sync.py    (P4-NH01)
+    LIVE_MATCH_TEST_DATABASE_URL    -> tests/test_live_match_sync.py (P4-NH02)
+    FIXTURES_API_TEST_DATABASE_URL  -> tests/test_fixtures_api.py    (P4-NH03)
+    GAMEWEEK_TEST_DATABASE_URL      -> tests/test_gameweeks_api.py   (P4-NH04)
 """
 import os
 import sys
 from urllib.parse import quote
 
 # cwd is backend/ (mounted repo); a script launched by path does not add cwd to
-# sys.path, so make the `app` package importable for conftest.py.
+# sys.path, so make the `app` package and cached test deps importable.
+if os.path.isdir("/test-deps"):
+    sys.path.insert(0, "/test-deps")
 sys.path.insert(0, os.getcwd())
 
 test_db = os.environ.get("FPL_TEST_DATABASE_NAME", "fantasy_fpl_test")
@@ -65,7 +82,15 @@ dsn = (
     f"postgresql+asyncpg://{quote(os.environ['RDS_USERNAME'], safe='')}:"
     f"{quote(os.environ['RDS_PASSWORD'], safe='')}@{host}:{port}/{test_db}?ssl=require"
 )
-for variable in ("E2E_TEST_DATABASE_URL", "SHARE_TEST_DATABASE_URL", "FPL_SYNC_TEST_DATABASE_URL"):
+for variable in (
+    "E2E_TEST_DATABASE_URL",
+    "SHARE_TEST_DATABASE_URL",
+    "FPL_SYNC_TEST_DATABASE_URL",
+    "FIXTURE_SYNC_TEST_DATABASE_URL",
+    "LIVE_MATCH_TEST_DATABASE_URL",
+    "FIXTURES_API_TEST_DATABASE_URL",
+    "GAMEWEEK_TEST_DATABASE_URL",
+):
     os.environ.setdefault(variable, dsn)
 print(f"[acceptance] test database = {host}:{port}/{test_db} (TLS required, credentials hidden)", flush=True)
 
@@ -91,7 +116,7 @@ LOG="$EVIDENCE/${STAMP}-pytest-postgres.log"
 
 set +e
 docker run --rm \
-  -v "$SRC:/repo:ro" -v "$DRIVER:/run_pg_suites.py:ro" -w /repo/backend \
+  -v "$SRC:/repo:ro" -v "$DRIVER:/run_pg_suites.py:ro" -v "$TEST_DEPS:/test-deps:ro" -w /repo/backend \
   --env-file "$ENV_FILE" \
   -e PYTHONDONTWRITEBYTECODE=1 -e HOME=/tmp \
   -e RUN_RDS_CONNECTION_TEST=1 \
