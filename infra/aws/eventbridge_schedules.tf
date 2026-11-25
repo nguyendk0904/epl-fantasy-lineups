@@ -41,8 +41,9 @@ locals {
   send_command_target_arn = "arn:aws:scheduler:::aws-sdk:ssm:sendCommand"
 
   # Least-privilege resource ARNs for the ssm:SendCommand permission.
+  # AWS-managed SSM documents use an empty account ID (`::document/...`).
   fpl_host_instance_arn = "arn:aws:ec2:${var.aws_region}:${data.aws_caller_identity.current.account_id}:instance/${var.ec2_instance_id}"
-  fpl_run_shell_doc_arn = "arn:aws:ssm:${var.aws_region}:${data.aws_caller_identity.current.account_id}:document/AWS-RunShellScript"
+  fpl_run_shell_doc_arn = "arn:aws:ssm:${var.aws_region}::document/AWS-RunShellScript"
 
   # Single-line container selector: prefer the dedicated sync worker
   # container (fpl-worker, P2-NH03); fall back to the API container

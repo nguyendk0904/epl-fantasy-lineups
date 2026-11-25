@@ -156,7 +156,7 @@ fi
 - **Role:** `fpl-p4q01-eventbridge-scheduler-role` — `assume_role_policy` trust duy nhất `scheduler.amazonaws.com`.
 - **Policy:** `ssm-send-command-scoped` — **chỉ** 1 action `ssm:SendCommand` trên đúng **2 resource**:
   - Instance: `arn:aws:ec2:ap-southeast-1:{account}:instance/i-0f1e71fa1a78b0013`
-  - Document: `arn:aws:ssm:ap-southeast-1:{account}:document/AWS-RunShellScript`
+  - Document: `arn:aws:ssm:ap-southeast-1::document/AWS-RunShellScript`
 - **Không có** `Resource:"*"`, không quyền khác (không cần `kms:Decrypt` vì không dùng KMS, không cần thêm quyền SQS/Lambda).
 - Role dùng **đúng region** của schedule (`ap-southeast-1`) — SSM document và instance cùng region.
 

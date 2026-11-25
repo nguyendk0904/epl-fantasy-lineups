@@ -395,3 +395,43 @@ async def test_fixtures_sync_invalidates_fixtures_cache(tmp_path):
     finally:
         await engine.dispose()
     assert await cache_service.get(cache_key) is None
+
+
+@pytest.mark.asyncio
+async def test_fixture_sync_invalidates_fixtures_cache(tmp_path):
+    from app.services.fixture_sync import sync_fixtures_and_injuries
+
+    cache_key = cache_service.build_key("fixtures", gameweek=2)
+    await cache_service.set(cache_key, [{"id": 1}])
+    assert await cache_service.get(cache_key) == [{"id": 1}]
+
+    engine, factory = await sqlite_factory(tmp_path, "fixture_sync.db")
+
+    def respond(request):
+        if request.url.path.rstrip("/").endswith("/fixtures"):
+            return httpx.Response(200, json=[{
+                "id": 1, "event": 2, "team_h": 1, "team_a": 2, "finished": True,
+                "team_h_score": 2, "team_a_score": 1,
+                "kickoff_time": "2026-08-15T15:00:00Z", "team_h_difficulty": 2, "team_a_difficulty": 4,
+            }])
+        return httpx.Response(200, json={
+            "teams": [
+                {"id": 1, "name": "Arsenal", "short_name": "ARS"},
+                {"id": 2, "name": "Chelsea", "short_name": "CHE"},
+            ],
+            "elements": [
+                {"id": 1, "team": 1, "web_name": "Saka", "element_type": 3, "now_cost": 100, "status": "a"},
+            ],
+        })
+
+    try:
+        async with httpx.AsyncClient(transport=httpx.MockTransport(respond)) as client:
+            result = await sync_fixtures_and_injuries(
+                factory, client=client,
+                bootstrap_url="https://fpl.test/bootstrap",
+                fixtures_url="https://fpl.test/fixtures",
+            )
+        assert result["fixtures_processed"] == 1
+    finally:
+        await engine.dispose()
+    assert await cache_service.get(cache_key) is None
