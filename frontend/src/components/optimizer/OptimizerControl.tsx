@@ -34,6 +34,8 @@ interface OptimizerControlProps {
   currentSquad: LineupPlayer[];
   onOptimize: (config: OptimizerConfig) => Promise<OptimizerResult | null>;
   isOptimizing?: boolean;
+  disabled?: boolean;
+  disabledReason?: string;
 }
 
 const FORMATIONS: (FormationType | 'auto')[] = [
@@ -53,6 +55,8 @@ export const OptimizerControl: React.FC<OptimizerControlProps> = ({
   currentSquad,
   onOptimize,
   isOptimizing = false,
+  disabled = false,
+  disabledReason,
 }) => {
   const [budget, setBudget] = useState<number>(100.0);
   const [targetFormation, setTargetFormation] = useState<FormationType | 'auto'>('auto');
@@ -105,7 +109,7 @@ export const OptimizerControl: React.FC<OptimizerControlProps> = ({
 
         <button
           onClick={handleRunOptimizer}
-          disabled={isOptimizing}
+          disabled={disabled || isOptimizing}
           className="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-brand-hotpink-dark hover:bg-brand-hotpink text-brand-white font-black text-sm flex items-center justify-center gap-2 shadow-lg shadow-brand-hotpink/25 hover:brightness-110 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
         >
           {isOptimizing ? (
@@ -121,6 +125,8 @@ export const OptimizerControl: React.FC<OptimizerControlProps> = ({
           )}
         </button>
       </div>
+
+      {disabled && disabledReason && <p className="text-sm text-brand-muted">{disabledReason}</p>}
 
       {/* Control Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
