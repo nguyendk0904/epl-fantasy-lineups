@@ -155,10 +155,12 @@ def test_solver_uses_single_thread_cbc_behind_a_bounded_gate(monkeypatch):
     calls = []
 
     class FakeSolver:
-        def __init__(self, msg, threads):
-            calls.append((msg, threads))
+        def __init__(self, msg, threads, timeLimit):
+            calls.append((msg, threads, timeLimit))
 
     class FakeModel:
+        sol_status = pulp.LpSolutionOptimal
+
         def solve(self, solver):
             return solver
 
@@ -166,7 +168,7 @@ def test_solver_uses_single_thread_cbc_behind_a_bounded_gate(monkeypatch):
 
     solver = solve_model_with_cbc(FakeModel())
 
-    assert calls == [(False, 1)]
+    assert calls == [(False, 1, 10)]
     assert isinstance(solver, FakeSolver)
     assert 1 <= MAX_CONCURRENT_SOLVES <= 12
 
@@ -371,6 +373,46 @@ def _optimizer_api_app(rows=None):
 
     app.dependency_overrides[get_db] = override_get_db
     return app
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("outcome", ["incumbent", "no_solution", "busy"])
+async def test_optimizer_deadline(monkeypatch, outcome):
+    from app.core.config import settings
+    from app.services import optimizer_solver
+
+    monkeypatch.setattr(settings, "OPTIMIZER_TIME_LIMIT_SECONDS", 1)
+    original_solve = pulp.LpProblem.solve
+
+    def stopped(model, solver):
+        assert solver.timeLimit == 1
+        if outcome == "incumbent":
+            original_solve(model, solver)
+            model.assignStatus(pulp.LpStatusOptimal, pulp.LpSolutionIntegerFeasible)
+        else:
+            model.assignStatus(pulp.LpStatusNotSolved, pulp.LpSolutionNoSolutionFound)
+        return model.status
+
+    class BusyGate:
+        def acquire(self, timeout):
+            assert timeout == 5
+            return False
+
+    if outcome == "busy":
+        monkeypatch.setattr(optimizer_solver, "_CBC_SOLVER_GATE", BusyGate())
+    else:
+        monkeypatch.setattr(pulp.LpProblem, "solve", stopped)
+
+    async with AsyncClient(transport=ASGITransport(app=_optimizer_api_app()), base_url="http://test") as client:
+        response = await client.post("/api/v1/optimizer/solve", json={"budget": 20})
+    if outcome == "incumbent":
+        assert response.status_code == 200
+        assert len(response.json()["starting_xi"]) == 11
+        assert response.json()["message"] == "nghiệm tốt nhất trong thời gian cho phép"
+    else:
+        assert response.status_code == 503
+        assert int(response.headers["Retry-After"]) > 0
+        assert ("đang bận" if outcome == "busy" else "hết thời gian") in response.json()["detail"]
 
 
 @pytest.mark.asyncio

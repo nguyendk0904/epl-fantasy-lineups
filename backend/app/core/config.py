@@ -48,6 +48,7 @@ class Settings(BaseSettings):
     CLOUDWATCH_LOGGING_ENABLED: bool = False
     CLOUDWATCH_LOG_GROUP: str = Field(default="/fpl/backend", min_length=1, max_length=512, pattern=r"^[A-Za-z0-9_./#-]+$")
     CLOUDWATCH_SEND_INTERVAL_SECONDS: int = Field(default=5, ge=1, le=60)
+    OPTIMIZER_TIME_LIMIT_SECONDS: int = Field(default=10, ge=1, le=60)
     RATE_LIMIT_ENABLED: bool = True
     RATE_LIMIT_STORAGE_URI: SecretStr = Field(default=SecretStr("memory://"), repr=False, exclude=True)
     # P4-Q02: Redis cache for Leaderboard & Fixtures (TTL 5 minutes on hits).
