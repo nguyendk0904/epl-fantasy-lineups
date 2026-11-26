@@ -23,11 +23,11 @@ import { LineupPlayer } from '../../types';
 
 export interface LineupMetrics {
   totalCost: number;
-  totalXp: number;
+  totalXp: number | null;
   attackRating: number;
   defenseRating: number;
-  formRating: number;
-  valueRating: number;
+  formRating: number | null;
+  valueRating: number | null;
 }
 
 export interface LineupComparisonProps {
@@ -58,7 +58,10 @@ export function calculateLineupMetrics(players: LineupPlayer[]): LineupMetrics {
   }
 
   const totalCost = Math.round(players.reduce((sum, p) => sum + p.now_cost, 0) * 10) / 10;
-  const totalXp = Math.round(players.reduce((sum, p) => sum + (p.expected_points_next ?? p.total_points / 20), 0) * 10) / 10;
+  const xpValues = players.map(p => p.expected_points_next);
+  const totalXp = xpValues.every((xp): xp is number => xp != null)
+    ? Math.round(xpValues.reduce((sum, xp) => sum + xp, 0) * 10) / 10
+    : null;
 
   // Tính rating chuẩn hóa thang 100
   const fwdsMids = players.filter(p => p.element_type === 'FWD' || p.element_type === 'MID');
@@ -70,18 +73,20 @@ export function calculateLineupMetrics(players: LineupPlayer[]): LineupMetrics {
   const attackRating = Math.min(99, Math.round((attackScore / Math.max(1, fwdsMids.length * 150)) * 100));
   const defenseRating = Math.min(99, Math.round((defScore / Math.max(1, defsGkps.length * 110)) * 100));
   
-  const avgForm = players.reduce((sum, p) => sum + (p.form ?? 5), 0) / players.length;
-  const formRating = Math.min(99, Math.round((avgForm / 9) * 100));
+  const forms = players.map(p => p.form);
+  const formRating = forms.every((form): form is number => form != null)
+    ? Math.min(99, Math.round(forms.reduce((sum, form) => sum + form, 0) / players.length / 9 * 100))
+    : null;
 
-  const valueRating = Math.min(99, Math.round((totalXp / Math.max(1, totalCost)) * 120));
+  const valueRating = totalXp === null ? null : Math.min(99, Math.round((totalXp / Math.max(1, totalCost)) * 120));
 
   return {
     totalCost,
     totalXp,
     attackRating: Math.max(40, attackRating),
     defenseRating: Math.max(40, defenseRating),
-    formRating: Math.max(40, formRating),
-    valueRating: Math.max(40, valueRating),
+    formRating: formRating === null ? null : Math.max(40, formRating),
+    valueRating: valueRating === null ? null : Math.max(40, valueRating),
   };
 }
 
@@ -97,14 +102,14 @@ export const LineupComparisonView: React.FC<LineupComparisonProps> = ({
   const radarData = [
     { subject: 'Tấn Công', LineupA: metricsA.attackRating, LineupB: metricsB.attackRating, fullMark: 100 },
     { subject: 'Phòng Ngự', LineupA: metricsA.defenseRating, LineupB: metricsB.defenseRating, fullMark: 100 },
-    { subject: 'Điểm Kỳ Vọng', LineupA: Math.min(99, Math.round(metricsA.totalXp)), LineupB: Math.min(99, Math.round(metricsB.totalXp)), fullMark: 100 },
+    { subject: 'Điểm Kỳ Vọng', LineupA: metricsA.totalXp === null ? null : Math.min(99, Math.round(metricsA.totalXp)), LineupB: metricsB.totalXp === null ? null : Math.min(99, Math.round(metricsB.totalXp)), fullMark: 100 },
     { subject: 'Phong Độ', LineupA: metricsA.formRating, LineupB: metricsB.formRating, fullMark: 100 },
     { subject: 'Hiệu Suất Giá', LineupA: metricsA.valueRating, LineupB: metricsB.valueRating, fullMark: 100 },
   ];
 
   // Head-to-Head Delta calculation
   const costDelta = Math.round((metricsB.totalCost - metricsA.totalCost) * 10) / 10;
-  const xpDelta = Math.round((metricsB.totalXp - metricsA.totalXp) * 10) / 10;
+  const xpDelta = metricsA.totalXp === null || metricsB.totalXp === null ? null : Math.round((metricsB.totalXp - metricsA.totalXp) * 10) / 10;
 
   const setA = new Set(lineupA.players.map(p => p.id));
   const setB = new Set(lineupB.players.map(p => p.id));
@@ -202,13 +207,13 @@ export const LineupComparisonView: React.FC<LineupComparisonProps> = ({
               <div>
                 <span className="text-xs text-brand-muted">Điểm kỳ vọng (xP)</span>
                 <p className="text-sm font-bold text-brand-white mt-0.5">
-                  {metricsA.totalXp.toFixed(1)} <span className="text-brand-muted font-normal">vs</span> {metricsB.totalXp.toFixed(1)}
+                  {metricsA.totalXp?.toFixed(1) ?? '-'} <span className="text-brand-muted font-normal">vs</span> {metricsB.totalXp?.toFixed(1) ?? '-'}
                 </p>
               </div>
-              <div className={`flex items-center text-xs font-bold px-2.5 py-1 rounded-lg ${xpDelta >= 0 ? 'bg-brand-skyblue/20 text-brand-skyblue-light' : 'bg-brand-hotpink/20 text-brand-hotpink-light'}`}>
+              {xpDelta !== null && <div className={`flex items-center text-xs font-bold px-2.5 py-1 rounded-lg ${xpDelta >= 0 ? 'bg-brand-skyblue/20 text-brand-skyblue-light' : 'bg-brand-hotpink/20 text-brand-hotpink-light'}`}>
                 {xpDelta >= 0 ? <ArrowUpRight className="w-3.5 h-3.5 mr-0.5" /> : <ArrowDownRight className="w-3.5 h-3.5 mr-0.5" />}
                 <span>{xpDelta > 0 ? `+${xpDelta.toFixed(1)} xP` : `${xpDelta.toFixed(1)} xP`}</span>
-              </div>
+              </div>}
             </div>
 
             {/* Độ trùng lặp */}

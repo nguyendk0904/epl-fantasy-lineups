@@ -1,5 +1,6 @@
 import React from 'react';
 import { PlayerPitchSlot } from './PlayerPitchSlot';
+import { FORMATIONS, substitutionFormation } from '../../stores/lineupStore';
 import { PositionType, FormationType, LineupPlayer } from '../../types';
 import { Armchair, ChevronDown, Sparkles } from 'lucide-react';
 
@@ -11,19 +12,9 @@ interface VirtualPitchProps {
   onSelectCaptain?: (id: number) => void;
   onSelectViceCaptain?: (id: number) => void;
   onRemovePlayer?: (id: number) => void;
+  onSubstitute?: (incomingId: number, outgoingId: number) => void;
   onAddPlayerClick?: (position: PositionType, slotIndex?: number, isBench?: boolean) => void;
 }
-
-const FORMATIONS: FormationType[] = [
-  '4-3-3',
-  '3-4-3',
-  '3-5-2',
-  '4-4-2',
-  '4-5-1',
-  '5-3-2',
-  '5-4-1',
-  '5-2-3'
-];
 
 export function VirtualPitch({
   startingXI = [],
@@ -33,8 +24,31 @@ export function VirtualPitch({
   onSelectCaptain,
   onSelectViceCaptain,
   onRemovePlayer,
+  onSubstitute,
   onAddPlayerClick,
 }: VirtualPitchProps) {
+  const [outgoingId, setOutgoingId] = React.useState<number | null>(null);
+  const starters = startingXI.filter((p): p is LineupPlayer => p !== null);
+  const canSwap = !!onSubstitute && starters.length === 11 && bench.some(Boolean);
+  const outgoing = canSwap && starters.find(p => p.id === outgoingId);
+
+  function cardProps(player: LineupPlayer | null, isBench = false) {
+    if (!canSwap || !player) return { player };
+    const eligible = !!(isBench && outgoing && substitutionFormation(starters, player, outgoing.id));
+    return {
+      player,
+      selected: !isBench && player.id === outgoingId,
+      eligible,
+      inactive: isBench && !eligible,
+      onCardClick: () => {
+        if (!isBench) setOutgoingId(id => id === player.id ? null : player.id);
+        else if (outgoing && eligible) {
+          onSubstitute?.(player.id, outgoing.id);
+          setOutgoingId(null);
+        }
+      },
+    };
+  }
   // Parse formation string into number of [DEF, MID, FWD]
   const [defCount, midCount, fwdCount] = formation.split('-').map(Number);
 
@@ -111,6 +125,10 @@ export function VirtualPitch({
       </div>
 
       {/* Main Pitch Field */}
+      {canSwap && <p className="mb-2 text-sm text-brand-muted" aria-live="polite">
+        {outgoing ? `Thay ${outgoing.web_name}: chọn cầu thủ dự bị được tô sáng để vào sân.`
+          : 'Để thay người, chọn cầu thủ ra sân rồi chọn cầu thủ dự bị vào sân.'}
+      </p>}
       <div 
         className="relative w-full max-w-4xl rounded-3xl overflow-hidden shadow-[0_25px_60px_-15px_rgba(4,22,32,0.9)] border-2 border-brand-border ring-1 ring-white/10 transition-all"
         style={{
@@ -179,7 +197,7 @@ export function VirtualPitch({
           {/* Hàng 1: Thủ Môn (GKP) */}
           <div className="flex justify-center items-center">
             <PlayerPitchSlot
-              player={getPitchPlayer('GKP', 0)}
+              {...cardProps(getPitchPlayer('GKP', 0))}
               expectedPosition="GKP"
               slotIndex={0}
               isBench={false}
@@ -195,7 +213,7 @@ export function VirtualPitch({
             {Array.from({ length: defCount }).map((_, i) => (
               <PlayerPitchSlot
                 key={`def-${i}`}
-                player={getPitchPlayer('DEF', i)}
+                {...cardProps(getPitchPlayer('DEF', i))}
                 expectedPosition="DEF"
                 slotIndex={i}
                 isBench={false}
@@ -212,7 +230,7 @@ export function VirtualPitch({
             {Array.from({ length: midCount }).map((_, i) => (
               <PlayerPitchSlot
                 key={`mid-${i}`}
-                player={getPitchPlayer('MID', i)}
+                {...cardProps(getPitchPlayer('MID', i))}
                 expectedPosition="MID"
                 slotIndex={i}
                 isBench={false}
@@ -229,7 +247,7 @@ export function VirtualPitch({
             {Array.from({ length: fwdCount }).map((_, i) => (
               <PlayerPitchSlot
                 key={`fwd-${i}`}
-                player={getPitchPlayer('FWD', i)}
+                {...cardProps(getPitchPlayer('FWD', i))}
                 expectedPosition="FWD"
                 slotIndex={i}
                 isBench={false}
@@ -266,7 +284,7 @@ export function VirtualPitch({
           <div className="flex flex-col items-center">
             <span className="text-[10px] font-bold text-brand-skyblue-light mb-1.5 uppercase tracking-wider">GK Sub</span>
             <PlayerPitchSlot
-              player={getBenchPlayer(0)}
+              {...cardProps(getBenchPlayer(0), true)}
               expectedPosition="GKP"
               slotIndex={0}
               isBench={true}
@@ -279,7 +297,7 @@ export function VirtualPitch({
           <div className="flex flex-col items-center">
             <span className="text-[10px] font-bold text-brand-muted mb-1.5 uppercase tracking-wider">Sub 1</span>
             <PlayerPitchSlot
-              player={getBenchPlayer(1)}
+              {...cardProps(getBenchPlayer(1), true)}
               expectedPosition="DEF"
               slotIndex={1}
               isBench={true}
@@ -292,7 +310,7 @@ export function VirtualPitch({
           <div className="flex flex-col items-center">
             <span className="text-[10px] font-bold text-brand-muted mb-1.5 uppercase tracking-wider">Sub 2</span>
             <PlayerPitchSlot
-              player={getBenchPlayer(2)}
+              {...cardProps(getBenchPlayer(2), true)}
               expectedPosition="MID"
               slotIndex={2}
               isBench={true}
@@ -305,7 +323,7 @@ export function VirtualPitch({
           <div className="flex flex-col items-center">
             <span className="text-[10px] font-bold text-brand-muted mb-1.5 uppercase tracking-wider">Sub 3</span>
             <PlayerPitchSlot
-              player={getBenchPlayer(3)}
+              {...cardProps(getBenchPlayer(3), true)}
               expectedPosition="FWD"
               slotIndex={3}
               isBench={true}

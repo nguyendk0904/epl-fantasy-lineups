@@ -8,6 +8,19 @@ export const MAX_PLAYERS_PER_CLUB = 3;
 
 export const MAX_FREE_TRANSFERS = 3;
 
+export const FORMATIONS: FormationType[] = ['4-3-3', '3-4-3', '3-5-2', '4-4-2', '4-5-1', '5-3-2', '5-4-1', '5-2-3'];
+
+function lineupFormation(xi: LineupPlayer[]): FormationType | undefined {
+  if (xi.length !== 11 || xi.filter(p => p.element_type === 'GKP').length !== 1) return;
+  const shape = ['DEF', 'MID', 'FWD'].map(pos => xi.filter(p => p.element_type === pos).length).join('-');
+  return FORMATIONS.find(formation => formation === shape);
+}
+
+export function substitutionFormation(xi: LineupPlayer[], incoming: LineupPlayer, outgoingId: number) {
+  if (xi.some(p => p.id === incoming.id) || !xi.some(p => p.id === outgoingId)) return;
+  return lineupFormation(xi.map(p => p.id === outgoingId ? incoming : p));
+}
+
 export interface TransferCalculationResult {
   playersOut: LineupPlayer[];
   playersIn: LineupPlayer[];
@@ -78,6 +91,7 @@ export interface LineupStoreState {
   showToast: (msg: string) => void;
   clearToast: () => void;
   removePlayer: (id: number) => void;
+  substitutePlayer: (incomingId: number, outgoingId: number) => void;
   addPlayerToLineup: (player: Player) => boolean;
   loadSampleLineup: (startingXI: LineupPlayer[], bench: LineupPlayer[]) => void;
   resetLineup: () => void;
@@ -237,6 +251,32 @@ export const useLineupStore = create<LineupStoreState>()(
           bench: newBench,
         });
         showToast(`Đã chuyển sang sơ đồ ${newForm}!`);
+      },
+
+      substitutePlayer: (incomingId, outgoingId) => {
+        const { startingXI, bench, captainId, viceCaptainId } = get();
+        const incoming = bench.find(p => p.id === incomingId);
+        const outgoing = startingXI.find(p => p.id === outgoingId);
+        if (!incoming || !outgoing) return;
+        const formation = substitutionFormation(startingXI, incoming, outgoingId);
+        if (!formation) return;
+        const nextCaptain = captainId === outgoingId ? incomingId : captainId;
+        const nextVice = viceCaptainId === outgoingId ? incomingId : viceCaptainId;
+        const nextXI = startingXI.map(p => p.id === outgoingId ? {
+          ...incoming, isStarting: true, isCaptain: nextCaptain === incomingId,
+          isViceCaptain: nextVice === incomingId,
+          slotIndex: outgoing.element_type === incoming.element_type ? outgoing.slotIndex : 11,
+        } : p);
+        const slots: Record<PositionType, number> = { GKP: 0, DEF: 0, MID: 0, FWD: 0 };
+        set({
+          startingXI: nextXI.sort((a, b) => a.slotIndex - b.slotIndex)
+            .map(p => ({ ...p, slotIndex: slots[p.element_type]++ })),
+          bench: bench.map(p => p.id === incomingId ? {
+            ...outgoing, isStarting: false, isCaptain: false, isViceCaptain: false, slotIndex: incoming.slotIndex,
+          } : p),
+          formation, captainId: nextCaptain, viceCaptainId: nextVice, targetSlot: null,
+          notification: `${incoming.web_name} vào sân thay ${outgoing.web_name}.`,
+        });
       },
 
       removePlayer: (id: number) => {
@@ -438,6 +478,7 @@ export const useLineupStore = create<LineupStoreState>()(
 
         set({
           startingXI: sampleStarting,
+          formation: lineupFormation(sampleStarting) ?? get().formation,
           bench: sampleBench,
           baselineSquad: existingBaseline.length > 0 ? existingBaseline : fullSquad,
           captainId: captain ? captain.id : null,
@@ -480,6 +521,7 @@ export const useLineupStore = create<LineupStoreState>()(
         const viceCaptain = starting.find((p) => p.isViceCaptain) || null;
         set({
           startingXI: starting,
+          formation: lineupFormation(starting) ?? get().formation,
           bench: bench,
           captainId: captain ? captain.id : null,
           viceCaptainId: viceCaptain ? viceCaptain.id : null,
