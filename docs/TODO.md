@@ -17,7 +17,8 @@
 | **Phase 2: AWS Services Integration** | **13 / 13** | `100%` |  Hoàn thành |
 | **Phase 3: Production Deploy & E2E Test** | **13 / 13** | `100%` | Hoàn thành |
 | **Phase 4: Live Gamification & League Operations** | **14 / 14** | `100%` | Hoàn thành |
-| **TỔNG CỘNG TOÀN DỰ ÁN** | **57 / 57** | `100%` | Hoàn thành |
+| **Phase 5: Accounts & Authentication** | **0 / 5** | `0%` | Chưa bắt đầu |
+| **TỔNG CỘNG TOÀN DỰ ÁN** | **57 / 62** | `91.9%` | Đang thực hiện (Phase 5 mới bổ sung) |
 
 ---
 
@@ -26,9 +27,9 @@
 | Thành viên | Vai trò | Thư mục ĐƯỢC PHÉP thao tác |
 | :--- | :--- | :--- |
 | **Nguyên** | **Frontend Lead** | `frontend/` (src, public, package.json, tailwind.config.js,...) |
-| **Nhất** | **Backend Core** | `backend/app/api/v1/endpoints/players.py`, `teams.py`, `backend/app/services/fpl_sync.py`, `backend/app/core/`, `backend/app/main.py`, `backend/tests/` |
-| **Vũ** | **Data & Algo** | `backend/app/models/`, `backend/app/schemas/`, `backend/app/services/optimizer_solver.py`, `backend/app/api/v1/endpoints/optimizer.py`, `lineups.py`, `backend/alembic/`, `backend/tests/test_optimizer.py` |
-| **Quang** | **DevOps & AWS** | `infra/`, `backend/Dockerfile`, `frontend/Dockerfile`, `.dockerignore`, `.github/workflows/`, `scripts/`, `LOCAL_SETUP_GUIDE.md` |
+| **Nhất** | **Backend Core** | `backend/app/api/v1/endpoints/players.py`, `teams.py`, `auth.py`, `gameweeks.py`, `backend/app/services/fpl_sync.py`, `backend/app/core/`, `backend/app/main.py`, `backend/requirements.txt`, `backend/tests/`, `docs/PROJECT_SSOT.md` (mục 4.5–4.6) |
+| **Vũ** | **Data & Algo** | `backend/app/models/`, `backend/app/schemas/`, `backend/app/services/optimizer_solver.py`, `backend/app/api/v1/endpoints/optimizer.py`, `lineups.py`, `backend/alembic/`, `backend/tests/test_optimizer.py`, `backend/tests/test_auth_models.py` |
+| **Quang** | **DevOps & AWS** | `infra/`, `backend/Dockerfile`, `frontend/Dockerfile`, `.dockerignore`, `.github/workflows/`, `scripts/`, `LOCAL_SETUP_GUIDE.md`, `.env.example` |
 
 ---
 
@@ -692,3 +693,75 @@
   - *Branch:* `feature/P4-Q03-gameweek-integration-test`
   - *Tiêu chí chấp nhận (Acceptance Criteria):* Kịch bản test giả lập chạy từ đầu đến cuối không lỗi, xác nhận tính toàn vẹn của toàn bộ vòng lặp trò chơi tuần.
   - *Cách kiểm chứng (Verification):* Chạy `python scripts/test_gameweek_lifecycle.py` hiển thị `Gameweek Lifecycle Test: ALL 5 STAGES PASSED`.
+
+---
+
+## 🔐 PHASE 5: HỆ THỐNG TÀI KHOẢN & XÁC THỰC (0/5)
+*Mục tiêu: Người dùng tự đăng ký và đăng nhập bằng email/mật khẩu; các thao tác ghi gắn với danh tính thật lấy từ phiên phía server thay cho token demo cấp tay. Không lưu mật khẩu dạng rõ, không lưu token phiên trong `localStorage`.*
+
+### 🧠 Vũ (Data & Algorithm Engineer) - [0/1]
+
+- [ ] **`P5-V01`** *(Level 3)*: Schema tài khoản & phiên đăng nhập (Alembic migration `006`)
+  - *Mô tả:* Tạo bảng `users` (email đã chuẩn hóa lowercase + unique, `password_hash`, `display_name`, `is_active`, `created_at`) và bảng `auth_sessions` (`user_id` FK ON DELETE CASCADE, `token_hash` unique, `created_at`, `expires_at`, `revoked_at`). Chỉ lưu **hash** của mật khẩu và của token phiên; không có cột chứa mật khẩu/token thô. Bổ sung Pydantic schema dùng chung cho hợp đồng xác thực.
+  - *Phụ thuộc:* Không (bắt đầu ngay).
+  - *Thư mục:* `backend/app/models/`, `backend/app/schemas/`, `backend/alembic/versions/`
+  - *File tạo mới (5 files):* `backend/app/models/user.py`, `backend/app/models/auth_session.py`, `backend/app/schemas/auth.py`, `backend/alembic/versions/006_add_user_auth_schema.py`, `backend/tests/test_auth_models.py`.
+  - *File sửa (không tính giới hạn 5 file):* `backend/app/models/__init__.py` (export `User`, `AuthSession`).
+  - *Branch:* `feature/P5-V01-auth-schema`
+  - *Tiêu chí chấp nhận (Acceptance Criteria):* `alembic upgrade head` và `alembic downgrade -1` chạy sạch; email unique sau chuẩn hóa; FK cascade từ user sang session; index trên `token_hash` và `expires_at`; không tồn tại cột lưu mật khẩu/token thô.
+  - *Cách kiểm chứng (Verification):* `alembic upgrade head` + `alembic downgrade -1` thành công; `pytest backend/tests/test_auth_models.py` pass 100%.
+
+### ⚙️ Nhất (Backend Core & Auth Lead) - [0/2]
+
+- [ ] **`P5-NH01`** *(Level 4)*: REST API xác thực `POST /api/v1/auth/register`, `POST /api/v1/auth/login`, `POST /api/v1/auth/logout`, `GET /api/v1/auth/me`
+  - *Mô tả:* Đăng ký bằng email/mật khẩu (chuẩn hóa email, kiểm tra độ dài tối thiểu), đăng nhập cấp phiên phía server, đăng xuất thu hồi phiên, trả thông tin tài khoản hiện tại. Phiên gửi qua cookie `HttpOnly` (tên `fpl_session`), token sinh bằng `secrets.token_urlsafe(32)` và chỉ lưu hash SHA-256 trong DB. Băm mật khẩu bằng bcrypt (thêm `bcrypt>=4.1,<5.0` vào `backend/requirements.txt`), pre-hash SHA-256 + base64 trước bcrypt để không bị cắt ở 72 byte và hỗ trợ mật khẩu Unicode. Chống dò tài khoản: email không tồn tại và sai mật khẩu trả cùng một lỗi 401, vẫn chạy phép băm giả để cân bằng thời gian phản hồi. Rate limit: thêm rule IP cho `POST /api/v1/auth/login` (5/phút) và `POST /api/v1/auth/register` (10/phút) vào `backend/app/core/rate_limiter.py` (rules hiện khai báo cứng theo method+path). Các endpoint ghi yêu cầu `Content-Type: application/json` và header `X-Requested-With: XMLHttpRequest` để giảm rủi ro CSRF khi cookie ở chế độ `SameSite=None`.
+  - *Phụ thuộc:* `P5-V01`
+  - *Thư mục:* `backend/app/api/v1/endpoints/`, `backend/app/core/`, `backend/app/main.py`, `backend/tests/`
+  - *File tạo mới (4 files):* `backend/app/api/v1/endpoints/auth.py`, `backend/app/core/security.py` (băm/kiểm tra mật khẩu, sinh và hash token), `backend/app/core/session_auth.py` (dependency đọc cookie → người dùng hiện tại), `backend/tests/test_auth_api.py`.
+  - *File sửa (không tính giới hạn 5 file):* `backend/app/main.py` (đăng ký router), `backend/app/core/config.py` (thêm `AUTH_COOKIE_NAME`, `AUTH_COOKIE_SECURE`, `AUTH_COOKIE_SAMESITE`, `AUTH_SESSION_TTL_SECONDS`; bắt buộc `secure=True` khi `samesite="none"`), `backend/app/core/rate_limiter.py` (thêm rule auth), `backend/requirements.txt` (bcrypt).
+  - *Branch:* `feature/P5-NH01-auth-api`
+  - *Tiêu chí chấp nhận (Acceptance Criteria):* Register 201 (email trùng 409); login 200 kèm `Set-Cookie` có `HttpOnly` và `Secure`/`SameSite` theo cấu hình; `GET /me` 200 khi có phiên, 401 khi thiếu/hết hạn; logout 204 + cookie bị xóa + phiên bị thu hồi (dùng lại cookie cũ phải 401); response và log không chứa mật khẩu, hash hay token thô.
+  - *Cách kiểm chứng (Verification):* `pytest backend/tests/test_auth_api.py` pass 100%; `ruff check backend/app backend/tests`.
+
+- [ ] **`P5-NH02`** *(Level 3)*: Dùng phiên đăng nhập thật cho luồng chuyển nhượng (bỏ danh tính demo)
+  - *Mô tả:* Đổi `POST /api/v1/transfers/confirm` (và các endpoint ghi cần danh tính) sang dependency phiên thật; `user_id` lấy từ phiên phía server, không đọc từ body/query. Giữ nguyên toàn bộ validation nghiệp vụ hiện có: đủ 15 người, sơ đồ, Captain/Vice, tối đa 3 cầu thủ/CLB, ngân sách, deadline, hạn mức 3 lượt/vòng, transaction lock và rollback. `gameweek_auth.py` (token demo) được giữ cho kịch bản demo nhưng không còn là đường xác thực của endpoint thật; nếu nhóm quyết định gỡ hẳn thì tách task riêng, không xóa âm thầm.
+  - *Phụ thuộc:* `P5-NH01`
+  - *Thư mục:* `backend/app/api/v1/endpoints/`, `backend/tests/`
+  - *File tạo mới (0 files):* không tạo file mới; chỉ sửa `backend/app/api/v1/endpoints/gameweeks.py`, `backend/tests/test_gameweeks_api.py` và bổ sung ca kiểm thử trong `backend/tests/test_auth_api.py`.
+  - *Branch:* `feature/P5-NH02-auth-transfers`
+  - *Tiêu chí chấp nhận (Acceptance Criteria):* chưa đăng nhập trả 401; tài khoản A không đọc/ghi được dữ liệu của B; `user_id` gửi kèm trong body bị bỏ qua; retry không cộng lượt; toàn bộ test nghiệp vụ chuyển nhượng cũ vẫn pass.
+  - *Cách kiểm chứng (Verification):* `pytest backend/tests/test_gameweeks_api.py backend/tests/test_auth_api.py -q` pass 100%.
+
+### 🎨 Nguyên (Frontend & UI Lead) - [0/1]
+
+- [ ] **`P5-NG01`** *(Level 3)*: Giao diện đăng ký/đăng nhập và trạng thái phiên trên Navbar
+  - *Mô tả:* Khối/tab xác thực tiếng Việt theo theme hiện có: form đăng ký và đăng nhập, validation phía client (email hợp lệ, mật khẩu tối thiểu 8 ký tự, xác nhận mật khẩu khớp), trạng thái đang gửi và thông báo lỗi từ API. Gọi API thật với `credentials: 'include'` để trình duyệt gửi cookie phiên; không lưu mật khẩu/token trong `localStorage`. Thêm `'auth'` vào union `TabType` (`frontend/src/App.tsx`) và một nút/tab xác thực cạnh các tab hiện có; hiển thị email đang đăng nhập và nút đăng xuất trên Navbar; tải lại trang khôi phục trạng thái qua `GET /auth/me`.
+  - *Phụ thuộc:* `P5-NH01`
+  - *Thư mục:* `frontend/`
+  - *File tạo mới (4 files):* `frontend/src/services/authApi.ts`, `frontend/src/hooks/useAuth.ts`, `frontend/src/components/auth/AuthPanel.tsx`, `frontend/src/components/auth/__tests__/AuthPanel.test.tsx`.
+  - *File sửa (không tính giới hạn 5 file):* `frontend/src/App.tsx` (thêm tab/khối xác thực và hiển thị trạng thái phiên trên Navbar).
+  - *Branch:* `feature/P5-NG01-auth-ui`
+  - *Tiêu chí chấp nhận (Acceptance Criteria):* chuyển đổi được giữa đăng nhập và đăng ký; validation chặn dữ liệu sai; đăng ký/đăng nhập thành công hiển thị email trên Navbar; lỗi API hiển thị thông báo rõ ràng; đăng xuất quay về trạng thái chưa đăng nhập; không có mật khẩu/token trong `localStorage`.
+  - *Cách kiểm chứng (Verification):* `npm --prefix frontend test -- AuthPanel.test.tsx` pass 100%; `npm --prefix frontend run build` exit code 0.
+  - *Ghi chú kỹ thuật:* Test frontend hiện dùng `renderToStaticMarkup` (không cần jsdom), nên tách hàm validate (email, độ dài mật khẩu, khớp xác nhận) thành hàm thuần trong `authApi.ts` hoặc `useAuth.ts` để test trực tiếp; `apiClient` (export từ `apiClient.ts`) đã nhận `credentials` qua `RequestOptions` nên không cần sửa `apiClient.ts`; gọi `apiClient.post('/auth/login', body, { credentials: 'include' })`.
+
+### 🐳 Quang (DevOps & Cloud Automation Lead) - [0/1]
+
+- [ ] **`P5-Q01`** *(Level 3)*: Cấu hình cookie/CORS cho môi trường triển khai và smoke test luồng xác thực
+  - *Mô tả:* Chốt cấu hình để cookie phiên hoạt động đúng trên môi trường thật. Dev qua Vite proxy là same-origin nên `SameSite=Lax` là đủ; production khi frontend (CloudFront/S3) và backend (App Runner) khác origin phải dùng `SameSite=None` + `Secure` + HTTPS, `CORS_ORIGINS` chỉ chứa đúng domain frontend (middleware đã bật `allow_credentials=True`). Xác định cách nạp `AUTH_COOKIE_*`/`AUTH_SESSION_TTL_SECONDS` và secret (không đưa vào repo), xác nhận trình tự áp dụng migration `006` trên RDS trước khi chạy image mới. Viết smoke test gọi API thật cho luồng register → login → me → logout.
+  - *Phụ thuộc:* `P5-NH01`, `P5-NG01`, `P5-NH02`
+  - *Thư mục:* `infra/`, `.github/workflows/`, `scripts/`, `.env.example`
+  - *File tạo mới (2 files):* `scripts/smoke_auth_flow.py`, `infra/aws/auth_deployment.md`.
+  - *File sửa (không tính giới hạn 5 file):* `.env.example` (bổ sung biến `AUTH_*` kèm ghi chú SameSite theo môi trường).
+  - *Branch:* `feature/P5-Q01-auth-deployment`
+  - *Tiêu chí chấp nhận (Acceptance Criteria):* Tài liệu ghi rõ khác biệt same-origin và cross-origin; smoke test chạy trên deployment test pass cả 4 bước; cookie trả về có `HttpOnly` + `Secure` + `SameSite` đúng; không có secret hay token trong log, file cấu hình commit.
+  - *Cách kiểm chứng (Verification):* `python scripts/smoke_auth_flow.py --base-url https://<backend-test-domain>` in `AUTH SMOKE TEST: ALL 4 STAGES PASSED`; xác nhận migration `006` đã áp dụng trên RDS test.
+
+### 📌 Ghi chú phối hợp Phase 5
+
+- *Thứ tự thực hiện:* `P5-V01` → `P5-NH01` → (`P5-NG01` và `P5-NH02` có thể chạy song song sau khi API ổn định) → `P5-Q01`.
+- *Hợp đồng API:* Hợp đồng xác thực (endpoint, payload, cookie, mã lỗi) phải được bổ sung vào `docs/PROJECT_SSOT.md` (mục demo auth hiện tại là §4.5) trước khi `P5-NG01` nối API; Nhất cập nhật, Nguyên review.
+- *Không đánh dấu `[x]`* khi chưa có test pass và chưa nghiệm thu; ghi chú nghiệm thu ngay dưới task như các phase trước.
+- *Quan hệ với P4-NH04:* Phase 4 ghi nhận “chưa có bảng users/login” và dùng token demo; `P5-NH02` là task thay thế phần danh tính đó, không tạo thêm hệ thống song song.
+- *Môi trường local:* Hiện chưa có `backend/.venv`; cần cài `backend/requirements-dev.txt` (đã gồm `bcrypt` sau `P5-NH01`) trước khi chạy `pytest`.
+- *Lưu ý dev proxy:* `frontend/vite.config.ts` đang proxy `/api` sang backend AWS (`https://54.255.194.74.sslip.io`). Muốn test xác thực ở local phải chạy backend local và đổi proxy target về `http://localhost:8000`, hoặc deploy API auth lên môi trường test trước; nếu không, frontend sẽ gọi backend cũ chưa có endpoint auth và trả 404.
