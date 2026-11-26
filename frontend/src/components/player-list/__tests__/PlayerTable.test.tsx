@@ -1,6 +1,10 @@
 import { describe, it, expect } from 'vitest';
 import { Player } from '../../../types';
 import { FilterState } from '../PlayerFilters';
+import React from 'react';
+import { renderToStaticMarkup } from 'react-dom/server';
+import { PlayerTable } from '../PlayerTable';
+import { marketStats } from '../../../App';
 
 const MOCK_PLAYERS: Player[] = [
   {
@@ -97,6 +101,13 @@ function filterPlayers(players: Player[], filters: FilterState): Player[] {
 }
 
 describe('PlayerTable & Filter Logic Unit Tests', () => {
+  it.each([[null, '-'], [0, '0.0'], [5.2, '5.2']] as const)('renders API xP %s', (xp, display) => {
+    const stats = marketStats({ total_points: 0, form: null, expected_points_next: xp });
+    expect(stats.total_points).toBe(0);
+    expect(stats.form).toBeUndefined();
+    const html = renderToStaticMarkup(<PlayerTable players={[{ ...MOCK_PLAYERS[0], ...stats }]} />);
+    expect(html).toContain(`>${display}</span>`);
+  });
   it('correctly loads and counts all sample players without active filters', () => {
     const defaultFilters: FilterState = {
       search: '',

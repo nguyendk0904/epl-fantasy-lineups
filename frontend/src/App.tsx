@@ -100,6 +100,18 @@ export const SAMPLE_MARKET_PLAYERS: Player[] = [
   { id: 25, web_name: 'Bruno Fernandes', first_name: 'Bruno', second_name: 'Fernandes', team_id: 11, team_short_name: 'MUN', element_type: 'MID', now_cost: 8.2, total_points: 96, form: 5.2, expected_points_next: 5.5, status: 'a' },
 ];
 
+export function marketStats(raw: {
+  total_points?: number | null;
+  form?: number | null;
+  expected_points_next?: number | null;
+}) {
+  return {
+    total_points: Number(raw.total_points ?? 0),
+    form: raw.form == null ? undefined : Number(raw.form),
+    expected_points_next: raw.expected_points_next == null ? undefined : Number(raw.expected_points_next),
+  };
+}
+
 export function App() {
   const isSplit = useMediaQuery('(min-width: 1280px)');
   const isMobile = useMediaQuery('(max-width: 768px)');
@@ -263,7 +275,7 @@ export function App() {
           ...remainingPages.flatMap((res) => (res && res.items ? res.items : [])),
         ];
 
-        // 4. Map to frontend Player type with official FPL kit codes and ensure non-zero realistic points
+        // 4. Map to frontend Player type with official FPL kit codes
         const mappedPlayers: Player[] = allRawItems.map((raw) => {
           const shortName = raw.team_short_name || 'UNK';
           const teamId = (raw.team_short_name && teamMap.get(raw.team_short_name)) || 1;
@@ -274,33 +286,6 @@ export function App() {
 
           const elementType = raw.element_type as PositionType;
           const cost = Number(raw.now_cost);
-          let points = Number(raw.total_points);
-          let formVal = raw.form !== null && raw.form !== undefined ? Number(raw.form) : 0;
-
-          // Nếu cầu thủ chưa có điểm (do snapshot FPL API chưa cập nhật hoặc dự bị),
-          // ước lượng điểm số thực tế theo giá trị thị trường và vị trí thi đấu
-          if (points <= 0) {
-            const baseByPos: Record<PositionType, number> = {
-              GKP: 38,
-              DEF: 42,
-              MID: 46,
-              FWD: 50,
-            };
-            const base = baseByPos[elementType] || 40;
-            const costFactor = Math.round((cost - 4.5) * 8);
-            const formBonus = formVal > 0 ? Math.round(formVal * 3) : 0;
-            points = Math.max(15, base + costFactor + formBonus);
-          }
-
-          if (formVal <= 0) {
-            formVal = Math.round((points / 16) * 10) / 10;
-          }
-
-          const xpVal =
-            raw.expected_points_next !== null && raw.expected_points_next !== undefined
-              ? Number(raw.expected_points_next)
-              : Math.round(((points / 16) * 0.9 + formVal * 0.1) * 10) / 10;
-
           return {
             id: raw.id,
             web_name: raw.web_name,
@@ -311,12 +296,10 @@ export function App() {
             team_code: teamCode,
             element_type: elementType,
             now_cost: cost,
-            total_points: points,
-            form: formVal,
+            ...marketStats(raw),
             status: raw.status || 'a',
             news: raw.news ?? undefined,
             chance_of_playing_next_round: raw.chance_of_playing_next_round ?? null,
-            expected_points_next: xpVal,
           };
         });
 
@@ -408,7 +391,8 @@ export function App() {
       const response = await solveOptimizer(config, controller.signal);
       const result = mapOptimizerResponse(response, marketPlayers);
       setOptimizedResult(result);
-      showToast('Đã tìm thấy đội hình tối ưu trong ngân sách!');
+      showToast('message' in response && typeof response.message === 'string'
+        ? response.message : 'Đã tìm thấy đội hình tối ưu trong ngân sách!');
       setActiveTab('compare');
       return result;
     } catch (error) {
