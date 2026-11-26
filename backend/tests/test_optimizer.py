@@ -376,6 +376,30 @@ def _optimizer_api_app(rows=None):
 
 
 @pytest.mark.asyncio
+@pytest.mark.parametrize("formation,locked,reason", [
+    ("3-4-3", [2, 7], None),
+    (None, [3, 4, 5, 6, 7], None),
+    (None, [1, 2], "thủ môn"),
+    ("3-4-3", [3, 4, 5, 6], "3-4-3"),
+    (None, list(range(2, 14)), "11"),
+])
+async def test_locked_players_must_start(formation, locked, reason):
+    async with AsyncClient(transport=ASGITransport(app=_optimizer_api_app()), base_url="http://test") as client:
+        response = await client.post("/api/v1/optimizer/solve", json={
+            "budget": 20, "target_formation": formation, "locked_player_ids": locked,
+        })
+    assert response.status_code == 200
+    data = response.json()
+    if reason:
+        assert data["status"] == "infeasible"
+        assert reason in data["message"]
+    else:
+        assert data["status"] == "optimal"
+        assert set(locked) <= {player["id"] for player in data["starting_xi"]}
+        assert set(locked).isdisjoint(player["id"] for player in data["bench"])
+
+
+@pytest.mark.asyncio
 @pytest.mark.parametrize("outcome", ["incumbent", "no_solution", "busy"])
 async def test_optimizer_deadline(monkeypatch, outcome):
     from app.core.config import settings
