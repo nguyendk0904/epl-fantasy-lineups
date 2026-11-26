@@ -45,7 +45,7 @@ export class ApiError extends Error {
   status: number;
   data: unknown;
 
-  constructor(message: string, status: number, data?: unknown) {
+  constructor(message: string, status: number, data?: unknown, readonly headers?: Headers) {
     super(message);
     this.name = 'ApiError';
     this.status = status;
@@ -123,7 +123,7 @@ export async function apiRequest<T>(endpoint: string, options: RequestOptions = 
         ? (responseData as { detail: string }).detail
         : `Request failed with status ${response.status}: ${response.statusText}`;
 
-    throw new ApiError(errorMessage, response.status, responseData);
+    throw new ApiError(errorMessage, response.status, responseData, response.headers);
   }
 
   onResponse?.(response);
@@ -147,4 +147,3 @@ export const apiClient = {
 };
 
 export default apiClient;
-

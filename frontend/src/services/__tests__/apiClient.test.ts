@@ -153,3 +153,18 @@ describe('apiClient service', () => {
   });
 });
 
+
+it('preserves Retry-After on HTTP errors', async () => {
+  vi.spyOn(globalThis, 'fetch').mockResolvedValue(new Response(null, {
+    status: 429, headers: { 'Retry-After': '17' },
+  }));
+  try {
+    const request = apiRequest('/optimizer/solve');
+    await expect(request).rejects.toBeInstanceOf(ApiError);
+    await request.catch((error: ApiError) => {
+      expect(error.headers?.get('Retry-After')).toBe('17');
+    });
+  } finally {
+    vi.restoreAllMocks();
+  }
+});
