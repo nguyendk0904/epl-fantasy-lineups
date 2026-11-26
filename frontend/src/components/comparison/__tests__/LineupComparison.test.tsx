@@ -27,6 +27,9 @@ const MOCK_LINEUP_B: LineupPlayer[] = [
 ];
 
 describe('Lineup Comparison & Metrics Calculation Tests', () => {
+  it('leaves the total unknown if a player has no xP', () => {
+    expect(calculateLineupMetrics([{ ...MOCK_LINEUP_A[0], expected_points_next: undefined }]).totalXp).toBeNull();
+  });
   it('calculates total cost and expected points accurately for Lineup A', () => {
     const metricsA = calculateLineupMetrics(MOCK_LINEUP_A);
 
@@ -44,6 +47,7 @@ describe('Lineup Comparison & Metrics Calculation Tests', () => {
     // Diff cost: (12.8 + 9.8) - (5.5 + 5.5) = +11.6m
     const costDelta = Math.round((metricsB.totalCost - metricsA.totalCost) * 10) / 10;
     expect(costDelta).toBe(11.6);
+    if (metricsA.totalXp === null) throw new Error('Expected complete xP for lineup A');
     expect(metricsB.totalXp).toBeGreaterThan(metricsA.totalXp);
   });
 

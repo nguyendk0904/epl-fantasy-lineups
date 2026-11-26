@@ -9,6 +9,7 @@ from threading import BoundedSemaphore
 from typing import Sequence
 
 import pulp
+from app.core.config import settings
 from app.services.fdr_service import get_next_gameweek_fdr_multipliers
 
 
@@ -29,10 +30,24 @@ if MAX_CONCURRENT_SOLVES < 1:
 _CBC_SOLVER_GATE = BoundedSemaphore(MAX_CONCURRENT_SOLVES)
 
 
-def solve_model_with_cbc(model: pulp.LpProblem):
+class OptimizerBusy(RuntimeError):
+    """Retryable admission or solver timeout."""
+
+
+def solve_model_with_cbc(model: pulp.LpProblem, *, allow_incumbent: bool = False):
     """Run one CBC solve with a bounded number of concurrent solver processes."""
-    with _CBC_SOLVER_GATE:
-        return model.solve(pulp.COIN_CMD(msg=False, threads=1))
+    if not _CBC_SOLVER_GATE.acquire(timeout=5):
+        raise OptimizerBusy("Bộ giải đang bận. Vui lòng thử lại.")
+    try:
+        status = model.solve(pulp.COIN_CMD(
+            msg=False, threads=1, timeLimit=settings.OPTIMIZER_TIME_LIMIT_SECONDS
+        ))
+        if model.sol_status == pulp.LpSolutionIntegerFeasible and not allow_incumbent:
+            raise OptimizerBusy("Bộ giải đã hết thời gian trước khi chứng minh tối ưu.")
+        return status
+    finally:
+        _CBC_SOLVER_GATE.release()
+
 
 POSITION_MAP = {
     1: "GKP",
@@ -62,6 +77,7 @@ class OptimizationResult:
     total_cost: float
     total_expected_points: float
     adjusted_expected_points: dict[int, float] = field(default_factory=dict)
+    message: str | None = None
 
 
 def load_players_from_json(path: str | Path) -> list[PlayerCandidate]:
@@ -254,7 +270,7 @@ def optimize_squad(
         excluded_player_ids,
     )
     try:
-        solve_model_with_cbc(model)
+        solve_model_with_cbc(model, allow_incumbent=True)
     except pulp.PulpSolverError as exc:
         raise RuntimeError(
             "PuLP could not run CBC. Install a supported CBC solver and retry."
@@ -265,7 +281,9 @@ def optimize_squad(
         raise ValueError(
             f"No feasible 15-player squad found within the £{budget:.1f}m budget."
         )
-    if status != "Optimal":
+    if model.status == pulp.LpStatusNotSolved and model.sol_status == pulp.LpSolutionNoSolutionFound:
+        raise OptimizerBusy("Bộ giải đã hết thời gian trước khi tìm được đội hình.")
+    if status != "Optimal" or model.sol_status not in (pulp.LpSolutionOptimal, pulp.LpSolutionIntegerFeasible):
         raise RuntimeError(f"Optimizer did not find an optimal solution (status: {status}).")
 
     chosen_ids = tuple(
@@ -280,6 +298,8 @@ def optimize_squad(
     ]
 
     return OptimizationResult(
+        message=("nghiệm tốt nhất trong thời gian cho phép"
+                 if model.sol_status == pulp.LpSolutionIntegerFeasible else None),
         selected_player_ids=chosen_ids,
         total_cost=round(sum(player.now_cost for player in chosen_players), 1),
         adjusted_expected_points={
