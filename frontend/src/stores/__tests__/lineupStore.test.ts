@@ -24,6 +24,35 @@ const MOCK_BENCH: LineupPlayer[] = [
 ];
 
 describe('Lineup Zustand Store', () => {
+  it.each([
+    [12, 1, '4-3-3'], [14, 6, '4-3-3'], [13, 9, '5-3-2'],
+  ] as const)('substitutes %i for %i and keeps squad finances', (incoming, outgoing, formation) => {
+    const store = useLineupStore.getState();
+    store.loadSampleLineup(MOCK_STARTING, MOCK_BENCH);
+    const transfers = store.getTransferSummary();
+    store.substitutePlayer(incoming, outgoing);
+    const next = useLineupStore.getState();
+    expect(next.formation).toBe(formation);
+    expect(next.startingXI.find(p => p.id === incoming)).toMatchObject({
+      isStarting: true, isCaptain: outgoing === 9, isViceCaptain: outgoing === 6,
+    });
+    expect(next.bench.find(p => p.id === outgoing)).toMatchObject({ isStarting: false, isCaptain: false, isViceCaptain: false });
+    expect(next.captainId).toBe(outgoing === 9 ? incoming : 9);
+    expect(next.viceCaptainId).toBe(outgoing === 6 ? incoming : 6);
+    expect(next.getRemainingBudget()).toBe(3);
+    expect(next.getTransferSummary().totalTransfers).toBe(transfers.totalTransfers);
+  });
+
+  it('rejects invalid substitutions without changing the XI', () => {
+    const store = useLineupStore.getState();
+    store.loadSampleLineup(MOCK_STARTING, MOCK_BENCH);
+    store.substitutePlayer(12, 2);
+    expect(useLineupStore.getState().startingXI).toEqual(MOCK_STARTING);
+    store.substitutePlayer(14, 2); // 3-4-3 is legal
+    const xi = useLineupStore.getState().startingXI;
+    store.substitutePlayer(15, 3); // only two defenders would remain
+    expect(useLineupStore.getState().startingXI).toBe(xi);
+  });
   beforeEach(() => {
     const store = useLineupStore.getState();
     store.resetLineup();

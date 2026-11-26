@@ -33,14 +33,13 @@ POSITION_ORDER = {"GKP": 0, "DEF": 1, "MID": 2, "FWD": 3}
 
 
 def _optimize_starting_xi(
-    squad: Sequence[PlayerCandidate], target_formation: Formation | None
+    squad: Sequence[PlayerCandidate], formations: Sequence[Formation], locked: set[int]
 ) -> tuple[set[int], int]:
     """Choose an optimal valid XI and captain from an already optimized squad."""
     # For fixed positional counts, the highest-xP players maximize both
     # the XI sum and its largest (captain) term. Only eight formations exist.
-    ranked = sorted(squad, key=lambda p: (-p.expected_points_next, p.id))
+    ranked = sorted(squad, key=lambda p: (p.id not in locked, -p.expected_points_next, p.id))
     by_position = {pos: [p for p in ranked if p.element_type == pos] for pos in POSITION_ORDER}
-    formations = (target_formation,) if target_formation else get_args(Formation)
     best_score = float("-inf")
     for formation in formations:
         counts = (1, *map(int, formation.split("-")))
@@ -97,6 +96,27 @@ async def solve_optimizer(
         for row in candidate_rows
     ]
     rows_by_id = {row.id: row for row in candidate_rows}
+    locked = set(request.locked_player_ids)
+    formations = (request.target_formation,) if request.target_formation else get_args(Formation)
+    # Leave unknown or unavailable IDs to the squad solver's validation.
+    if locked and all(pid in rows_by_id and (rows_by_id[pid].status or "a") == "a" for pid in locked):
+        locked_counts = {pos: sum(rows_by_id[pid].element_type == pos for pid in locked)
+                         for pos in POSITION_ORDER}
+        if len(locked) > 11:
+            return OptimizerResponse(status="infeasible", message="Chỉ có thể khóa tối đa 11 cầu thủ đá chính.")
+        if locked_counts["GKP"] > 1:
+            return OptimizerResponse(status="infeasible", message="Chỉ có một suất thủ môn đá chính. Hãy bỏ khóa bớt thủ môn.")
+        formations = tuple(
+            formation for formation in formations
+            if all(locked_counts[pos] <= count for pos, count in
+                   zip(("DEF", "MID", "FWD"), map(int, formation.split("-"))))
+        )
+        if not formations:
+            description = f"Sơ đồ {request.target_formation}" if request.target_formation else "Các sơ đồ hợp lệ"
+            return OptimizerResponse(status="infeasible", message=(
+                f"{description} không đủ suất theo vị trí cho các cầu thủ đã khóa. "
+                "Hãy bỏ bớt khóa hoặc đổi sơ đồ."
+            ))
 
     try:
         squad_result = await run_in_threadpool(
@@ -123,7 +143,7 @@ async def solve_optimizer(
         for p in candidates if p.id in selected_ids
     ]
     try:
-        starting_ids, captain_id = _optimize_starting_xi(selected_candidates, request.target_formation)
+        starting_ids, captain_id = _optimize_starting_xi(selected_candidates, formations, locked)
     except ValueError as exc:
         return OptimizerResponse(status="infeasible", message=str(exc))
 

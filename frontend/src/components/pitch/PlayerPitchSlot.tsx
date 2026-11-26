@@ -70,6 +70,10 @@ export function getPlayerKitUrl(
 
 interface PlayerPitchSlotProps {
   player: LineupPlayer | null;
+  selected?: boolean;
+  eligible?: boolean;
+  inactive?: boolean;
+  onCardClick?: () => void;
   expectedPosition: PositionType;
   slotIndex?: number;
   isBench?: boolean;
@@ -81,6 +85,7 @@ interface PlayerPitchSlotProps {
 
 export function PlayerPitchSlot({
   player,
+  selected, eligible, inactive, onCardClick,
   expectedPosition,
   slotIndex = 0,
   isBench = false,
@@ -113,6 +118,11 @@ export function PlayerPitchSlot({
     );
   }
 
+  const activateCard = () => {
+    if (inactive) return;
+    onCardClick?.();
+    if (!isBench) setShowQuickMenu(prev => !prev);
+  };
   const kitUrl = getPlayerKitUrl(
     player.team_id,
     player.element_type,
@@ -122,7 +132,6 @@ export function PlayerPitchSlot({
 
   return (
     <div
-      onClick={() => !isBench && setShowQuickMenu((prev) => !prev)}
       className="relative group flex flex-col items-center w-[62px] min-[390px]:w-[70px] min-[440px]:w-20 sm:w-24 select-none pb-7 cursor-pointer"
     >
       {/* Nút Xóa (X) Glassmorphism - luôn hiển thị trên mobile/touch */}
@@ -141,7 +150,19 @@ export function PlayerPitchSlot({
       )}
 
       {/* Glassmorphism Card Container */}
-      <div className={`relative w-full rounded-2xl p-1 sm:p-1.5 pt-1.5 sm:pt-2 flex flex-col items-center transition-all duration-300
+      <div role="button" tabIndex={inactive ? -1 : 0}
+        aria-label={onCardClick ? `Chọn ${player.web_name} ${isBench ? 'vào sân' : 'ra sân'}` : player.web_name}
+        aria-pressed={isBench ? undefined : selected}
+        aria-disabled={inactive}
+        onClick={activateCard}
+        onKeyDown={event => {
+          if (event.target === event.currentTarget && (event.key === 'Enter' || event.key === ' ')) {
+            event.preventDefault();
+            activateCard();
+          }
+        }}
+        className={`${selected ? 'ring-2 ring-brand-hotpink' : eligible ? 'ring-2 ring-brand-skyblue' : ''}
+        ${inactive && isBench && selected === false ? 'cursor-default' : ''} relative w-full rounded-2xl p-1 sm:p-1.5 pt-1.5 sm:pt-2 flex flex-col items-center transition-all duration-300
         backdrop-blur-md border shadow-xl group-hover:-translate-y-1 group-hover:shadow-2xl
         ${isBench 
           ? 'bg-brand-card/70 border-brand-border hover:border-brand-border-light' 
@@ -223,7 +244,7 @@ export function PlayerPitchSlot({
         <div
           onClick={(e) => e.stopPropagation()}
           className={`absolute bottom-0 left-1/2 -translate-x-1/2 transition-all duration-200 flex items-center gap-1.5 bg-brand-darker/95 backdrop-blur-md border border-brand-skyblue/40 px-2 py-1 rounded-xl shadow-[0_10px_25px_rgba(4,22,32,0.8)] z-40 ${
-            showQuickMenu
+            (selected ?? showQuickMenu)
               ? 'opacity-100 pointer-events-auto scale-100'
               : 'opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto scale-95 group-hover:scale-100'
           }`}

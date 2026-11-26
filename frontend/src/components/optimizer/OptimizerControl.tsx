@@ -63,6 +63,11 @@ export const OptimizerControl: React.FC<OptimizerControlProps> = ({
   const [lockedPlayerIds, setLockedPlayerIds] = useState<number[]>([]);
   const [excludedPlayerIds, setExcludedPlayerIds] = useState<number[]>([]);
   const [activeTab, setActiveTab] = useState<'locked' | 'excluded'>('locked');
+  const [search, setSearch] = useState('');
+  const query = search.trim().toLowerCase();
+  const visiblePlayers = query ? availablePlayers.filter(player =>
+    [player.web_name, player.first_name, player.second_name].filter(Boolean).join(' ').toLowerCase().includes(query)
+  ) : availablePlayers;
 
   const toggleLockPlayer = (id: number) => {
     // Không thể vừa lock vừa exclude
@@ -202,7 +207,7 @@ export const OptimizerControl: React.FC<OptimizerControlProps> = ({
               }`}
             >
               <Lock className="w-3.5 h-3.5" />
-              <span>Khóa cầu thủ bắt buộc giữ ({lockedPlayerIds.length})</span>
+              <span>Bắt buộc đá chính ({lockedPlayerIds.length})</span>
             </button>
 
             <button
@@ -220,8 +225,17 @@ export const OptimizerControl: React.FC<OptimizerControlProps> = ({
         </div>
 
         {/* Danh sách cầu thủ để người dùng bấm toggle */}
+        <input
+          type="search"
+          aria-label="Tìm cầu thủ theo tên"
+          placeholder="Tìm cầu thủ theo tên"
+          value={search}
+          onChange={event => setSearch(event.target.value)}
+          className="w-full rounded-lg border border-brand-border bg-brand-darker px-3 py-2 text-sm text-brand-white"
+        />
         <div className="max-h-48 overflow-y-auto pr-1 space-y-1.5">
-          {availablePlayers.slice(0, 15).map((player) => {
+          {visiblePlayers.length === 0 && <p className="text-sm text-brand-muted">Không tìm thấy cầu thủ.</p>}
+          {visiblePlayers.map((player) => {
             const isLocked = lockedPlayerIds.includes(player.id);
             const isExcluded = excludedPlayerIds.includes(player.id);
 
@@ -251,7 +265,7 @@ export const OptimizerControl: React.FC<OptimizerControlProps> = ({
                           ? 'bg-brand-skyblue text-brand-darker shadow font-bold'
                           : 'bg-brand-card text-brand-muted hover:text-brand-skyblue-light'
                       }`}
-                      title={isLocked ? 'Đã khóa cầu thủ này' : 'Khóa bắt buộc giữ'}
+                      title={isLocked ? 'Bỏ khóa đá chính' : 'Bắt buộc đá chính'}
                     >
                       <Lock className="w-3.5 h-3.5" />
                     </button>
