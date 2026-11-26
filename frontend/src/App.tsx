@@ -160,6 +160,7 @@ export function App() {
     setViceCaptain,
     setTargetSlot,
     removePlayer,
+    substitutePlayer,
     addPlayerToLineup,
     loadSampleLineup,
     resetLineup,
@@ -718,6 +719,7 @@ export function App() {
                       onSelectCaptain={setCaptain}
                       onSelectViceCaptain={setViceCaptain}
                       onRemovePlayer={removePlayer}
+                      onSubstitute={substitutePlayer}
                       onAddPlayerClick={handleAddPlayerClick}
                     />
                   </div>
@@ -731,6 +733,7 @@ export function App() {
                   onSelectCaptain={setCaptain}
                   onSelectViceCaptain={setViceCaptain}
                   onRemovePlayer={removePlayer}
+                  onSubstitute={substitutePlayer}
                   onAddPlayerClick={handleAddPlayerClick}
                 />
               )}

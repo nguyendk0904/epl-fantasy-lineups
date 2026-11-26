@@ -1,4 +1,8 @@
-import { describe, it, expect } from 'vitest';
+// @vitest-environment jsdom
+import React, { act } from 'react';
+import { createRoot } from 'react-dom/client';
+import { describe, it, expect, vi } from 'vitest';
+import { VirtualPitch } from '../VirtualPitch';
 import { LineupPlayer } from '../../../types';
 
 describe('VirtualPitch Component Unit Tests', () => {
@@ -29,6 +33,35 @@ describe('VirtualPitch Component Unit Tests', () => {
     expect(mockStartingXI.filter(p => p.element_type === 'DEF')).toHaveLength(4);
     expect(mockStartingXI.filter(p => p.element_type === 'MID')).toHaveLength(3);
     expect(mockStartingXI.filter(p => p.element_type === 'FWD')).toHaveLength(3);
+  });
+
+  it('substitutes directly on cards and keeps captain actions independent', () => {
+    const host = document.createElement('div');
+    const root = createRoot(host);
+    const swap = vi.fn();
+    vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT', true);
+    try {
+      const captain = vi.fn();
+      const bench = mockBench.map((p, slotIndex) => ({ ...p, slotIndex }));
+      act(() => root.render(<VirtualPitch startingXI={mockStartingXI} bench={bench}
+        onSelectCaptain={captain} onSubstitute={swap} />));
+      const click = (name: string) => act(() => host.querySelector<HTMLElement>(`[aria-label="${name}"]`)!.click());
+      click('Chọn Flekken ra sân');
+      click('Chọn Dunk vào sân');
+      expect(swap).not.toHaveBeenCalled();
+      click('Chọn Flekken ra sân');
+      click('Chọn Turner vào sân');
+      expect(swap).not.toHaveBeenCalled();
+      click('Chọn Saliba ra sân');
+      click('Chọn Flekken ra sân');
+      act(() => host.querySelector<HTMLButtonElement>('[title="Chọn làm Captain (x2 điểm)"]')!.click());
+      expect(captain).toHaveBeenCalledWith(1);
+      click('Chọn Turner vào sân');
+      expect(swap).toHaveBeenCalledWith(12, 1);
+    } finally {
+      act(() => root.unmount());
+      vi.unstubAllGlobals();
+    }
   });
 
   it('renders bench with exactly 4 players (1 GKP and 3 outfielders)', () => {
